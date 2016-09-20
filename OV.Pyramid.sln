@@ -5,7 +5,12 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OV.Creation", "OV.Pyramid\OV.Creation.csproj", "{2ED715DD-8E74-4091-A2CB-CFF8C3EEBA05}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "OV.Core", "OV.Core\OV.Core.shproj", "{81107376-4103-4696-8285-4F4ACB1E12F4}"
+EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		OV.Core\OV.Core.projitems*{81107376-4103-4696-8285-4f4acb1e12f4}*SharedItemsImports = 13
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
