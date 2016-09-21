@@ -8,27 +8,27 @@ namespace OV.Core
     {
         public string Name { get; set; }
 
-        public ATTRIBUTE Attribute { get; set; } = ATTRIBUTE.NONE;
+        public ATTRIBUTE Attribute { get; set; }
 
-        public double Level { get; set } = double.NaN;
+        public double Level { get; set; }
 
-        public double Rank { get; set; } = double.NaN;
+        public double Rank { get; set; }
 
-        public PROPERTY Property { get; set; } = PROPERTY.NONE;
+        public PROPERTY Property { get; set; }
 
         public byte[] ArtworkByte { get; set; }
 
-        public TYPE Type { get; set; } = TYPE.NONE;
+        public TYPE Type { get; set; }
                 
         public FRAME Frame { get; set; }
 
-        public List<ABILITY> Abilities = new List<ABILITY>();
+        public List<ABILITY> Abilities;
 
         public string Description { get; set; }
 
-        public double ATK { get; set; } = double.NaN;
+        public double ATK { get; set; }
 
-        public double DEF { get; set; } = double.NaN;
+        public double DEF { get; set; }
     }
 
     enum ATTRIBUTE
