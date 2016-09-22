@@ -1,7 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Documents;
 using OV.Tools;
-
+using System.Windows.Input;
 
 namespace OV.Pyramid
 {
@@ -23,5 +23,7 @@ namespace OV.Pyramid
             style.Setters.Add(new Setter(Paragraph.MarginProperty, new Thickness(0)));
             Resources.Add(typeof(Paragraph), style);
         }
+
+        
     }
 }

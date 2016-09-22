@@ -1,0 +1,77 @@
+﻿<UserControl x:Class="OV.Pyramid.YGOView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:OV.Pyramid"
+             mc:Ignorable="d" 
+             d:DesignWidth="421" d:DesignHeight="614"  Background="White">
+    <Viewbox Name="AllView" Width="421" Height="614">
+        <Canvas x:Name="Card" Width="813" Height="1185" Canvas.Top="0" Canvas.Left="0">
+            <Image Name="Artwork" Stretch="Fill"></Image>
+            <Image Name="Foil_Artwork" Stretch="Fill" Width="{Binding ElementName=Artwork, Path=Width}"
+                       Height="{Binding ElementName=Artwork, Path=Height}"
+                       Canvas.Left="{Binding ElementName=Artwork, Path=(Canvas.Left)}"
+                       Canvas.Top="{Binding ElementName=Artwork, Path=(Canvas.Top)}"></Image>
+            <Viewbox Width="{Binding Width, ElementName=Card}"
+                       Height="{Binding Height, ElementName=Card}" Stretch="Fill">
+                <Image x:Name="Frame" >
+                </Image>
+            </Viewbox>
+            <Border Name="Left_NameBorder" Background="Transparent" Canvas.Top="40" Canvas.Left="74">
+                <Viewbox Name="Left_NameViewbox" Stretch="Fill" Height="95"  Width="577">
+                    <TextBlock FontSize="{Binding Height, ElementName=Left_NameViewbox}" ></TextBlock>
+                </Viewbox>
+            </Border>
+            <Image Name="Attribute"></Image>
+
+            <Border Name="Left_MiddleBorder">
+                <Canvas Name="Middle"
+                        ></Canvas>
+            </Border>
+            <Viewbox Name="Ability_Viewbox">
+                <Grid VerticalAlignment="Center" Height="50">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="17"></ColumnDefinition>
+                        <ColumnDefinition Width="Auto"></ColumnDefinition>
+                        <ColumnDefinition Width="17"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="2"></RowDefinition>
+                        <RowDefinition Height="Auto"></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <TextBlock Name="BracketLeft" Grid.Column="0" Grid.Row="0" Grid.RowSpan="2" ></TextBlock>
+                    <TextBlock Grid.Column="1" Name="Ability" Grid.Row="1"></TextBlock>
+                    <TextBlock Name="BracketRight" Grid.Column="2" HorizontalAlignment="Right" Grid.Row="0" Grid.RowSpan="2"></TextBlock>
+                </Grid>
+            </Viewbox>
+
+            <Border Name="Left_TextBorder">
+                <RichTextBox Name="Description" Width="0" Height="0"></RichTextBox>
+            </Border>
+            <Border Name="Left_PendulumBorder">
+                <RichTextBox Name="Pendulum" Width="0" Height="0"></RichTextBox>
+            </Border>
+            <Border Name="Left_ScaleBorder" >
+                <Canvas>
+                    <TextBlock Name="ScaleLeft" Canvas.Top="12"></TextBlock>
+                    <TextBlock Name="ScaleRight" Canvas.Top="12"></TextBlock>
+                </Canvas>
+            </Border>
+            <Viewbox Height="30.66">
+                <TextBlock Name="CardNumber"></TextBlock>
+            </Viewbox>
+            <TextBlock Name="Edition" ></TextBlock>
+            <TextBlock Name="SetNumber" Panel.ZIndex="10"></TextBlock>
+            <TextBlock Name="Creator" Panel.ZIndex="10" Canvas.Right="70" HorizontalAlignment="Right" Canvas.Top="1128" ></TextBlock>
+            <Image Name="Artwork_Border"></Image>
+            <Image Name="Border_Card"></Image>
+            <Image Name="Lore_Border"></Image>
+            <Image Name="Sticker"></Image>
+
+            <Image Name="Foil_Card" Stretch="Fill"
+                        Width="{Binding ElementName=Card, Path=Width}"
+                       Height="{Binding ElementName=Card, Path=Height}"></Image>
+        </Canvas>
+    </Viewbox>
+</UserControl>
