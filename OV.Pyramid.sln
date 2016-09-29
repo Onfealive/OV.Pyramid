@@ -9,6 +9,7 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "OV.Core", "OV.Core\OV.Core.
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		OV.Core\OV.Core.projitems*{2ed715dd-8e74-4091-a2cb-cff8c3eeba05}*SharedItemsImports = 4
 		OV.Core\OV.Core.projitems*{81107376-4103-4696-8285-4f4acb1e12f4}*SharedItemsImports = 13
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

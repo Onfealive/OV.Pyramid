@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OV.Tools;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -8,6 +9,7 @@ namespace OV.Core
     {
         public string Name { get; set; }
 
+        
         public ATTRIBUTE Attribute { get; set; }
 
         public double Level { get; set; }
@@ -19,8 +21,8 @@ namespace OV.Core
         public byte[] ArtworkByte { get; set; }
 
         public TYPE Type { get; set; }
-                
-        public FRAME Frame { get; set; }
+        
+        public FRAME Frame { get; set; }        
 
         public List<ABILITY> Abilities;
 
@@ -29,11 +31,70 @@ namespace OV.Core
         public double ATK { get; set; }
 
         public double DEF { get; set; }
+
+        public string Creator { get; set; }
+
+        public RARITY Rarity { get; set; }
+
+        public bool IsPendulum { get; set; }
+
+        public EDITION Edition { get; set; }
+
+        public STICKER Sticker { get; set; }
+
+        public int Number { get; set; }
+
+        public string Set { get; set; }
+
+        private YGOCard()
+        {
+            this.Abilities = new List<ABILITY>();
+        }
+
+        internal static YGOCard Default
+        {
+            get
+            {
+                YGOCard defaultCard = new YGOCard();
+                defaultCard.Name = "Card Name";
+                defaultCard.ATK = 1200;
+                defaultCard.DEF = 1200;
+                defaultCard.Frame = FRAME.Effect;
+                //defaultCard.Attribute = ATTRIBUTE.UNKNOWN;
+                defaultCard.Level = 4;
+                defaultCard.Creator = "© 1996 KAZUKI TAKAHASHI";
+                defaultCard.Rarity = RARITY.Common;
+                defaultCard.Type = TYPE.Warrior;
+                defaultCard.Sticker = STICKER.PromoSilver;
+                defaultCard.ArtworkByte = Images.GetImageByte(Utilities.GetLocationPath() + @"\Template\NoneImage.png");
+                return defaultCard;
+            }
+        }
+        
     }
+
+    static class Static {
+
+        public static bool IsFrame(this YGOCard card, FRAME frame)
+        {
+            return frame == card.Frame;
+        }
+
+        public static bool IsMagic(this YGOCard card)
+        {
+            return (card.Frame == FRAME.Spell || card.Frame == FRAME.Trap);
+        }
+
+        public static bool IsMonster(this YGOCard card)
+        {
+            return !card.IsMagic();
+        }
+    }
+
 
     enum ATTRIBUTE
     {
-        NONE,
+        UNKNOWN,
         EARTH, DARK, DIVINE, FIRE, LIGHT, WATER, WIND,
         SPELL, TRAP
     }
@@ -55,7 +116,7 @@ namespace OV.Core
 
     public enum ABILITY
     {
-        NONE, Flip, Toon, Union, Gemini, Spirit,
+        Flip, Toon, Union, Gemini, Spirit,
         Effect, Tuner,
     };
 
@@ -66,5 +127,34 @@ namespace OV.Core
         Beast, Aqua, Rock, Insect, Plant, Zombie, Reptile, Pyro,
         Fish, Thunder, Psychic, Wyrm, Dinosaur,
         WingedBeast, BeastWarrior, SeaSerpent, DivineBeast, CreatorGod
+    }
+
+    public enum STICKER
+    {
+        NONE, 
+        Gold, Silver,
+        PromoGold, PromoSilver
+    }
+
+    public enum RARITY
+    {
+        Common,
+        Rare, UltimateRare,
+        SuperRare,
+        UltraRare,
+        SecretRare,
+        ParallelRare,
+        StarfoilRare,
+        MosaicRare,
+        GoldRare,
+        GhostRare
+    }
+
+    public enum EDITION
+    {
+        UnlimitedEdition,
+        FirstEdition,
+        LimitedEdition,
+        DuelTerminal
     }
 }

@@ -6,30 +6,31 @@
              xmlns:local="clr-namespace:OV.Pyramid"
              mc:Ignorable="d" 
              d:DesignWidth="421" d:DesignHeight="614"  Background="White">
-    <Viewbox Name="AllView" Width="421" Height="614">
-        <Canvas x:Name="Card" Width="813" Height="1185" Canvas.Top="0" Canvas.Left="0">
-            <Image Name="Artwork" Stretch="Fill"></Image>
-            <Image Name="Foil_Artwork" Stretch="Fill" Width="{Binding ElementName=Artwork, Path=Width}"
+    <Viewbox Name="CardView" Width="421" Height="614">
+        <Canvas x:Name="CardCanvas" Width="813" Height="1185" Canvas.Top="0" Canvas.Left="0">
+            <Image Name="Artwork" Stretch="Fill" Width="620" Height="620" Canvas.Left="98" Canvas.Top="217"></Image>
+            <Image Name="ArtworkFoil" Stretch="Fill" Width="{Binding ElementName=Artwork, Path=Width}"
                        Height="{Binding ElementName=Artwork, Path=Height}"
                        Canvas.Left="{Binding ElementName=Artwork, Path=(Canvas.Left)}"
                        Canvas.Top="{Binding ElementName=Artwork, Path=(Canvas.Top)}"></Image>
-            <Viewbox Width="{Binding Width, ElementName=Card}"
-                       Height="{Binding Height, ElementName=Card}" Stretch="Fill">
+            <Viewbox Width="{Binding Width, ElementName=CardCanvas}"
+                       Height="{Binding Height, ElementName=CardCanvas}" Stretch="Fill">
                 <Image x:Name="Frame" >
                 </Image>
             </Viewbox>
-            <Border Name="Left_NameBorder" Background="Transparent" Canvas.Top="40" Canvas.Left="74">
-                <Viewbox Name="Left_NameViewbox" Stretch="Fill" Height="95"  Width="577">
-                    <TextBlock FontSize="{Binding Height, ElementName=Left_NameViewbox}" ></TextBlock>
+            <Border Name="NameBorder" Background="Transparent" Canvas.Top="40" Canvas.Left="61">
+                <Viewbox Name="NameViewbox" Stretch="Fill" Height="95"  Width="606">
+                    <TextBlock Name="CardName" FontSize="{Binding Height, ElementName=NameViewbox}" ></TextBlock>
                 </Viewbox>
             </Border>
-            <Image Name="Attribute"></Image>
-
-            <Border Name="Left_MiddleBorder">
-                <Canvas Name="Middle"
-                        ></Canvas>
+            <Image Name="Attribute" Width="79" Height="79" Stretch="Fill" Canvas.Top="53" Canvas.Left="678"></Image>
+            <Viewbox Width="80" Height="35" Stretch="Fill" Canvas.Left="677.5" Canvas.Top="54.5" >
+                <TextBlock Width="100" Height="35" Name="AttributeText" TextAlignment="Center" Foreground="White" FontSize="17" FontWeight="Bold"></TextBlock>
+            </Viewbox>
+            <Border Name="MiddleBorder" Width="621" Height="56" Canvas.Left="97" Canvas.Top="143">
+                <Canvas Name="Middle" ></Canvas>
             </Border>
-            <Viewbox Name="Ability_Viewbox">
+            <Viewbox Name="AbilityViewbox" Canvas.Left="63" Canvas.Top="890">
                 <Grid VerticalAlignment="Center" Height="50">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="17"></ColumnDefinition>
@@ -45,33 +46,37 @@
                     <TextBlock Name="BracketRight" Grid.Column="2" HorizontalAlignment="Right" Grid.Row="0" Grid.RowSpan="2"></TextBlock>
                 </Grid>
             </Viewbox>
-
-            <Border Name="Left_TextBorder">
-                <RichTextBox Name="Description" Width="0" Height="0"></RichTextBox>
+            <Border Name="DescriptionBorder" Canvas.Left="58" Canvas.Top="922">
+                <RichTextBox Name="Description" Width="698" Height="0" IsReadOnly="True" BorderThickness="0"
+                             Opacity="0.9" Background="Transparent"></RichTextBox>
             </Border>
-            <Border Name="Left_PendulumBorder">
-                <RichTextBox Name="Pendulum" Width="0" Height="0"></RichTextBox>
+            <Border Name="PendulumBorder" Canvas.Left="122" Canvas.Top="797">
+                <RichTextBox Name="Pendulum" Width="568" Height="0" MaxHeight="133" BorderThickness="0"
+                             IsReadOnly="True" Background="Transparent"></RichTextBox>
             </Border>
-            <Border Name="Left_ScaleBorder" >
+            <Border Name="ScaleBorder" >
                 <Canvas>
-                    <TextBlock Name="ScaleLeft" Canvas.Top="12"></TextBlock>
-                    <TextBlock Name="ScaleRight" Canvas.Top="12"></TextBlock>
+                    <TextBlock Name="ScaleLeft" FontSize="58" Canvas.Top="12"></TextBlock>
+                    <TextBlock Name="ScaleRight" FontSize="58" Canvas.Top="12"></TextBlock>
                 </Canvas>
             </Border>
-            <Viewbox Height="30.66">
-                <TextBlock Name="CardNumber"></TextBlock>
+            <Viewbox Name="CardNumberViewbox" Height="30.66" Canvas.Left="37" Canvas.Top="1128">
+                <TextBlock Name="CardNumber" FontSize="24"></TextBlock>
             </Viewbox>
-            <TextBlock Name="Edition" ></TextBlock>
-            <TextBlock Name="SetNumber" Panel.ZIndex="10"></TextBlock>
-            <TextBlock Name="Creator" Panel.ZIndex="10" Canvas.Right="70" HorizontalAlignment="Right" Canvas.Top="1128" ></TextBlock>
-            <Image Name="Artwork_Border"></Image>
-            <Image Name="Border_Card"></Image>
-            <Image Name="Lore_Border"></Image>
-            <Image Name="Sticker"></Image>
-
-            <Image Name="Foil_Card" Stretch="Fill"
-                        Width="{Binding ElementName=Card, Path=Width}"
-                       Height="{Binding ElementName=Card, Path=Height}"></Image>
+            <TextBlock Name="Edition" Canvas.Left="155" Canvas.Top="1127"></TextBlock>
+            <TextBlock Name="SetNumber" Panel.ZIndex="10" Canvas.Left="581" Canvas.Top="849" FontSize="23" Width="150" TextAlignment="Right"></TextBlock>
+            <TextBlock Name="Creator" Panel.ZIndex="10" FontSize="24" Canvas.Right="70" HorizontalAlignment="Right" Canvas.Top="1128" ></TextBlock>
+            <Image Name="ArtworkBorder"></Image>
+            <Image Name="CardBorder"></Image>
+            <Image Name="LoreBorder"></Image>
+            <Image Name="Sticker" Width="40" Height="40" Stretch="Fill" Canvas.Left="750" Canvas.Top="1120"></Image>
+            <TextBlock Name="ATKText" Canvas.Top="1081" Canvas.Left="511" TextAlignment="Right"
+                       FontSize="37" FontWeight="Bold"></TextBlock>
+            <TextBlock Name="DEFText" Canvas.Top="1081" Canvas.Left="675" TextAlignment="Right"
+                       FontSize="37" FontWeight="Bold"></TextBlock>
+            <Image Name="CardFoil" Stretch="Fill"
+                        Width="{Binding ElementName=CardCanvas, Path=Width}"
+                       Height="{Binding ElementName=CardCanvas, Path=Height}"></Image>
         </Canvas>
     </Viewbox>
 </UserControl>
