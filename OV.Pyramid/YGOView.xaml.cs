@@ -6,19 +6,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-
+using static OV.Tools.Utilities;
 
 namespace OV.Pyramid
 {
@@ -91,7 +85,7 @@ namespace OV.Pyramid
                     return new FontFamily(
                         new Uri(Utilities.GetLocationPath() + @"\Fonts\"), "./#MatrixBoldFractions");
                 }
-            } */
+            }  */
 
             public static FontFamily PalatinoLinotype
             {
@@ -118,7 +112,7 @@ namespace OV.Pyramid
             CardName.FontFamily = Fonts.YGOMatrixSmallCap2;
             //Attribute
             Ability.FontFamily = BracketLeft.FontFamily = BracketRight.FontFamily = Fonts.StoneSerifLTBold;
-            ATKText.FontFamily = DEFText.FontFamily = Fonts.YGOMatrixSmallCap2;
+            ATKBlock.FontFamily = DEFBlock.FontFamily = Fonts.YGOMatrixSmallCap2;
             Creator.FontFamily = Fonts.StoneSerifRegular;
             CardNumber.FontFamily = Fonts.StoneSerifRegular;
             SetNumber.FontFamily = Fonts.StoneSerifRegular;
@@ -126,8 +120,11 @@ namespace OV.Pyramid
             AttributeText.FontFamily = Fonts.PalatinoLinotype;
             ArtworkBorder.Source = Images.GetImage(Utilities.GetLocationPath() + @"\Template\Border\Artwork\Default.png");
             LoreBorder.Source = Images.GetImage(Utilities.GetLocationPath() + @"\Template\Border\Lore\Default.png");
+            ScaleLeftBlock.FontFamily = ScaleRightBlock.FontFamily = Fonts.YGOMatrixSmallCap2;
 
-            //RenderCard();
+
+            ScaleLeft.Source = Images.GetImage(GetLocationPath() + @"\Template\Middle\ScaleLeft.png");
+            ScaleRight.Source = Images.GetImage(GetLocationPath() + @"\Template\Middle\ScaleRight.png");
         }
 
         public void SetDefaultArtwork(string filePath)
@@ -151,11 +148,246 @@ namespace OV.Pyramid
             HandleMiddle();
             HandleArtwork();
             HandleFrame();
+            HandleAD();
             HandleAbility();
             HandleRarity();
             HandleCreator();
-            HandleText();
+            HandleScale();
+            HandleDescription();
             HandleSticker();
+            HandleEdition();
+            HandleCartNumber();
+            HandleSetCard();
+        }
+
+        private void HandleScale()
+        {
+            if (Current.IsPendulum == false)
+            {
+                ScaleLeftBlock.Text = ScaleRightBlock.Text = "";
+                ScaleLeft.Visibility = ScaleRight.Visibility = Visibility.Hidden;
+                return;
+            }
+            ScaleLeft.Visibility = ScaleRight.Visibility = Visibility.Visible;
+            ScaleLeftBlock.Text = double.IsNaN(Current.ScaleLeft) ? "?" : Current.ScaleLeft.ToString();
+            ScaleRightBlock.Text = double.IsNaN(Current.ScaleRight) ? "?" : Current.ScaleRight.ToString();
+
+
+            if (Pendulum.CountLine() < 4)
+            {
+                Canvas.SetTop(ScaleLeftBlock, 824);
+                Canvas.SetTop(ScaleRightBlock, 824);
+            }
+            else
+            {
+                Canvas.SetTop(ScaleLeftBlock, 800);
+                Canvas.SetTop(ScaleRightBlock, 800);
+            }
+
+
+            //ScaleLeft
+            if (!double.IsNaN(Current.ScaleLeft))
+            {
+                if (Current.ScaleLeft >= 10)
+                {
+                    if (Current.ScaleLeft == 11)
+                    {
+                        Canvas.SetLeft(ScaleLeftBlock, 74 - 16);
+                    }
+                    else
+                    {
+                        Canvas.SetLeft(ScaleLeftBlock, 74 - 19);
+                    }
+                }
+                else
+                {
+                    Canvas.SetLeft(ScaleLeftBlock, 74);
+                }
+            }
+            else
+            {                
+                Canvas.SetLeft(ScaleLeftBlock, 74);
+            }
+            //Scale Right
+            if (!double.IsNaN(Current.ScaleRight))
+            { 
+                if (Current.ScaleRight >= 10)
+                {
+                    if (Current.ScaleRight == 11)
+                    {
+                        Canvas.SetLeft(ScaleRightBlock, CardCanvas.Width - 74 - 42);
+                    }
+                    else
+                    {
+                        Canvas.SetLeft(ScaleRightBlock, CardCanvas.Width - 74 - 45);
+                    }
+                }
+                else
+                {
+                    Canvas.SetLeft(ScaleRightBlock, CardCanvas.Width - 74 - 22);
+                }
+            }
+            else
+            {                
+                Canvas.SetLeft(ScaleRightBlock, CardCanvas.Width - 74 - 22);
+            }
+            Canvas.SetTop(ScaleLeft, ScaleLeftBlock.Top() - 30);
+            Canvas.SetTop(ScaleRight, ScaleRightBlock.Top() - 30);
+            //MessageBox.Show(ScaleLeftText.GetFormattedText().Width.ToString());
+        }
+
+        private void HandleSetCard()
+        {
+            if (Current.Set == null) { return; }
+            SetNumber.Text = Current.Set.ToUpper();
+            if (Current.IsFrame(FRAME.Xyz) && !Current.IsPendulum)
+            {
+                SetNumber.Foreground = Brushes.White;
+            }
+            else
+            {
+                SetNumber.Foreground = Brushes.Black;
+            }
+        }
+
+        private void HandleCartNumber()
+        {
+            if (Current.Number > 0)
+            {
+                string number = Current.Number.ToString().PadLeft(8, '0');
+                CardNumber.Text = number;
+                if (CardNumber.GetFormattedText().Width > 109)
+                {
+                    CardNumberViewbox.Width = 109;
+                }
+                else
+                {
+                    CardNumberViewbox.Width = double.NaN;
+                }
+            } else
+            {
+                CardNumber.Text = null;
+                CardNumberViewbox.Width = double.NaN;
+            }
+
+
+            if (Current.IsFrame(FRAME.Xyz) && !Current.IsPendulum)
+            {                
+                CardNumber.Foreground = Brushes.White;
+            }
+            else
+            {                
+                CardNumber.Foreground = Brushes.Black;
+            }
+        }
+
+        private void HandleEdition()
+        {
+            if (Current.IsFrame(FRAME.Xyz) && !Current.IsPendulum)
+            {
+                Edition.Foreground = Brushes.White;
+            }
+            else
+            {
+                Edition.Foreground = Brushes.Black;
+            }
+
+            //Edition.Text = Current.Edition.ToString();
+
+
+            if (Current.Edition == EDITION.UnlimitedEdition)
+            {
+                Edition.Text = null;
+            }
+            else if (Current.Edition == EDITION.FirstEdition)
+            {
+                Edition.FontFamily = Fonts.PalatinoLinotype;
+                Edition.FontSize = 24;
+                Edition.Inlines.Clear();
+                Edition.Inlines.Add(new Run("1"));
+                Run Superscript = new Run("st");
+                Superscript.Typography.Variants = FontVariants.Superscript;
+                Edition.Inlines.Add(Superscript);
+                Edition.Inlines.Add(new Run(" Edition"));
+                Edition.FontWeight = FontWeights.UltraBlack;
+            }
+            else if (Current.Edition == EDITION.LimitedEdition)
+            {
+                Edition.FontFamily = Fonts.PalatinoLinotype;
+                Edition.FontSize = 24;
+                Edition.FontWeight = FontWeights.SemiBold;
+                Edition.Text = Current.Edition.ToString().AddSpaceBetweenCapital().ToUpper();
+            }
+            else if (Current.Edition == EDITION.DuelTerminal)
+            {
+                Edition.FontFamily = Fonts.BankGothicMdBT;
+                Edition.Text = Current.Edition.ToString().AddSpaceBetweenCapital().ToUpper();
+                Edition.FontWeight = FontWeights.Normal;
+                Edition.FontSize = 30;
+
+                //ChangeRarity(Text);
+            }
+            
+        }
+
+        private void HandleAD()
+        {
+            if (Current.IsMonster())
+            {
+                /*
+                if (vietnameseLang.IsChecked == true)
+                {
+                    ATKText.SetRight(322);
+                    DEFText.SetRight(148);
+
+                    ATKText.Text = "CÔNG/";
+                    DEFText.Text = "THỦ/";
+                    ATKText.FontSize = DEFText.FontSize = 44.5;
+                    Canvas.SetTop(ATK, 1072.5);
+                    Canvas.SetTop(DEF, 1072.5);
+                }
+                else */
+                {
+                    ATKBlock.SetLeft(431);
+                    DEFBlock.SetLeft(600);
+
+                    ATKBlock.Text = "ATK/";
+                    DEFBlock.Text = "DEF/";
+                    ATKBlock.FontSize = DEFBlock.FontSize = 46;
+                    Canvas.SetTop(ATKBlock, 1072);
+                    Canvas.SetTop(DEFBlock, 1072);
+                }
+                /*
+                DropShadowEffect shadow = new DropShadowEffect();
+                shadow.BlurRadius = 1;
+                shadow.RenderingBias = RenderingBias.Quality;
+                shadow.Direction = 90;
+                shadow.ShadowDepth = 0.5;
+                shadow.Color = Colors.Black;
+
+                AD.Effect = shadow;
+                */
+
+
+                //if (!Double.IsNaN(Current.ATK))
+                {
+                    ATKBlock.Text += SpecialPoint(Current.ATK);
+                    //Canvas.SetLeft(ATKBlock, ATKBlock.Left() - ATKBlock.GetFormattedText(SpecialPoint(Current.ATK)).Width);
+                    //MessageBox.Show(ATKBlock.Left().ToString());
+                }
+                //if (!Double.IsNaN(Current.DEF))
+                {
+                    DEFBlock.Text += SpecialPoint(Current.DEF);
+
+                    //Canvas.SetLeft(DEFBlock, DEFBlock.Left() - DEFBlock.GetFormattedText(SpecialPoint(Current.DEF)).Width);
+                }
+                Canvas.SetTop(DescriptionBorder, 926);
+            }
+            else
+            {
+                ATKBlock.Text = DEFBlock.Text = "";
+                Canvas.SetTop(DescriptionBorder, 891);
+            }
         }
 
         private void HandleSticker()
@@ -376,7 +608,7 @@ namespace OV.Pyramid
             }
         }
 
-        private void HandleText()
+        private void HandleDescription()
         {
             if (Current == null)
             {
@@ -788,10 +1020,13 @@ namespace OV.Pyramid
                 "Template/Frame/" + Current.Frame.ToString() + ".png");
             if (Current.IsPendulum)
             {
-                ArtworkBorder.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Border/Pendulum/Medium");
+                ArtworkBorder.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Border/Pendulum/Small.png");
                 LoreBorder.Visibility = Visibility.Hidden;
-                //pendulumBoxMiddle.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Border/Pendulum/Small_Box");
-                //pendulumBoxText.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Border/Pendulum/Text_Box");
+                PendulumBoxMiddle.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Border/Pendulum/SmallBox.png");
+                PendulumBoxText.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Border/Pendulum/TextBox.png");
+                PendulumLine.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Border/Pendulum/Line"+ Current.Frame.ToString() + ".png");
+                SpellHalf.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Border/Pendulum/SpellHalf.png");
+                LoreBackground.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Border/Pendulum/LoreBoxMedium.png");
                 Artwork.Width = 707;
                 Artwork.Height = 663;
                 Canvas.SetLeft(Artwork, 53);
@@ -799,86 +1034,37 @@ namespace OV.Pyramid
             }
             else
             {
-               // ArtworkBorder.Source = null;
+                ArtworkBorder.Source = null;
                 LoreBorder.Visibility = Visibility.Visible;
-                //pendulumBoxMiddle.Source = pendulumBoxText.Source = null;
+                PendulumBoxMiddle.Source = PendulumBoxText.Source = null;
+                PendulumLine.Source = null;
+                SpellHalf.Source = null;
+                LoreBackground.Source = null;
                 Artwork.Width = 620;
                 Artwork.Height = 620;
                 Canvas.SetLeft(Artwork, 98);
                 Canvas.SetTop(Artwork, 217);
             }
-            if (Current.IsMonster())
-            {
-                /*
-                if (vietnameseLang.IsChecked == true)
-                {
-                    ATKText.SetRight(322);
-                    DEFText.SetRight(148);
-
-                    ATKText.Text = "CÔNG/";
-                    DEFText.Text = "THỦ/";
-                    ATKText.FontSize = DEFText.FontSize = 44.5;
-                    Canvas.SetTop(ATK, 1072.5);
-                    Canvas.SetTop(DEF, 1072.5);
-                }
-                else */
-                {
-                    ATKText.SetLeft(813 - 310);
-                    DEFText.SetLeft(813 - 148);
-
-                    ATKText.Text = "ATK/";
-                    DEFText.Text = "DEF/";
-                    ATKText.FontSize = DEFText.FontSize = 46;
-                    Canvas.SetTop(ATKText, 1071);
-                    Canvas.SetTop(DEFText, 1071);
-                }
-                /*
-                DropShadowEffect shadow = new DropShadowEffect();
-                shadow.BlurRadius = 1;
-                shadow.RenderingBias = RenderingBias.Quality;
-                shadow.Direction = 90;
-                shadow.ShadowDepth = 0.5;
-                shadow.Color = Colors.Black;
-
-                AD.Effect = shadow;
-                */
-
-                
-                if (!Double.IsNaN(Current.ATK))
-                {
-                    ATKText.Text += " " + SpecialPoint(Current.ATK.ToString());
-                    
-                    Canvas.SetLeft(ATKText, ATKText.Left() - ATKText.GetFormattedText(" " + SpecialPoint(Current.ATK.ToString())).Width);
-                    
-                }
-                if (!Double.IsNaN(Current.DEF))
-                {
-                    DEFText.Text += " " + SpecialPoint(Current.DEF.ToString());
-                    
-                    Canvas.SetLeft(DEFText, DEFText.Left() - DEFText.GetFormattedText(" " + SpecialPoint(Current.DEF.ToString())).Width);
-                }
-                Canvas.SetTop(DescriptionBorder, 926);
-            }
-            else
-            {
-                ATKText.Text = DEFText.Text = "";
-                Canvas.SetTop(DescriptionBorder, 891);
-            }
+            
         }
 
-        private string SpecialPoint(string value)
+        private string SpecialPoint(double value)
         {
-            if (value == "?")
+            string result = "";
+            if (double.IsNaN(value))
             {
-                value = " " + value;
+                result = "?";
+            } else
+            {
+                result = value.ToString();
             }
-            if (value.Length == 1)
-                value = "      " + value;
-            else if (value.Length == 2)
-                value = "    " + value;
-            else if (value.Length == 3)
-                value = "  " + value;
-            return value;
+            if (result.Length == 1)
+                result = "      " + result;
+            else if (result.Length == 2)
+                result = "    " + result;
+            else if (result.Length == 3)
+                result = "  " + result;
+            return result;
         }
 
         private void HandleAbility()
@@ -888,7 +1074,7 @@ namespace OV.Pyramid
                 return;
             }
             this.Ability.Inlines.Clear();
-            if (!Current.IsMagic())
+            if (Current.IsMonster())
             {
                 BracketLeft.Text = "["; BracketRight.Text = "]";
                 double theWidth = 637;
@@ -897,6 +1083,7 @@ namespace OV.Pyramid
                 {
                     string type = Current.Type != TYPE.NONE ? Current.Type.ToString() : "";// TransAbility(Current.Type);  
 
+                    
                     {
                         type = type.Replace("WingedBeast", "Winged Beast");
                         type = type.Replace("BeastWarrior", "Beast-Warrior");
@@ -906,116 +1093,38 @@ namespace OV.Pyramid
                         //type = TransLanguage(type);
                     }
 
-
-                    if (Current.IsFrame( FRAME.Normal))
+                    List<string> abilityText = new List<string>();
+                    abilityText.Add(type);
+                    if (Current.Frame != FRAME.Normal && Current.Frame != FRAME.Effect)
                     {
-                        if (Current.IsPendulum)
-                        {
-                            //type += "_/_" + TransLanguage("Pendulum");
-                            type += "_/_" + "Pendulum";
-                        }
-
-                        futureText = type;
-
-                        if (Current.Abilities.Contains(ABILITY.Tuner))
-                        {
-                            //futureText = type + "_/_" + TransLanguage("Tuner");
-                            futureText = type + "_/_" + "Tuner";
-                        }
+                        abilityText.Add(Current.Frame.ToString());
                     }
-                    else
+                    if (Current.IsPendulum)
                     {
-                        /*
-                        string tempAbility =  abilityText;
-                        
-                        //Có Ability
-                        if (!String.IsNullOrEmpty(abilityText))
-                        {
-                            tempAbility = "_/_" + (abilityText != "Effect" ? TransLanguage(tempAbility) : tempAbility);
-                            //if (!Ability.Contains("Tuner")) //XX
-                            tempAbility += "_/_" + "Effect";
-                        }
-
-
-                        //if (Current.Ability == Ability)
-                        //    TempAbility = null;
-
-                        if (Current.IsFrame("Effect"))
-                            futureText = type + (Current.PendulumValid ? "_/_" + TransLanguage("Pendulum") : null)
-                                + tempAbility + "_/_" + "Effect";
-                        else
-                        {
-                            futureText = type + "_/_" + TransLanguage(Current.Frame.ToString()) +
-                                (Current.PendulumValid ? "_/_" + TransLanguage("Pendulum") : null)  + tempAbility;
-
-                        }
-
-                        futureText = futureText.Replace("Tuner_/_Effect", "Effect_/_Tuner");
-
-                        while (futureText.Contains("_/_Effect_/_Effect"))
-                        {
-                            futureText = futureText.Replace("_/_Effect_/_Effect", "_/_Effect");
-                        }
-                        
-
-                        futureText = futureText.Replace("Effect", TransLanguage("Effect"));
-                        */
-
-                        //string framePart = (Current.Frame != FrameEnum.Effect ? TransLanguage(Current.Frame.ToString()) : null)
-                        //    + (Current.PendulumValid ? "_/_" + TransLanguage("Pendulum") : null);
-
-                        string tempFrame = TransLanguage(Current.Frame.ToString()) + (Current.IsPendulum ? "_/_" + TransLanguage("Pendulum") : null);
-                        string tempAbility = "";
-                        if (!Current.Abilities.Contains( ABILITY.Tuner) && Current.Abilities.Count !=1 )
-                        {
-                            var listAbility = Current.Abilities;
-                            listAbility.Remove(ABILITY.Tuner);
-                            tempAbility = TransLanguage(string.Join("", listAbility.ToArray()));
-                            if (Current.Abilities.Contains( ABILITY.Tuner))
-                            {
-                                tempAbility += "_/_" + TransLanguage("Tuner");
-                            }
-                        }
-                        else
-                        {
-                            tempAbility = TransLanguage("Tuner");
-                        }
-
-
-
-
-                        if (Current.Frame != FRAME.Effect)
-                        {
-                            
-                            
-                            if (Current.Abilities.OnlyContain(ABILITY.Tuner))
-                            {
-                                tempAbility += "_/_" + TransLanguage("Effect");
-                            }
-                            
-                            futureText = TransLanguage(type) + "_/_" + tempFrame + (tempAbility ?? "_/_" + tempAbility);
-
-
-                        }
-                        else
-                        {
-                            tempFrame = null;
-
-                            tempAbility = tempAbility + (tempAbility != "" ? "_/_" : null) + TransLanguage("Effect");
-
-                            futureText = TransLanguage(type) + "_/_" + tempAbility;
-                        }
-
-                        //futureText = TransLanguage(type) + (framePart ?? "_/_" + framePart) + (abilityPart ?? "_/_" + abilityPart);
-
-
+                        abilityText.Add("Pendulum");
                     }
+                    Current.Abilities.Sort();
+                    foreach(ABILITY ability in Current.Abilities.Where(o => o != ABILITY.Effect && o != ABILITY.Tuner))
+                    {
+                        abilityText.Add(ability.ToString());
+                    }
+                    if (Current.Abilities.Contains(ABILITY.Tuner))
+                    {
+                        abilityText.Add(ABILITY.Tuner.ToString());
+                    }
+
+                    if (Current.Frame == FRAME.Effect || Current.Abilities.Contains(ABILITY.Effect))
+                    {
+                        abilityText.Add("Effect");
+                    }
+
+                    futureText = string.Join("_/_", abilityText);
                 }
                 int time = 0;
 
                 futureText = futureText ?? "";
-                double Default = 31; //12.2 - 11.4
-                BracketLeft.FontSize = BracketRight.FontSize = 0.93 * Default;
+                double Default = 32; //12.2 - 11.4 | 31
+                BracketLeft.FontSize = BracketRight.FontSize = 1.0 * Default; //||0.93
                 do
                 {
                     this.Ability.Inlines.Clear();
@@ -1153,7 +1262,7 @@ namespace OV.Pyramid
                     futureText += "    ";
                     Image property = new Image();
                     property.Source = Images.GetImage(Utilities.GetLocationPath()
-                        + "Template/Middle/" + Current.Property.ToString());
+                        + "Template/Middle/" + Current.Property.ToString() + ".png");
                     Middle.Children.Add(property);
                     //MessageBox.Show(Current.Property.ToString());
                     Canvas.SetLeft(property, 575);

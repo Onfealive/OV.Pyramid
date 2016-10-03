@@ -8,7 +8,6 @@ namespace OV.Core
     class YGOCard
     {
         public string Name { get; set; }
-
         
         public ATTRIBUTE Attribute { get; set; }
 
@@ -46,6 +45,10 @@ namespace OV.Core
 
         public string Set { get; set; }
 
+        public double ScaleLeft { get; set; }
+
+        public double ScaleRight { get; set; }
+
         private YGOCard()
         {
             this.Abilities = new List<ABILITY>();
@@ -60,13 +63,15 @@ namespace OV.Core
                 defaultCard.ATK = 1200;
                 defaultCard.DEF = 1200;
                 defaultCard.Frame = FRAME.Effect;
-                //defaultCard.Attribute = ATTRIBUTE.UNKNOWN;
+                defaultCard.Attribute = ATTRIBUTE.UNKNOWN;
                 defaultCard.Level = 4;
                 defaultCard.Creator = "© 1996 KAZUKI TAKAHASHI";
                 defaultCard.Rarity = RARITY.Common;
                 defaultCard.Type = TYPE.Warrior;
                 defaultCard.Sticker = STICKER.PromoSilver;
                 defaultCard.ArtworkByte = Images.GetImageByte(Utilities.GetLocationPath() + @"\Template\NoneImage.png");
+                defaultCard.Set = "";
+                defaultCard.ScaleLeft = defaultCard.ScaleRight = double.NaN;
                 return defaultCard;
             }
         }
