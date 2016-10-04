@@ -399,10 +399,17 @@
                                 <TextBlock Name="DocumentCaption" FontSize="14" Canvas.Left="4">Description and Pendulum Effect</TextBlock>
                             </Canvas>
                         </Expander.Header>
-                        <Canvas x:Name="DocumentCanvas" Width="360" Height="200">
-                            <Button Width="170" Height="24" Canvas.Left="20">Description</Button>
-                            <Button Width="170" Height="24" Canvas.Right="0">Pendulum Effect</Button>
-                            <RichTextBox Canvas.Top="30" Canvas.Left="20" Height="130" Width="340"></RichTextBox>
+                        <Canvas x:Name="DocumentCanvas" Width="360" Height="220">
+                            <Button Name="DescriptionButton" IsEnabled="False" Width="170" Height="24"  Canvas.Left="20" Click="Description_Click">Description</Button>
+                            <Button Name="PendulumEffectButton"  Width="170" Height="24" Canvas.Right="0">Pendulum Effect</Button>
+                            <RichTextBox Name="DocumentBox" Canvas.Top="30" Canvas.Left="20" Height="120" Width="340"></RichTextBox>
+                            <WrapPanel Grid.Row="1" Canvas.Top="160" Canvas.Left="20" Grid.Column="4" Orientation="Horizontal">
+                                <Button Margin="2"  Width="20" Height="20" VerticalAlignment="Top" HorizontalAlignment="Left" Content="●" Click="Symbol_Click"></Button>
+                                <Button Margin="2" Width="20" Height="20" VerticalAlignment="Top" HorizontalAlignment="Left"  Content="α" Click="Symbol_Click"></Button>
+                                <Button Margin="2" Width="20" Height="20" VerticalAlignment="Top" HorizontalAlignment="Left"  Content="β" Click="Symbol_Click"></Button>
+                                <Button Margin="2" Width="20" Height="20" VerticalAlignment="Top" HorizontalAlignment="Left"  Content="Ω" Click="Symbol_Click"></Button>
+                            </WrapPanel>
+                            <Button Canvas.Top="160" Canvas.Right="0" Click="ApplyDocument_Click">Apply</Button>
                         </Canvas>
                     </Expander>
 
@@ -410,8 +417,7 @@
                 <Border x:Name="CirculationBorder" Height="40" Width="400"
                 	Background="Transparent" Grid.Row="18" 
                 	BorderBrush="Black" BorderThickness="1.5" CornerRadius="5"
-                	MouseLeftButtonDown="Border_MouseLeftButtonDown"   
-                >
+                	MouseLeftButtonDown="Border_MouseLeftButtonDown">
                     <Expander Height="Auto" Template="{StaticResource StretchyExpanderTemp}"
                 		OverridesDefaultStyle="True" HorizontalAlignment="Left" VerticalAlignment="Top"                  
                 		x:Name="CirculationExpander"

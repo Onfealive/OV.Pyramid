@@ -27,6 +27,8 @@ namespace OV.Core
 
         public string Description { get; set; }
 
+        public string PendulumEffect { get; set; }
+
         public double ATK { get; set; }
 
         public double DEF { get; set; }

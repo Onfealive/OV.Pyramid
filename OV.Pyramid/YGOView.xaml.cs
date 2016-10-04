@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -380,13 +381,11 @@ namespace OV.Pyramid
                     DEFBlock.Text += SpecialPoint(Current.DEF);
 
                     //Canvas.SetLeft(DEFBlock, DEFBlock.Left() - DEFBlock.GetFormattedText(SpecialPoint(Current.DEF)).Width);
-                }
-                Canvas.SetTop(DescriptionBorder, 926);
+                }                
             }
             else
             {
                 ATKBlock.Text = DEFBlock.Text = "";
-                Canvas.SetTop(DescriptionBorder, 891);
             }
         }
 
@@ -422,7 +421,7 @@ namespace OV.Pyramid
             else
                 dlg.FileName = Current.Name.Replace(":", " -"); // Default file name
             //dlg.DefaultExt = ".png"; // Default file extension
-            dlg.Filter = "JSON File|*.json"; // Filter files by extension 
+            dlg.Filter = "OV.Creation Card File|*.ocj"; // Filter files by extension 
 
             // Show save file dialog box
             Nullable<bool> result = dlg.ShowDialog();
@@ -436,17 +435,22 @@ namespace OV.Pyramid
             }
         }
 
-        public void Load()
+        public void Load(string filePath = "")
         {
-
-            Microsoft.Win32.OpenFileDialog choofdlog = new Microsoft.Win32.OpenFileDialog();
-            choofdlog.Filter = "JSON File|*.json";
-            choofdlog.FilterIndex = 1;
-            choofdlog.Multiselect = false;
             string path = null;
-            if (choofdlog.ShowDialog() == true)
+            if (String.IsNullOrEmpty(filePath)) {
+                Microsoft.Win32.OpenFileDialog choofdlog = new Microsoft.Win32.OpenFileDialog();
+                choofdlog.Filter = "JSON File|*.json";
+                choofdlog.FilterIndex = 1;
+                choofdlog.Multiselect = false;
+                
+                if (choofdlog.ShowDialog() == true)
+                {
+                    path = choofdlog.FileName;
+                }
+            } else
             {
-                path = choofdlog.FileName;
+                path = filePath;
             }
 
             if (String.IsNullOrEmpty(path) || !File.Exists(path))
@@ -608,15 +612,52 @@ namespace OV.Pyramid
             }
         }
 
+        
+
         private void HandleDescription()
         {
-            if (Current == null)
-            {
-
-                return;
-            }
+            if (Current == null) {return; }
 
             string Text = Current.Description;
+
+            Description.Text = Text;
+            if (Current.IsMonster())
+            {
+                Canvas.SetTop(DescriptionBorder, 922);
+                if (Current.IsFrame(FRAME.Normal))
+                {
+                    Description.Width = 694;
+                    Description.Height = 153;
+                }
+                else
+                {
+                    Description.Width = 694;
+                    Description.Height = 160;//160
+                }
+            }
+            else
+            {
+                Canvas.SetTop(DescriptionBorder, 891);
+                Description.Height = 230;//226
+                Description.Width = 694;
+            }
+
+            Description.FontFamily = Fonts.MatrixBook;
+            double fontDefault = 32.4;
+            Description.FontSize = fontDefault;
+            Description.LineHeight = fontDefault * 1;
+            Description.Padding = new Thickness(5, 0, 5, 0);
+            
+            
+            while (Description.FontSize * (Current.IsFrame(FRAME.Normal) && (Text != null && Text.IsVietnamese())
+                ? 1.1 : 1) * Description.GetLines().Count() > Description.Height)
+            {
+                Description.FontSize -= 0.05; //0.1
+                Description.LineHeight = 0.95 * Description.FontSize;
+                //Target.Document.Blocks.Clear();
+                //Target.Document.Blocks.Add(Para);
+            }
+            /*
             RichTextBox Target = Description;
             Paragraph Para = new Paragraph();
 
@@ -624,69 +665,81 @@ namespace OV.Pyramid
             Para.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
             double Default = 0;
 
+            
+            
 
-            Description.Height = 153;
-            Description.Width = Current.IsFrame(FRAME.Normal) ? 694 : 698;
+            Target.Document.Blocks.Clear();
+            Target.Document.Blocks.Add(Para);
 
 
-
-
-            {
+            if (Current.IsMonster())
+            {                
+                Canvas.SetTop(DescriptionBorder, 920);
                 if (Current.IsFrame(FRAME.Normal))
                 {
-                    if (Text != null)
-                        Text = Text.Replace("\"", "''");
-                    Target.Document.Blocks.Clear();
-                    Target.Document.Blocks.Add(Para);
-
-                    string First = Text != null ? (Text.Split('(') != null ? Text.Split('(')[0] : null) : null;
-                    //MessageBox.Show(Text.Split('(')[0]);
-                    string Second = null;
-                    if (Text != null && Text.Contains("(") && Text.Contains(")"))
-                    {
-                        Second = Text.Substring(Text.IndexOf("("), Text.LastIndexOf(")") + 1 - Text.IndexOf("("));
-
-                    }
-                    if (Second == null)
-                        First = Text;
-
-                    //MessageBox.Show(First);
-                    Para.Inlines.Add(new Run(First));
-                    Para.Inlines.Add(new Run(Second));
-                    Para.Inlines.ElementAt(0).FontFamily = Fonts.StoneSerifItalic; ;//new FontFamily("Times New Roman Italic");
-                    Para.Inlines.ElementAt(0).FontStyle = FontStyles.Italic;
-                    Para.Inlines.ElementAt(1).FontFamily = Fonts.MatrixBook;
-                    Default = 27; //29.8-32.4 -- 33.1
-                    Para.FontSize = Default;
-                }
-                else
+                    Description.Width = 694;
+                    Description.Height = 153;
+                } else
                 {
-                    Target.Document.Blocks.Clear();
-                    Target.Document.Blocks.Add(Para);
-                    Para.Inlines.Add(new Run(Text));
+                    Description.Width = 694;
+                    Description.Height = 160;//160
+                }
+            }
+            else
+            {               
+                Canvas.SetTop(DescriptionBorder, 891);
+                Description.Height = 230;//226
+                Description.Width = 694;
+            }
 
-                    Para.FontFamily = Fonts.MatrixBook;
-                    Default = 32.4; //32.4-33.1
-                    Description.Height = 158;//160
-                    if (Current.IsMagic())
-                    {
-                        Default = 32.8;
-                        Description.Height = 230;//226
-                    }
+            if (Current.IsFrame(FRAME.Normal))
+            {
+                if (Text != null) { Text = Text.Replace("\"", "''"); }
+
+                string First = Text != null ? (Text.Split('(') != null ? Text.Split('(')[0] : null) : null;
+                //MessageBox.Show(Text.Split('(')[0]);
+                string Second = null;
+                if (Text != null && Text.Contains("(") && Text.Contains(")"))
+                {
+                    Second = Text.Substring(Text.IndexOf("("), Text.LastIndexOf(")") + 1 - Text.IndexOf("("));
+                }
+                if (Second == null)
+                    First = Text;
+
+                //MessageBox.Show(First);
+                Para.Inlines.Add(new Run(First));
+                Para.Inlines.Add(new Run(Second));
+                Para.Inlines.ElementAt(0).FontFamily = Fonts.StoneSerifItalic; ;//new FontFamily("Times New Roman Italic");
+                Para.Inlines.ElementAt(0).FontStyle = FontStyles.Italic;
+                Para.Inlines.ElementAt(1).FontFamily = Fonts.MatrixBook;
+                Default = 27; //29.8-32.4 -- 33.1
+                Para.FontSize = Default;
+            }
+            else
+            {                
+                Para.Inlines.Add(new Run(Text));
+                Para.FontFamily = Fonts.MatrixBook;
+                Default = 32.4; //32.4-33.1
+                
+                if (Current.IsMagic())
+                {
+                    Default = 32.8;
+                    
                 }
             }
 
+
             Para.FontSize = Default;
             // 6-26.5
-            while (Para.FontSize * (Current.IsFrame(FRAME.Normal) && (Text != null && Text.IsVietnamese()) ? 1.1 : 1) * Target.CountLine() > Target.Height)
+
+            int Line = Target.CountLine();
+            while (Para.FontSize * (Current.IsFrame(FRAME.Normal) && (Text != null && Text.IsVietnamese()) ? 1.1 : 1.25) * Target.CountLine() > Target.Height)
             {
                 Para.FontSize -= 0.07; //0.1
                 Target.Document.Blocks.Clear();
                 Target.Document.Blocks.Add(Para);
             }
-
-            int Line = Target.CountLine();
-            //Para.LineHeight = (Current.IsFrame("Normal") ? 1.1 : 1) * Para.FontSize;
+            
             if (Current.IsFrame(FRAME.Normal))
             {
                 double param = 1;
@@ -701,14 +754,23 @@ namespace OV.Pyramid
                         param = 1.3;
                     }
                 }
-                Para.LineHeight = param * Para.FontSize;
+                Para.LineHeight = param * Para.FontSize * 1.0; // 1.0 
             }
             else
             {
                 if (Line <= (Current.IsMagic() ? 7 : 4))
-                    Para.LineHeight = 0.95 * Para.FontSize;
+                {
+                    Para.LineHeight = 0.95 * Para.FontSize; //0.95
+                }
                 else
-                    Para.LineHeight = Target.Height / (Line * 1.05);
+                {
+                    double multiply = 1.25;
+                    if (Line > 6)
+                    {
+                        multiply = 1.05;
+                    }
+                    Para.LineHeight = Target.Height / (Line * multiply); //1.05
+                }
             }
 
             if (Para.Inlines.Count > 1)
@@ -717,7 +779,7 @@ namespace OV.Pyramid
             }
             //if (IsAlert && Line > (Current.IsMagic ? 10 : 7))
             //    MessageBox.Show("Số dòng đề nghị là " + (Current.IsMagic ? 10 : 7) + " để dễ hiển thị và in ấn.", "Tiêu chuẩn");
-
+            */
         }
 
         private void HandleRarity()
@@ -1123,7 +1185,7 @@ namespace OV.Pyramid
                 int time = 0;
 
                 futureText = futureText ?? "";
-                double Default = 32; //12.2 - 11.4 | 31
+                double Default = 31; //12.2 - 11.4 | 31
                 BracketLeft.FontSize = BracketRight.FontSize = 1.0 * Default; //||0.93
                 do
                 {

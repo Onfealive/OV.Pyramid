@@ -11,6 +11,9 @@ using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using Microsoft.Win32;
+using System.Runtime.InteropServices;
+using System.Reflection;
 
 namespace OV.Pyramid
 {
@@ -20,10 +23,45 @@ namespace OV.Pyramid
     public partial class MainWindow : Window
     {
         YGOCard Current = YGOCard.Default;
+
+        CustomFileExtensionControl.CustomFileExtension DefaultExtension
+        {
+            get
+            {
+                CustomFileExtensionControl.CustomFileExtension extenstion = new CustomFileExtensionControl.CustomFileExtension();
+                extenstion.ApplicationName = "OV.Creation.exe";                
+                extenstion.Description = "OV.Creation Card";
+                extenstion.EmbeddedIcon = false;
+                extenstion.Extension = ".ocj";
+                extenstion.Handler = "OV.Land.Pyramid";
+                extenstion.IconName = "OV.Creation.Icon.ico";
+                extenstion.IconPosition = 0;
+                extenstion.OpenText = "CardIZE with OV.Creation";
+
+                return extenstion;
+            }
+        }
+        
         public MainWindow()
         {
             InitializeComponent();
             FirstLoad();
+            this.Loaded += new RoutedEventHandler(MainContainer_Loaded);
+            //DefaultExtension.RegisterFileType();
+            //DefaultExtension.RemoveFileType();
+            
+        }
+
+        void MainContainer_Loaded(object sender, RoutedEventArgs e)
+
+        {
+            //MessageBox.Show("here");
+            if (Application.Current.Properties["ArbitraryArgName"] != null)
+            {
+                string fname = Application.Current.Properties["ArbitraryArgName"].ToString();                
+                RenderCard.Load(fname);
+            }
+
         }
 
         private void FirstLoad()
@@ -1449,6 +1487,32 @@ namespace OV.Pyramid
 
         }
 
+        private void Description_Click(object sender, RoutedEventArgs e)
+        {            
+            DescriptionButton.IsEnabled = false;
+            PendulumEffectButton.IsEnabled = true;
+            
+            DocumentBox.Document.Blocks.Clear();
+            DocumentBox.AppendText(Current.Description); 
+        }
+
+        private void ApplyDocument_Click(object sender, RoutedEventArgs e)
+        {
+            TextRange textRange = new TextRange(DocumentBox.Document.ContentStart, DocumentBox.Document.ContentEnd);
+
+            string Text = @textRange.Text;
+            Text = Text.ReplaceLastOccurrence(Environment.NewLine, "");
+
+            if (DescriptionButton.IsEnabled == false) //Current is Description
+            {
+                Current.Description = Text;
+            } else
+            {
+                Current.PendulumEffect = Text;
+            }
+            
+            RenderCard.Render(Current);
+        }
     }
 
     public static class Masking
