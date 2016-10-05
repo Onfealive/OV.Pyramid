@@ -411,7 +411,9 @@ namespace OV.Pyramid
 
         public void Save()
         {
-            string text = JsonConvert.SerializeObject(Current, Formatting.Indented);
+            YGOSet set = new YGOSet();
+            set.Cards.Add(Current);
+            string text = JsonConvert.SerializeObject(set, Formatting.Indented);
             //MessageBox.Show(xml);
 
 
@@ -621,25 +623,24 @@ namespace OV.Pyramid
             string Text = Current.Description;
 
             Description.Text = Text;
+            Description.Width = 694;
             if (Current.IsMonster())
             {
                 Canvas.SetTop(DescriptionBorder, 922);
                 if (Current.IsFrame(FRAME.Normal))
                 {
-                    Description.Width = 694;
+                    
                     Description.Height = 153;
                 }
                 else
                 {
-                    Description.Width = 694;
                     Description.Height = 160;//160
                 }
             }
             else
             {
                 Canvas.SetTop(DescriptionBorder, 891);
-                Description.Height = 230;//226
-                Description.Width = 694;
+                Description.Height = 226;//226
             }
 
             Description.FontFamily = Fonts.MatrixBook;
@@ -654,6 +655,10 @@ namespace OV.Pyramid
             {
                 Description.FontSize -= 0.05; //0.1
                 Description.LineHeight = 0.95 * Description.FontSize;
+                if (Description.GetLines().Count() > 6)
+                {
+                    Description.LineHeight = 0.94 * Description.FontSize;
+                }
                 //Target.Document.Blocks.Clear();
                 //Target.Document.Blocks.Add(Para);
             }

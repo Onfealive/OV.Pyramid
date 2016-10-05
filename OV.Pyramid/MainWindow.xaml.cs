@@ -23,6 +23,7 @@ namespace OV.Pyramid
     public partial class MainWindow : Window
     {
         YGOCard Current = YGOCard.Default;
+        
 
         CustomFileExtensionControl.CustomFileExtension DefaultExtension
         {
