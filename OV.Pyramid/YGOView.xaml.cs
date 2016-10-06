@@ -137,6 +137,7 @@ namespace OV.Pyramid
 
         internal void Render(YGOCard card)
         {
+            
             Current = card;
             RenderCard();
         }

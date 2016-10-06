@@ -14,15 +14,53 @@ using System.Text.RegularExpressions;
 using Microsoft.Win32;
 using System.Runtime.InteropServices;
 using System.Reflection;
+using System.Windows.Data;
+using System.Globalization;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.IO;
 
 namespace OV.Pyramid
 {
+    [ValueConversion(typeof(System.Drawing.Image), typeof(System.Windows.Media.ImageSource))]
+    public class ImageConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            // empty images are empty...
+            if (value == null) { return null; }            
+            return (value as byte[]).GetBitmapImageFromByteArray();
+        }
+
+        public object ConvertBack(object value, Type targetType,
+            object parameter, CultureInfo culture)
+        {
+            return null;
+        }
+    }
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
     {
-        YGOCard Current = YGOCard.Default;
+        private YGOSet Set = new YGOSet();
+        private int currentIndex = -1;
+        private YGOCard Current
+        {
+            get
+            {
+                if (currentIndex < 0) return null;                
+                return Set.Cards[currentIndex];
+                
+
+            }
+            set {
+                if (currentIndex < 0) return;
+                Set.Cards[currentIndex] = value;
+                
+            }
+        }
+        
         
 
         CustomFileExtensionControl.CustomFileExtension DefaultExtension
@@ -42,14 +80,22 @@ namespace OV.Pyramid
                 return extenstion;
             }
         }
+
         
+
         public MainWindow()
         {
             InitializeComponent();
+            Set.Cards.Add(YGOCard.Default);
+            Set.Cards.Add(YGOCard.Default);
+            
             FirstLoad();
             this.Loaded += new RoutedEventHandler(MainContainer_Loaded);
             //DefaultExtension.RegisterFileType();
             //DefaultExtension.RemoveFileType();
+            
+            cardList.ItemsSource = Set.Cards;
+            cardList.SelectedIndex = 0;
             
         }
 
@@ -78,15 +124,23 @@ namespace OV.Pyramid
             
             
             
-            RenderCard.Render(Current);
+            //RenderCard.Render(Current);
 
             LoadControl();
             LoadButton();
         }
 
+        private void Refresh()
+        {
+            ICollectionView view = CollectionViewSource.GetDefaultView(Set.Cards);
+            view.Refresh();
+            if (Current == null) { return; }
+            RenderCard.Render(Current);
+        }
+
         void LoadButton()
         {
-            Button[] Stack = new Button[] { Home, Talk, About, Export, Save, Load, Update, Exit };
+            Button[] Stack = new Button[] { Home, Talk, About, Export, Save, Load, Exit };
             for (int i = 0; i < Stack.Length; i++)
             {
                 StackPanel Zone = new StackPanel();
@@ -673,7 +727,7 @@ namespace OV.Pyramid
                 Zone.Orientation = Orientation.Horizontal;
 
                 Image Icon = new Image();
-                Icon.Source = Images.GetImage(GetLocationPath() + "/Attribute/" + Attribute_String[i - 1] + ".png");
+                Icon.Source = Images.GetImage(GetLocationPath() + "/Template/Attribute/" + Attribute_String[i - 1] + ".png");
                 Icon.Width = 20;
                 Icon.Height = 20;
                 Icon.Stretch = Stretch.Uniform;
@@ -990,15 +1044,16 @@ namespace OV.Pyramid
         private void LoadNameControl()
         {
 
-            string[] Rarity = new string[] {"Common", "Rare", "Super_Rare", "Ultra_Rare",
-                    "Secret_Rare", "Parallel_Rare", "Starfoil_Rare", "Mosaic_Rare",
-                    "Gold_Rare", "Ghost_Rare", "Ultimate_Rare"};
+            string[] Rarity = typeof(RARITY).GetList().ToArray();
+            /*new string[] {"Common", "Rare", "SuperRare", "UltraRare",
+                    "SecretRare", "ParallelRare", "StarfoilRare", "MosaicRare",
+                    "GoldRare", "GhostRare", "UltimateRare"}; */
 
             for (int i = 0; i < Rarity.Length; i++)
             {
                 Button Button = new Button();
-                Button.Name = "Rarity_" + Rarity[i];
-                Button.Content = Rarity[i].Replace('_', ' ');
+                //Button.Name = "Rarity_" + Rarity[i];
+                Button.Content = Rarity[i].AddSpaceBetweenCapital();
                 if (i == 0)
                     Button.IsEnabled = false;
                 Button.Width = 70;
@@ -1015,7 +1070,7 @@ namespace OV.Pyramid
                     Left = 56;
                 Canvas.SetLeft(Button, Left + (i % 4) * (Button.Width + 10));
                 Button.Click += Button_Rarity;
-
+                Button.Tag = Rarity[i];
                 NameCanvas.Children.Add(Button);
             }
 
@@ -1103,9 +1158,12 @@ namespace OV.Pyramid
         {
             //Canvas Card = Uti.FindChild<Canvas>(mainCanvas, "Card");
             Current.Name = (sender as TextBox).Text;
-
+            
             //_Pending.Text = (Artwork.Source as ImageSource).ToString();
             RenderCard.Render(Current);
+            //cardList.ItemsSource = null;
+            //cardList.ItemsSource = Set.Cards;
+            
         }
 
         private void Symbol_Click(object sender, RoutedEventArgs e)
@@ -1513,6 +1571,34 @@ namespace OV.Pyramid
             }
             
             RenderCard.Render(Current);
+        }
+        
+        private void cardList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            currentIndex = cardList.SelectedIndex;
+            Refresh();
+            ControlArtwork.Source = Current.ArtworkByte.GetBitmapImageFromByteArray();
+        }
+
+        private void ArtworkBrowser_Click(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog openDialog = new OpenFileDialog();
+            openDialog.Filter = "Image File (*.png, *.jpg, *.bmp)|*.png;*.jpg;*.bmp";
+            if (openDialog.ShowDialog() == true)
+            {
+                ArtworkPath.Text = openDialog.FileName;
+            }
+        }
+
+        private void ArtworkPath_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            string Text = (sender as TextBox).Text;
+            if (File.Exists(Text))
+            {
+                Current.ArtworkByte = Images.GetImageByte(Text);
+                ControlArtwork.Source = Images.GetImage(Text);
+                Refresh();
+            }
         }
     }
 

@@ -83,7 +83,7 @@ namespace OV.Core
     static class Static {
 
         public static bool IsFrame(this YGOCard card, FRAME frame)
-        {
+        {            
             return frame == card.Frame;
         }
 
