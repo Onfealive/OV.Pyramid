@@ -8,8 +8,9 @@ namespace OV.Core
     class YGOCard
     {
         public string Name { get; set; }
-        
-        public ATTRIBUTE Attribute { get; set; }
+
+        private ATTRIBUTE _Attribute;
+        public ATTRIBUTE Attribute { get { return _Attribute; } }
 
         public double Level { get; set; }
 
@@ -20,17 +21,24 @@ namespace OV.Core
         public byte[] ArtworkByte { get; set; }
 
         public TYPE Type { get; set; }
-        
-        public FRAME Frame { get; set; }        
+
+        private FRAME _Frame;
+        public FRAME Frame { get { return _Frame; } }        
 
         public List<ABILITY> Abilities;
 
         public string Description { get; set; }
 
         public string PendulumEffect { get; set; }
-
+        /// <summary>
+        /// Get value of ATK of card
+        /// <para>-1 means "N/A", double.Nan means "?"</para>
+        /// </summary>
         public double ATK { get; set; }
-
+        /// <summary>
+        /// Get value of DEF of card
+        /// <para>-1 means "N/A", double.Nan means "?"</para>
+        /// </summary>
         public double DEF { get; set; }
 
         public string Creator { get; set; }
@@ -46,9 +54,15 @@ namespace OV.Core
         public int Number { get; set; }
 
         public string Set { get; set; }
-
+        /// <summary>
+        /// Get value of left scale of card
+        /// <para>-1 means "N/A", double.Nan means "?"</para>
+        /// </summary>
         public double ScaleLeft { get; set; }
-
+        /// <summary>
+        /// Get value of right scale of card
+        /// <para>-1 means "N/A", double.Nan means "?"</para>
+        /// </summary>
         public double ScaleRight { get; set; }
 
         private YGOCard()
@@ -64,8 +78,8 @@ namespace OV.Core
                 defaultCard.Name = "Card Name";
                 defaultCard.ATK = 1200;
                 defaultCard.DEF = 1200;
-                defaultCard.Frame = FRAME.Effect;
-                defaultCard.Attribute = ATTRIBUTE.UNKNOWN;
+                defaultCard._Frame = FRAME.Effect;
+                defaultCard._Attribute = ATTRIBUTE.UNKNOWN;
                 defaultCard.Level = 4;
                 defaultCard.Creator = "© 1996 KAZUKI TAKAHASHI";
                 defaultCard.Rarity = RARITY.Common;
@@ -73,9 +87,65 @@ namespace OV.Core
                 defaultCard.Sticker = STICKER.PromoSilver;
                 defaultCard.ArtworkByte = Images.GetImageByte(Utilities.GetLocationPath() + @"\Template\NoneImage.png");
                 defaultCard.Set = "";
-                defaultCard.ScaleLeft = defaultCard.ScaleRight = double.NaN;
+                defaultCard.ScaleLeft = defaultCard.ScaleRight = -1;
                 return defaultCard;
             }
+        }
+
+        public void SetAttribute(ATTRIBUTE attribute, bool setLogic = true)
+        {
+            if (setLogic)
+            {
+                //Card is Monster
+                if (this.IsMonster())
+                {
+                    if (attribute == ATTRIBUTE.SPELL || attribute == ATTRIBUTE.TRAP)
+                    {
+                        ScaleLeft = ScaleRight = ATK = DEF = Level = Rank = -1;
+                        IsPendulum = false;
+                        _Frame = (attribute == ATTRIBUTE.SPELL) ? FRAME.Spell : FRAME.Trap;
+                        Abilities.Clear();
+                        Property = PROPERTY.Normal;                        
+                    }
+                }
+                //Card is Spell/Trap
+                else
+                {                    
+                    //From Trap To Spell
+                    if (attribute == ATTRIBUTE.SPELL)
+                    {
+                        _Frame = FRAME.Spell;
+                        if (Property.IsTrapPropertyOnly())
+                        {
+                            Property = PROPERTY.Normal;
+                        }
+                    }
+                    //From Spell To Trap
+                    else if (attribute == ATTRIBUTE.TRAP)
+                    {
+                        _Frame = FRAME.Trap;
+                        if (Property.IsSpellPropertyOnly())
+                        {
+                            Property = PROPERTY.Normal;
+                        }
+                    }
+                    //To Monster
+                    else
+                    {
+                        ScaleLeft = ScaleRight = ATK = DEF = double.NaN;
+                        _Frame = FRAME.Effect; //Default Frame
+                        Property = PROPERTY.NONE;
+                        Level = 4; //Default Level
+                    }
+                }
+            }
+
+            this._Attribute = attribute;
+        }
+
+        public void SetFrame(FRAME frame, bool setLogic = true)
+        {
+            this._Frame = frame;
         }
         
     }
@@ -95,6 +165,21 @@ namespace OV.Core
         public static bool IsMonster(this YGOCard card)
         {
             return !card.IsMagic();
+        }
+
+        public static bool IsSpellPropertyOnly(this PROPERTY property)
+        {
+            if (property == PROPERTY.Equip) return true;
+            if (property == PROPERTY.Field) return true;
+            if (property == PROPERTY.QuickPlay) return true;
+            if (property == PROPERTY.Ritual) return true;
+            return false;
+        }
+
+        public static bool IsTrapPropertyOnly(this PROPERTY property)
+        {
+            if (property == PROPERTY.Counter) return true;
+            return false;
         }
     }
 

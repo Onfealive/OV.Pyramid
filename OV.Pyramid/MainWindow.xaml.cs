@@ -657,7 +657,7 @@ namespace OV.Pyramid
             string Frame = (sender as Button).Name.Split('_')[0];
             string Property = (sender as Button).Name.Split('_')[1];
 
-            Current.Frame = Frame == "Spell" ? FRAME.Spell : FRAME.Trap;
+            Current.SetFrame( Frame == "Spell" ? FRAME.Spell : FRAME.Trap);
 
             Current.Property = Property.ToEnum<PROPERTY>();
 
@@ -747,7 +747,7 @@ namespace OV.Pyramid
 
         private void Button_Attribute(object sender, RoutedEventArgs e)
         {
-            Current.Attribute = (sender as Button).Tag.ToEnum<ATTRIBUTE>();
+            Current.SetAttribute((sender as Button).Tag.ToEnum<ATTRIBUTE>());
             RenderCard.Render(Current);
         }
 
@@ -843,7 +843,7 @@ namespace OV.Pyramid
             }
             else
             {
-                Current.Frame = frameName.ToEnum<FRAME>();
+                Current.SetFrame(frameName.ToEnum<FRAME>());
             }
             RenderCard.Render(Current);
         }

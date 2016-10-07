@@ -369,20 +369,20 @@
                                 <TextBlock Canvas.Top="8" Canvas.Left="40" FontSize="14">ATK</TextBlock>
                                 <TextBox Width="70" FontSize="14" local:Masking.Mask="([0-9])|(^\?$)"
                                  Canvas.Left="76" Canvas.Top="5" MaxLength="4"
-                                 TextChanged="ATK_TextBox_TextChanged" HorizontalAlignment="Right"></TextBox>
+                                 TextChanged="ATK_TextBox_TextChanged" FlowDirection="RightToLeft"></TextBox>
                             </Canvas>
 
                         </Border>
                         <Border x:Name="DEFBorder"
-				Background="Transparent"
-				BorderBrush="Black" BorderThickness="1.5" CornerRadius="5"
-				Height="40" Width="195" HorizontalAlignment="Right"
-				Grid.Row="12" MouseLeftButtonDown="Border_MouseLeftButtonDown">
+				            Background="Transparent"
+				            BorderBrush="Black" BorderThickness="1.5" CornerRadius="5"
+				            Height="40" Width="195" HorizontalAlignment="Right"
+				            Grid.Row="12" MouseLeftButtonDown="Border_MouseLeftButtonDown">     
                             <Canvas x:Name="DEFCanvas">
                                 <TextBlock Canvas.Top="8" Canvas.Left="40" FontSize="14">DEF</TextBlock>
                                 <TextBox Width="70" FontSize="14" local:Masking.Mask="([0-9])|(^\?$)"
                                  Canvas.Left="76" Canvas.Top="5" MaxLength="4"
-                                 TextChanged="DEF_TextBox_TextChanged" HorizontalAlignment="Right"></TextBox>
+                                 TextChanged="DEF_TextBox_TextChanged" FlowDirection="RightToLeft"></TextBox>
                             </Canvas>
                         </Border>
 
