@@ -194,11 +194,11 @@ namespace OV.Pyramid
                 {
                     if (Current.ScaleLeft == 11)
                     {
-                        Canvas.SetLeft(ScaleLeftBlock, 74 - 16);
+                        Canvas.SetLeft(ScaleLeftBlock, 74 - 11);
                     }
                     else
                     {
-                        Canvas.SetLeft(ScaleLeftBlock, 74 - 19);
+                        Canvas.SetLeft(ScaleLeftBlock, 74 - 14);
                     }
                 }
                 else
@@ -217,11 +217,11 @@ namespace OV.Pyramid
                 {
                     if (Current.ScaleRight == 11)
                     {
-                        Canvas.SetLeft(ScaleRightBlock, CardCanvas.Width - 74 - 42);
+                        Canvas.SetLeft(ScaleRightBlock, CardCanvas.Width - 74 - 32);
                     }
                     else
                     {
-                        Canvas.SetLeft(ScaleRightBlock, CardCanvas.Width - 74 - 45);
+                        Canvas.SetLeft(ScaleRightBlock, CardCanvas.Width - 74 - 35);
                     }
                 }
                 else
@@ -400,7 +400,7 @@ namespace OV.Pyramid
         private void HandleCreator()
         {
             if (Current == null) { return; }
-            if (Current.IsFrame(FRAME.Xyz))
+            if (Current.IsFrame(FRAME.Xyz) && Current.IsPendulum == false)
             {
                 Creator.Foreground = Brushes.White;
             } else
@@ -443,7 +443,7 @@ namespace OV.Pyramid
             string path = null;
             if (String.IsNullOrEmpty(filePath)) {
                 Microsoft.Win32.OpenFileDialog choofdlog = new Microsoft.Win32.OpenFileDialog();
-                choofdlog.Filter = "JSON File|*.json";
+                choofdlog.Filter = "OV.Creation Card|*.ocj";
                 choofdlog.FilterIndex = 1;
                 choofdlog.Multiselect = false;
                 
@@ -460,6 +460,7 @@ namespace OV.Pyramid
                 return;
             //var settings = new ObjectCustomerSettings();
             Current = JsonConvert.DeserializeObject<YGOCard>(File.ReadAllText(path));
+            //Current.CleanUp();
             Render(Current);
         }
 
@@ -1171,7 +1172,7 @@ namespace OV.Pyramid
                     {
                         abilityText.Add("Pendulum");
                     }
-                    Current.Abilities.Sort();
+                    
                     foreach(ABILITY ability in Current.Abilities.Where(o => o != ABILITY.Effect && o != ABILITY.Tuner))
                     {
                         abilityText.Add(ability.ToString());

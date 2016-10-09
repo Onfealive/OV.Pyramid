@@ -301,10 +301,10 @@ namespace OV.Pyramid
             ABILITY ability = (sender as Button).Tag.ToEnum<ABILITY>();
             if (Current.Abilities.Contains(ability))
             {
-                Current.Abilities.Remove(ability);
+                Current.SetAbility(ability, false);
             } else
             {
-                Current.Abilities.Add(ability);
+                Current.SetAbility(ability, true);
             }
 
             RenderCard.Render(Current);
@@ -317,7 +317,7 @@ namespace OV.Pyramid
             TextBox txtBox = sender as TextBox;
             int value;
 
-            Current.DEF = Int32.TryParse(txtBox.Text, out value) ? value : double.NaN;
+            Current.SetDEF(int.TryParse(txtBox.Text, out value) ? value : double.NaN);
             RenderCard.Render(Current);
         }
 
@@ -326,7 +326,7 @@ namespace OV.Pyramid
             TextBox txtBox = sender as TextBox;
             int value;
 
-            Current.ATK = Int32.TryParse(txtBox.Text, out value) ? value : double.NaN;
+            Current.SetATK(int.TryParse(txtBox.Text, out value) ? value : double.NaN);
             RenderCard.Render(Current);
 
         }
@@ -417,7 +417,8 @@ namespace OV.Pyramid
         {
             Button button = sender as Button;
             int value;
-            Current.ScaleLeft = Current.ScaleRight = int.TryParse(button.Tag.ToString(), out value) ? value : double.NaN;
+            Current.SetScaleLeft( int.TryParse(button.Tag.ToString(), out value) ? value : double.NaN);
+            Current.SetScaleRight( int.TryParse(button.Tag.ToString(), out value) ? value : double.NaN);
             RenderCard.Render(Current);
         }
 
@@ -653,14 +654,10 @@ namespace OV.Pyramid
 
         private void Button_Property(object sender, RoutedEventArgs e)
         {
-
             string Frame = (sender as Button).Name.Split('_')[0];
-            string Property = (sender as Button).Name.Split('_')[1];
+            string Property = (sender as Button).Name.Split('_')[1];            
 
-            Current.SetFrame( Frame == "Spell" ? FRAME.Spell : FRAME.Trap);
-
-            Current.Property = Property.ToEnum<PROPERTY>();
-
+            Current.SetProperty(Frame == "Spell" ? FRAME.Spell : FRAME.Trap, Property.ToEnum<PROPERTY>());
             RenderCard.Render(Current);
         }
     
@@ -672,12 +669,12 @@ namespace OV.Pyramid
 
             if (type == "Level")
             {
-                Current.Level = number;
-                Current.Rank = double.NaN;
+                Current.SetLevel(number);                
+                Current.SetRank(double.NaN, false);
             } else
             {
-                Current.Rank = number;
-                Current.Level = double.NaN;
+                Current.SetRank(number);
+                Current.SetLevel(double.NaN, false);
             }
 
             RenderCard.Render(Current);
@@ -839,12 +836,12 @@ namespace OV.Pyramid
             string frameName = (sender as Button).Name;
             if (frameName == "Pendulum")
             {
-                Current.IsPendulum = !Current.IsPendulum;
+                Current.SetPendulum(!Current.IsPendulum);
             }
             else
             {
                 Current.SetFrame(frameName.ToEnum<FRAME>());
-            }
+            }          
             RenderCard.Render(Current);
         }
 
@@ -1111,7 +1108,7 @@ namespace OV.Pyramid
 
         private void Button_Type(object sender, RoutedEventArgs e)
         {
-            Current.Type = (sender as Button).Tag.ToEnum<TYPE>();
+            Current.SetType( (sender as Button).Tag.ToEnum<TYPE>());
             RenderCard.Render(Current);
         }
 
@@ -1432,83 +1429,20 @@ namespace OV.Pyramid
 
         private void ScaleLeft_TextChanged(object sender, TextChangedEventArgs e)
         {
-            /*
-            if (InChangeScale)
-            {
-                InChangeScale = false;
-                return;
-            }
+            TextBox txtBox = sender as TextBox;
+            int value;
 
-
-            if (!IsScaleAllowed((sender as TextBox).Text))
-            {
-                InChangeScale = true;
-                MessageBox.Show("Dữ liệu không hợp lệ!");
-                BoxScaleLeft.Text = BoxScaleLeft.Tag as string;
-            }
-            else
-            {
-
-                BoxScaleLeft.Tag = BoxScaleLeft.Text;
-                Button PendulumButton = Uti.FindChild<Button>(FrameCanvas, "Pendulum");
-                if (!Current.IsFrame("Pendulum"))
-                    Uti.PerformClick(PendulumButton);
-
-                BoxScaleLeft.Text = BoxScaleLeft.Tag.ToString();
-                if (String.IsNullOrEmpty(BoxScaleRight.Text))
-                {
-
-                    BoxScaleRight.Text = "1";
-                }
-
-                ChangeScale(BoxScaleLeft.Text + "/" + BoxScaleRight.Text);
-                ChangeScale(BoxScaleLeft.Text + "/" + BoxScaleRight.Text);
-
-
-            }
-
-            Refresh(); */
+            Current.SetScaleLeft(int.TryParse(txtBox.Text, out value) ? value : double.NaN);
+            RenderCard.Render(Current);
         }
 
         private void ScaleRight_TextChanged(object sender, TextChangedEventArgs e)
         {
-            /*
-            if (InChangeScale)
-            {
-                InChangeScale = false;
-                return;
-            }
+            TextBox txtBox = sender as TextBox;
+            int value;
 
-            if (!IsScaleAllowed((sender as TextBox).Text))
-            {
-                InChangeScale = true;
-                MessageBox.Show("Dữ liệu không hợp lệ!");
-                BoxScaleRight.Text = BoxScaleRight.Tag as string;
-            }
-            else
-            {
-
-                BoxScaleRight.Tag = BoxScaleRight.Text;
-                Button PendulumButton = Uti.FindChild<Button>(FrameCanvas, "Pendulum");
-                if (!Current.IsFrame("Pendulum"))
-                    Uti.PerformClick(PendulumButton);
-
-                BoxScaleRight.Text = BoxScaleRight.Tag.ToString();
-                if (String.IsNullOrEmpty(BoxScaleLeft.Text))
-                {
-
-                    BoxScaleLeft.Text = "1";
-
-                }
-
-
-                ChangeScale(BoxScaleLeft.Text + "/" + BoxScaleRight.Text);
-                ChangeScale(BoxScaleLeft.Text + "/" + BoxScaleRight.Text);
-
-
-            }
-
-            Refresh(); */
+            Current.SetScaleRight(int.TryParse(txtBox.Text, out value) ? value : double.NaN);
+            RenderCard.Render(Current);
         }
 
         void CardText_Click(object sender, RoutedEventArgs e)
@@ -1567,7 +1501,7 @@ namespace OV.Pyramid
                 Current.Description = Text;
             } else
             {
-                Current.PendulumEffect = Text;
+                Current.SetPendulumEffect(Text);
             }
             
             RenderCard.Render(Current);

@@ -397,8 +397,8 @@
             		x:Name="ScaleExpander"
             		Margin="8,8,0,0" Expanded="ScaleExpander_Expanded" Collapsed="ScaleExpander_Collapsed">
                                 <Canvas x:Name="ScaleCanvas">
-                                    <TextBox Name="BoxScaleLeft" TextChanged="ScaleLeft_TextChanged" Width="40" TextAlignment="Right"></TextBox>
-                                    <TextBox Name="BoxScaleRight" TextChanged="ScaleRight_TextChanged"  Width="40"></TextBox>
+                                    <TextBox Name="BoxScaleLeft" local:Masking.Mask="^([1-9]|[0-1][0-2]|\?)$"  TextChanged="ScaleLeft_TextChanged" Width="40" TextAlignment="Right"></TextBox>
+                                    <TextBox Name="BoxScaleRight" local:Masking.Mask="^([1-9]|[0-1][0-2]|\?)$" TextChanged="ScaleRight_TextChanged"  Width="40"></TextBox>
                                 </Canvas>
                             </Expander>
                         </Border>
