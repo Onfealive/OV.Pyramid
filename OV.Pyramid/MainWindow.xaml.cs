@@ -1,24 +1,21 @@
-﻿using System.Windows;
-using System.Windows.Documents;
-using OV.Tools;
-using System.Windows.Input;
-using System.Windows.Controls;
+﻿using Microsoft.Win32;
 using OV.Core;
+using OV.Tools;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
+using System.Windows.Input;
 using System.Windows.Media;
 using static OV.Tools.Animations;
 using static OV.Tools.Utilities;
-using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using Microsoft.Win32;
-using System.Runtime.InteropServices;
-using System.Reflection;
-using System.Windows.Data;
-using System.Globalization;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.IO;
 
 namespace OV.Pyramid
 {
@@ -28,7 +25,7 @@ namespace OV.Pyramid
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             // empty images are empty...
-            if (value == null) { return null; }            
+            if (value == null) { return null; }
             return (value as byte[]).GetBitmapImageFromByteArray();
         }
 
@@ -38,6 +35,7 @@ namespace OV.Pyramid
             return null;
         }
     }
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -45,30 +43,27 @@ namespace OV.Pyramid
     {
         private YGOSet Set = new YGOSet();
         private int currentIndex = -1;
+
         private YGOCard Current
         {
             get
             {
-                if (currentIndex < 0) return null;                
+                if (currentIndex < 0) return null;
                 return Set.Cards[currentIndex];
-                
-
             }
-            set {
+            set
+            {
                 if (currentIndex < 0) return;
                 Set.Cards[currentIndex] = value;
-                
             }
         }
-        
-        
 
-        CustomFileExtensionControl.CustomFileExtension DefaultExtension
+        private CustomFileExtensionControl.CustomFileExtension DefaultExtension
         {
             get
             {
                 CustomFileExtensionControl.CustomFileExtension extenstion = new CustomFileExtensionControl.CustomFileExtension();
-                extenstion.ApplicationName = "OV.Creation.exe";                
+                extenstion.ApplicationName = "OV.Creation.exe";
                 extenstion.Description = "OV.Creation Card";
                 extenstion.EmbeddedIcon = false;
                 extenstion.Extension = ".ocj";
@@ -81,49 +76,41 @@ namespace OV.Pyramid
             }
         }
 
-        
-
         public MainWindow()
         {
             InitializeComponent();
             Set.Cards.Add(YGOCard.Default);
             Set.Cards.Add(YGOCard.Default);
-            
+
             FirstLoad();
             this.Loaded += new RoutedEventHandler(MainContainer_Loaded);
             //DefaultExtension.RegisterFileType();
             //DefaultExtension.RemoveFileType();
-            
+
             cardList.ItemsSource = Set.Cards;
             cardList.SelectedIndex = 0;
-            
         }
 
-        void MainContainer_Loaded(object sender, RoutedEventArgs e)
+        private void MainContainer_Loaded(object sender, RoutedEventArgs e)
 
         {
             //MessageBox.Show("here");
             if (Application.Current.Properties["ArbitraryArgName"] != null)
             {
-                string fname = Application.Current.Properties["ArbitraryArgName"].ToString();                
+                string fname = Application.Current.Properties["ArbitraryArgName"].ToString();
                 RenderCard.Load(fname);
             }
-
         }
 
         private void FirstLoad()
         {
-            
-            //Set default global Style for Paragraph: Margin = 0            
+            //Set default global Style for Paragraph: Margin = 0
             Style style = new Style(typeof(Paragraph));
             style.Setters.Add(new Setter(Paragraph.MarginProperty, new Thickness(0)));
             Resources.Add(typeof(Paragraph), style);
 
-            
             RenderCard.SetDefaultArtwork(Utilities.GetLocationPath() + @"\Template\NoneImage.png");
-            
-            
-            
+
             //RenderCard.Render(Current);
 
             LoadControl();
@@ -138,7 +125,7 @@ namespace OV.Pyramid
             RenderCard.Render(Current);
         }
 
-        void LoadButton()
+        private void LoadButton()
         {
             Button[] Stack = new Button[] { Home, Talk, About, Export, Save, Load, Exit };
             for (int i = 0; i < Stack.Length; i++)
@@ -156,7 +143,6 @@ namespace OV.Pyramid
                 Zone.Children.Add(new TextBlock(new Run(Stack[i].Name)));
 
                 Stack[i].Content = Zone;
-
             }
             //Home.Click += Home_Click;
             //Talk.Click += Talk_Click;
@@ -166,11 +152,6 @@ namespace OV.Pyramid
             Load.Click += Load_Click;
             //Update.Click += Update_Click;
             //Exit.Click += Exit_Click;
-
-
-
-
-
         }
 
         private void Load_Click(object sender, RoutedEventArgs e)
@@ -185,32 +166,7 @@ namespace OV.Pyramid
 
         private void Export_Click(object sender, RoutedEventArgs e)
         {
-             RenderCard.Export();
-        }
-
-        private void ArtworkGet()
-        {
-            Microsoft.Win32.OpenFileDialog choofdlog = new Microsoft.Win32.OpenFileDialog();
-            choofdlog.Filter = "Image Files (*.jpg, *.png, *.bmp)|*.jpg;*.png;*.bmp";
-            choofdlog.FilterIndex = 1;
-            choofdlog.Multiselect = false;
-            string sFileName = null;
-            if (choofdlog.ShowDialog() == true)
-            {
-                sFileName = choofdlog.FileName;
-                /*
-                Artwork.Source = Uti.GetImage(sFileName, true);
-                Current.Artwork = sFileName;
-
-                Artwork.Tag = "Already";
-                Artwork.Opacity = 1;
-                ChangeRarity(Current.Rarity);
-
-                Refresh();
-                */
-                //card.ArtworkByte = Images.GetImageByte(sFileName);
-                //RenderCard.RenderCard(card);
-            }
+            RenderCard.Export();
         }
 
         private void LoadControl()
@@ -289,11 +245,8 @@ namespace OV.Pyramid
                 Zone.Children.Add(new TextBlock(new Run("Reset")));
                 Zone.Margin = new Thickness(0, 4, 0, 0);
 
-
                 Reset.Content = Zone;
             }
-
-
         }
 
         private void Button_Ability(object sender, RoutedEventArgs e)
@@ -302,15 +255,14 @@ namespace OV.Pyramid
             if (Current.Abilities.Contains(ability))
             {
                 Current.SetAbility(ability, false);
-            } else
+            }
+            else
             {
                 Current.SetAbility(ability, true);
             }
 
             RenderCard.Render(Current);
         }
-
-        
 
         private void DEF_TextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -328,7 +280,6 @@ namespace OV.Pyramid
 
             Current.SetATK(int.TryParse(txtBox.Text, out value) ? value : double.NaN);
             RenderCard.Render(Current);
-
         }
 
         private void LoadScaleControl()
@@ -364,7 +315,6 @@ namespace OV.Pyramid
                 Canvas.SetTop(BoxScaleRight, Canvas.GetTop(InRight) + 40);
                 Canvas.SetLeft(BoxScaleRight, Canvas.GetLeft(InRight) - 30);
             }
-
 
             Button Button = new Button();
 
@@ -417,8 +367,8 @@ namespace OV.Pyramid
         {
             Button button = sender as Button;
             int value;
-            Current.SetScaleLeft( int.TryParse(button.Tag.ToString(), out value) ? value : double.NaN);
-            Current.SetScaleRight( int.TryParse(button.Tag.ToString(), out value) ? value : double.NaN);
+            Current.SetScaleLeft(int.TryParse(button.Tag.ToString(), out value) ? value : double.NaN);
+            Current.SetScaleRight(int.TryParse(button.Tag.ToString(), out value) ? value : double.NaN);
             RenderCard.Render(Current);
         }
 
@@ -463,11 +413,9 @@ namespace OV.Pyramid
                 Property.Content = new Canvas();
                 Tab.Items.Add(Property);
 
-                
                 MiddleReload(Level.Content as Canvas, "Level");
                 MiddleReload(Rank.Content as Canvas, "Rank");
                 MiddleReload(Property.Content as Canvas, "Property");
-                
 
                 //Style style = new Style(typeof(TabItem));
                 //ContentPresenter x = new ContentPresenter();
@@ -493,7 +441,8 @@ namespace OV.Pyramid
 
                     {
                         if (i <= 4)
-                        { Canvas.SetTop(Button, top);
+                        {
+                            Canvas.SetTop(Button, top);
                             Canvas.SetLeft(Button, left + ((i - 1) % 4) * (Button.Width + 4) - 14);
                         }
                         else if (i <= 8)
@@ -530,8 +479,6 @@ namespace OV.Pyramid
                             */
                     Button.Click += Button_LR;
 
-
-
                     //LoadLevel(Caption.Text);
                 }
 
@@ -555,7 +502,6 @@ namespace OV.Pyramid
                     Zone.Children.Add(new TextBlock(new Run("Reset")));
                     Zone.Margin = new Thickness(0, 4, 0, 0);
 
-
                     Reset.Content = Zone;
                 }
                 /*
@@ -571,7 +517,6 @@ namespace OV.Pyramid
                 int count = 1;
                 while (count <= Magic.Length)
                 {
-
                     Image IconMonster = new Image();
                     IconMonster.Source = Images.GetImage(GetLocationPath() + "/Attribute/" + Magic[count - 1] + ".png");
                     IconMonster.Height = 20;
@@ -620,7 +565,6 @@ namespace OV.Pyramid
                         Canvas.SetLeft(Button, 44 + ((i - 1) % 3) * (Button.Width + 4) - 32);
                         //    Uti.SetCanvas(Button, 40, 22 + ((i - 1) % 3) * (Button.Width + 4));
 
-
                         StackPanel Zone = new StackPanel();
 
                         Zone.Orientation = Orientation.Horizontal;
@@ -655,12 +599,11 @@ namespace OV.Pyramid
         private void Button_Property(object sender, RoutedEventArgs e)
         {
             string Frame = (sender as Button).Name.Split('_')[0];
-            string Property = (sender as Button).Name.Split('_')[1];            
+            string Property = (sender as Button).Name.Split('_')[1];
 
             Current.SetProperty(Frame == "Spell" ? FRAME.Spell : FRAME.Trap, Property.ToEnum<PROPERTY>());
             RenderCard.Render(Current);
         }
-    
 
         private void Button_LR(object sender, RoutedEventArgs e)
         {
@@ -669,9 +612,10 @@ namespace OV.Pyramid
 
             if (type == "Level")
             {
-                Current.SetLevel(number);                
+                Current.SetLevel(number);
                 Current.SetRank(double.NaN, false);
-            } else
+            }
+            else
             {
                 Current.SetRank(number);
                 Current.SetLevel(double.NaN, false);
@@ -738,7 +682,6 @@ namespace OV.Pyramid
                 Button.Tag = Attribute_String[i - 1].ToEnum<ATTRIBUTE>();
 
                 Button.Click += Button_Attribute;
-
             }
         }
 
@@ -759,11 +702,9 @@ namespace OV.Pyramid
             Panel.Children.Add(Caption);
             FrameExpander.Header = Panel;
 
-
             List<string> frameList = typeof(FRAME).GetList().ToList();
             frameList.Insert(frameList.IndexOf("Spell"), "Pendulum");
             string[] Frame_String = frameList.ToArray();
-            
 
             double sub = 18;
 
@@ -821,7 +762,7 @@ namespace OV.Pyramid
                 Button.Content = Zone;
 
                 Button.Click += Button_Frame;
-                
+
                 /*
                 if (Current.IsFrame(Frame_String[i - 1]))
                     Button.IsEnabled = false;
@@ -841,7 +782,7 @@ namespace OV.Pyramid
             else
             {
                 Current.SetFrame(frameName.ToEnum<FRAME>());
-            }          
+            }
             RenderCard.Render(Current);
         }
 
@@ -857,8 +798,6 @@ namespace OV.Pyramid
             TypeExpander.Header = Panel;
 
             string[] Type_String = typeof(TYPE).GetList().Where(o => o != TYPE.NONE.ToString()).ToArray();
-
-
 
             for (int i = 1; i <= Type_String.Length; i++)
             {
@@ -918,11 +857,8 @@ namespace OV.Pyramid
                 Button.Tag = Type_String[i - 1];
 
                 Button.Click += Button_Type;
-
             }
         }
-
-        
 
         private void LoadCirculationControl()
         {
@@ -953,9 +889,6 @@ namespace OV.Pyramid
                 Canvas.SetLeft(Edition, 48);
                 Canvas.SetTop(Edition, 10);
 
-
-
-
                 Button Random = new Button();
                 Random.Content = "Random";
                 Random.Click += Random_Click;
@@ -972,7 +905,6 @@ namespace OV.Pyramid
                 Canvas.SetLeft(CardNumber, 90);
                 Canvas.SetTop(CardNumber, 40);
 
-
                 TextBlock One = new TextBlock(new Run("Edition"));
                 Canvas.SetTop(One, 12);
                 Canvas.SetLeft(One, 0);
@@ -982,7 +914,6 @@ namespace OV.Pyramid
                 Canvas.SetTop(Two, 42);
                 Canvas.SetLeft(Two, 0);
                 CirculationCanvas.Children.Add(Two);
-
 
                 TextBox SetNumber = new TextBox();
                 SetNumber.Name = "SetNumberEdit";
@@ -1019,7 +950,7 @@ namespace OV.Pyramid
                     Canvas.SetTop(Sticker, 40);
                 }
 
-                /* 
+                /*
                 Three = new TextBlock(new Run("Creator"));
                 Canvas.SetTop(Three, 104);
                 Canvas.SetLeft(Three, 0);
@@ -1033,14 +964,11 @@ namespace OV.Pyramid
                 Canvas.SetLeft(Creator, 90);
                 Canvas.SetTop(Creator, 104);
                 */
-
             }
-
         }
 
         private void LoadNameControl()
         {
-
             string[] Rarity = typeof(RARITY).GetList().ToArray();
             /*new string[] {"Common", "Rare", "SuperRare", "UltraRare",
                     "SecretRare", "ParallelRare", "StarfoilRare", "MosaicRare",
@@ -1058,7 +986,6 @@ namespace OV.Pyramid
                     Button.Width += 14;
                 Button.Height = 30;
                 Canvas.SetTop(Button, 36 + (i / 4) * (Button.Height + 10));
-
 
                 int Left = -10;
                 if (i >= 8)
@@ -1108,7 +1035,7 @@ namespace OV.Pyramid
 
         private void Button_Type(object sender, RoutedEventArgs e)
         {
-            Current.SetType( (sender as Button).Tag.ToEnum<TYPE>());
+            Current.SetType((sender as Button).Tag.ToEnum<TYPE>());
             RenderCard.Render(Current);
         }
 
@@ -1127,22 +1054,21 @@ namespace OV.Pyramid
 
         private void CardNumber_TextChanged(object sender, TextChangedEventArgs e)
         {
-            Current.Number = (sender as TextBox).Text.ToInt32();            
+            Current.Number = (sender as TextBox).Text.ToInt32();
             RenderCard.Render(Current);
         }
 
-        void Random_Click(object sender, RoutedEventArgs e)
+        private void Random_Click(object sender, RoutedEventArgs e)
         {
             TextBox CardNumber = CirculationCanvas.FindChild<TextBox>("CardNumberEdit");
             Random t = new Random();
             CardNumber.Text = t.Next(0, 99999999 + 1).ToString().PadLeft(8, '0');
-            
         }
 
         private void Edition_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             string Text = (sender as ComboBox).SelectedValue.ToString();
-            Current.Edition = Text.Remove(" ").Replace("1st", "First").ToEnum<EDITION>();            
+            Current.Edition = Text.Remove(" ").Replace("1st", "First").ToEnum<EDITION>();
             RenderCard.Render(Current);
         }
 
@@ -1155,12 +1081,11 @@ namespace OV.Pyramid
         {
             //Canvas Card = Uti.FindChild<Canvas>(mainCanvas, "Card");
             Current.Name = (sender as TextBox).Text;
-            
+
             //_Pending.Text = (Artwork.Source as ImageSource).ToString();
             RenderCard.Render(Current);
             //cardList.ItemsSource = null;
             //cardList.ItemsSource = Set.Cards;
-            
         }
 
         private void Symbol_Click(object sender, RoutedEventArgs e)
@@ -1168,7 +1093,6 @@ namespace OV.Pyramid
             TextBox Edit = (NameExpander.Header as Canvas).FindChild<TextBox>("NameEdit");
 
             Edit.Text = Edit.Text.Insert(Edit.CaretIndex, (sender as Button).Content.ToString());
-
         }
 
         private void Button_Rarity(object sender, RoutedEventArgs e)
@@ -1192,11 +1116,10 @@ namespace OV.Pyramid
 
         private void DocumentExpander_Expanded(object sender, RoutedEventArgs e)
         {
-
             Grid.Height += DocumentCanvas.Height - 40;
             SynchroAnimation(DocumentBorder, DocumentCanvas.Height, Border.HeightProperty);
 
-            TextBlock Caption =  (DocumentExpander.Header as Canvas).FindChild<TextBlock>("DocumentCaption");
+            TextBlock Caption = (DocumentExpander.Header as Canvas).FindChild<TextBlock>("DocumentCaption");
             SynchroAnimation(Caption, (DocumentBorder.Width - Caption.ActualWidth) / 2 - 32, Canvas.LeftProperty);
         }
 
@@ -1211,7 +1134,6 @@ namespace OV.Pyramid
 
         private void CirculationExpander_Expanded(object sender, RoutedEventArgs e)
         {
-
             Grid.Height += 172 - 40;
             SynchroAnimation(CirculationBorder, 172, Border.HeightProperty);
 
@@ -1250,8 +1172,8 @@ namespace OV.Pyramid
             Grid.Height -= 190 - 40;
             SynchroAnimation(NameBorder, 40, Border.HeightProperty);
 
-            TextBlock Caption =( NameExpander.Header as Canvas).FindChild<TextBlock>("NameCaption");
-            
+            TextBlock Caption = (NameExpander.Header as Canvas).FindChild<TextBlock>("NameCaption");
+
             SynchroAnimation(Caption, 2, Canvas.LeftProperty);
 
             TextBox Edit = (NameExpander.Header as Canvas).FindChild<TextBox>("NameEdit");
@@ -1268,7 +1190,6 @@ namespace OV.Pyramid
                 SynchroAnimation(AttributeBorder, 160, Border.HeightProperty);
                 //SynchroAnimation(AttributeBorder, 400 - width - 10, Border.WidthProperty);
 
-
                 TextBlock Caption = (AttributeExpander.Header as Canvas).FindChild<TextBlock>("AttributeCaption");
                 SynchroAnimation(Caption, (AttributeBorder.Width - Caption.ActualWidth) / 2 - 34, Canvas.LeftProperty);
                 //Grid.SetColumnSpan(AttributeBorder, 4);
@@ -1282,14 +1203,11 @@ namespace OV.Pyramid
                 SynchroAnimation(AttributeBorder, 40, Border.HeightProperty);
                 //SynchroAnimation(AttributeBorder, 195, Border.WidthProperty);
 
-
                 TextBlock Caption = (AttributeExpander.Header as Canvas).FindChild<TextBlock>("AttributeCaption");
                 SynchroAnimation(Caption, 2, Canvas.LeftProperty);
             }
             //SynchroAnimation(MiddleBorder, 195, Border.WidthProperty);
-
         }
-
 
         private void LevelExpander_Collapsed(object sender, RoutedEventArgs e)
         {
@@ -1302,7 +1220,6 @@ namespace OV.Pyramid
                 SynchroAnimation(Caption, 2, Canvas.LeftProperty);
             }
             // SynchroAnimation(AttributeBorder, 195, Border.WidthProperty);
-
         }
 
         private void LevelExpander_Expanded(object sender, RoutedEventArgs e)
@@ -1315,8 +1232,6 @@ namespace OV.Pyramid
                 SynchroAnimation(MiddleBorder, 210, Border.HeightProperty);
                 //SynchroAnimation(MiddleBorder, 400 - width - 10, Border.WidthProperty);
 
-
-
                 //SynchroAnimation(Caption, 64, Canvas.LeftProperty);
                 SynchroAnimation(Caption, (MiddleBorder.Width - Caption.ActualWidth) / 2 - 32, Canvas.LeftProperty);
             }
@@ -1324,7 +1239,6 @@ namespace OV.Pyramid
             //AttributeExpander.IsExpanded = false;
 
             //SynchroAnimation(AttributeBorder, width + 2, Border.WidthProperty);
-
         }
 
         private void FrameExpander_Expanded(object sender, RoutedEventArgs e)
@@ -1335,7 +1249,6 @@ namespace OV.Pyramid
 
             TextBlock Caption = (FrameExpander.Header as Canvas).FindChild<TextBlock>("FrameCaption");
             SynchroAnimation(Caption, 134, Canvas.LeftProperty);
-
 
             /*
             Image Frame = Uti.FindChild<Image>(Card, "Frame");
@@ -1352,7 +1265,6 @@ namespace OV.Pyramid
             FrameCanvas.LayoutTransform = new ScaleTransform(1, 1);
             SynchroAnimation(FrameCanvas, 1, "(FrameworkElement.LayoutTransform).(ScaleTransform.ScaleY)");
             //ScaleTransform test = new ScaleTransform();
-
         }
 
         private void FrameExpander_Collapsed(object sender, RoutedEventArgs e)
@@ -1381,7 +1293,6 @@ namespace OV.Pyramid
 
             TextBlock Caption = (TypeExpander.Header as Canvas).FindChild<TextBlock>("TypeCaption");
             SynchroAnimation(Caption, 2, Canvas.LeftProperty);
-
         }
 
         private void AbilityExpander_Collapsed(object sender, RoutedEventArgs e)
@@ -1424,9 +1335,6 @@ namespace OV.Pyramid
             SynchroAnimation(Caption, 2, Canvas.LeftProperty);
         }
 
-
-
-
         private void ScaleLeft_TextChanged(object sender, TextChangedEventArgs e)
         {
             TextBox txtBox = sender as TextBox;
@@ -1445,12 +1353,12 @@ namespace OV.Pyramid
             RenderCard.Render(Current);
         }
 
-        void CardText_Click(object sender, RoutedEventArgs e)
+        private void CardText_Click(object sender, RoutedEventArgs e)
         {
             //CallEditor((sender as Button).Content.ToString());
         }
 
-        void PendulumEffect_Click(object sender, RoutedEventArgs e)
+        private void PendulumEffect_Click(object sender, RoutedEventArgs e)
         {
             //CallEditor((sender as Button).Content.ToString());
         }
@@ -1459,7 +1367,6 @@ namespace OV.Pyramid
         {
             SolidColorBrush Show = Brushes.LightBlue;
 
-
             foreach (Visual Visual in Grid.Children)
             {
                 try
@@ -1467,26 +1374,22 @@ namespace OV.Pyramid
                     Border Border = Visual as Border;
                     if (Border.Background == Show)
                         (Border.Child as Expander).IsExpanded = (sender as Button).Content.ToString().Contains("Expand");
-
                 }
                 catch
                 {
-
                 }
             }
 
         (sender as Button).Content = (sender as Button).Content.ToString().Contains("Expand") ? "Collapse - All" : "Expand - All";
-
-
         }
 
         private void Description_Click(object sender, RoutedEventArgs e)
-        {            
+        {
             DescriptionButton.IsEnabled = false;
             PendulumEffectButton.IsEnabled = true;
-            
+
             DocumentBox.Document.Blocks.Clear();
-            DocumentBox.AppendText(Current.Description); 
+            DocumentBox.AppendText(Current.Description);
         }
 
         private void ApplyDocument_Click(object sender, RoutedEventArgs e)
@@ -1499,14 +1402,15 @@ namespace OV.Pyramid
             if (DescriptionButton.IsEnabled == false) //Current is Description
             {
                 Current.Description = Text;
-            } else
+            }
+            else
             {
                 Current.SetPendulumEffect(Text);
             }
-            
+
             RenderCard.Render(Current);
         }
-        
+
         private void cardList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             currentIndex = cardList.SelectedIndex;

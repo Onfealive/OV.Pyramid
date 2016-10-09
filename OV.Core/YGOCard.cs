@@ -3,110 +3,7 @@ using System.Collections.Generic;
 using System;
 
 namespace OV.Core
-{
-    public enum ABILITY
-    {
-        Flip, Toon, Union, Gemini, Spirit,
-        Effect, Tuner,
-    };
-
-    public enum EDITION
-    {
-        UnlimitedEdition,
-        FirstEdition,
-        LimitedEdition,
-        DuelTerminal
-    }
-
-    public enum FRAME
-    {
-        Normal, Effect, Token, Fusion, Ritual,
-        Synchro, Xyz,
-        Spell, Trap
-    };
-
-    public enum RARITY
-    {
-        Common,
-        Rare, UltimateRare,
-        SuperRare,
-        UltraRare,
-        SecretRare,
-        ParallelRare,
-        StarfoilRare,
-        MosaicRare,
-        GoldRare,
-        GhostRare
-    }
-
-    public enum STICKER
-    {
-        NONE,
-        Gold, Silver,
-        PromoGold, PromoSilver
-    }
-
-    public enum TYPE
-    {
-        NONE,
-        Warrior, Machine, Spellcaster, Fiend, Dragon, Fairy,
-        Beast, Aqua, Rock, Insect, Plant, Zombie, Reptile, Pyro,
-        Fish, Thunder, Psychic, Wyrm, Dinosaur,
-        WingedBeast, BeastWarrior, SeaSerpent, DivineBeast, CreatorGod
-    }
-
-    enum ATTRIBUTE
-    {
-        UNKNOWN,
-        EARTH, DARK, DIVINE, FIRE, LIGHT, WATER, WIND,
-        SPELL, TRAP
-    }
-
-    enum PROPERTY
-    {
-        NONE,
-        Continuous, Normal,
-        QuickPlay, Ritual, Equip, Field,
-        Counter
-    }
-
-    static class Static
-    {
-
-        public static bool IsFrame(this YGOCard card, FRAME frame)
-        {
-            return frame == card.Frame;
-        }
-
-        public static bool IsMagic(this YGOCard card)
-        {
-            if (card.Frame == FRAME.Spell && card.Attribute == ATTRIBUTE.SPELL) { return true; }
-            if (card.Frame == FRAME.Trap && card.Attribute == ATTRIBUTE.TRAP) { return true; }
-            //if (card.Attribute == ATTRIBUTE.UNKNOWN) { return false; }
-            return false;
-        }
-
-        public static bool IsMonster(this YGOCard card)
-        {
-            return !card.IsMagic();
-        }
-
-        public static bool IsSpellPropertyOnly(this PROPERTY property)
-        {
-            if (property == PROPERTY.Equip) return true;
-            if (property == PROPERTY.Field) return true;
-            if (property == PROPERTY.QuickPlay) return true;
-            if (property == PROPERTY.Ritual) return true;
-            return false;
-        }
-
-        public static bool IsTrapPropertyOnly(this PROPERTY property)
-        {
-            if (property == PROPERTY.Counter) return true;
-            return false;
-        }
-    }
-
+{   
     class YGOCard
     {
         public FRAME DefaultFrame = FRAME.Effect;
@@ -554,5 +451,108 @@ namespace OV.Core
             _Rank = Math.Round(_Rank, MidpointRounding.ToEven);
         }
         */
+    }
+
+    public enum ABILITY
+    {
+        Flip, Toon, Union, Gemini, Spirit,
+        Effect, Tuner,
+    };
+
+    public enum EDITION
+    {
+        UnlimitedEdition,
+        FirstEdition,
+        LimitedEdition,
+        DuelTerminal
+    }
+
+    public enum FRAME
+    {
+        Normal, Effect, Token, Fusion, Ritual,
+        Synchro, Xyz,
+        Spell, Trap
+    };
+
+    public enum RARITY
+    {
+        Common,
+        Rare, UltimateRare,
+        SuperRare,
+        UltraRare,
+        SecretRare,
+        ParallelRare,
+        StarfoilRare,
+        MosaicRare,
+        GoldRare,
+        GhostRare
+    }
+
+    public enum STICKER
+    {
+        NONE,
+        Gold, Silver,
+        PromoGold, PromoSilver
+    }
+
+    public enum TYPE
+    {
+        NONE,
+        Warrior, Machine, Spellcaster, Fiend, Dragon, Fairy,
+        Beast, Aqua, Rock, Insect, Plant, Zombie, Reptile, Pyro,
+        Fish, Thunder, Psychic, Wyrm, Dinosaur,
+        WingedBeast, BeastWarrior, SeaSerpent, DivineBeast, CreatorGod
+    }
+
+    enum ATTRIBUTE
+    {
+        UNKNOWN,
+        EARTH, DARK, DIVINE, FIRE, LIGHT, WATER, WIND,
+        SPELL, TRAP
+    }
+
+    enum PROPERTY
+    {
+        NONE,
+        Continuous, Normal,
+        QuickPlay, Ritual, Equip, Field,
+        Counter
+    }
+
+    static class Static
+    {
+
+        public static bool IsFrame(this YGOCard card, FRAME frame)
+        {
+            return frame == card.Frame;
+        }
+
+        public static bool IsMagic(this YGOCard card)
+        {
+            if (card.Frame == FRAME.Spell && card.Attribute == ATTRIBUTE.SPELL) { return true; }
+            if (card.Frame == FRAME.Trap && card.Attribute == ATTRIBUTE.TRAP) { return true; }
+            //if (card.Attribute == ATTRIBUTE.UNKNOWN) { return false; }
+            return false;
+        }
+
+        public static bool IsMonster(this YGOCard card)
+        {
+            return !card.IsMagic();
+        }
+
+        public static bool IsSpellPropertyOnly(this PROPERTY property)
+        {
+            if (property == PROPERTY.Equip) return true;
+            if (property == PROPERTY.Field) return true;
+            if (property == PROPERTY.QuickPlay) return true;
+            if (property == PROPERTY.Ritual) return true;
+            return false;
+        }
+
+        public static bool IsTrapPropertyOnly(this PROPERTY property)
+        {
+            if (property == PROPERTY.Counter) return true;
+            return false;
+        }
     }
 }
