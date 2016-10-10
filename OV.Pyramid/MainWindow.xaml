@@ -377,41 +377,59 @@
                         <GridSplitter Grid.Row="13"></GridSplitter>
 
                         <Border x:Name="NameBorder" Canvas.Left="331" Canvas.Top="10"
-				Background="Transparent" Grid.Row="0" Grid.RowSpan="1" Grid.Column="0" Grid.ColumnSpan="4"
-				BorderBrush="Black" BorderThickness="1.5" CornerRadius="5"
-				Width="400" Height="40" VerticalAlignment="Center" MouseLeftButtonDown="Border_MouseLeftButtonDown">
+				            Background="Transparent" Grid.Row="0" Grid.RowSpan="1" Grid.Column="0" Grid.ColumnSpan="4"
+				            BorderBrush="Black" BorderThickness="1.5" CornerRadius="5"
+				            Width="400" Height="40" VerticalAlignment="Center" MouseLeftButtonDown="Border_MouseLeftButtonDown">
                             <Expander Height="Auto" Template="{StaticResource StretchyExpanderTemp}"                              
-					OverridesDefaultStyle="True" HorizontalAlignment="Left" VerticalAlignment="Top"                  
-					x:Name="NameExpander"
-					Margin="8,8,0,0" Expanded="NameExpander_Expanded" Collapsed="NameExpander_Collapsed">
+					            OverridesDefaultStyle="True" HorizontalAlignment="Left" VerticalAlignment="Top"                  
+					            x:Name="NameExpander" Margin="8,8,0,0" 
+					            Expanded="NameExpander_Expanded" Collapsed="NameExpander_Collapsed">
+                                <Expander.Header>
+                                    <Canvas>
+                                        <TextBlock Name="NameCaption" FontSize="14" Text="Name" Canvas.Left="4"></TextBlock>
+                                        <TextBox Name="NameEdit" FontSize="15" Canvas.Left="60" Canvas.Top="-2" Width="280"
+                                                 TextChanged="Name_TextBox_TextChanged"
+                                                 GotFocus="Name_TextBox_GotFocus"></TextBox>
+                                    </Canvas>
+                                </Expander.Header>
                                 <Canvas x:Name="NameCanvas">
-
+                                    
                                 </Canvas>
                             </Expander>
                         </Border>
                         <Border x:Name="AttributeBorder" Canvas.Left="331" Canvas.Top="64"
-				Background="Transparent" Grid.Row="2" Grid.RowSpan="1"
-				BorderBrush="Black" BorderThickness="1.5" CornerRadius="5"
-				Height="40" Width="400"
-				MouseLeftButtonDown="Border_MouseLeftButtonDown"  >
+				            Background="Transparent" Grid.Row="2" Grid.RowSpan="1"
+				            BorderBrush="Black" BorderThickness="1.5" CornerRadius="5"
+				            Height="40" Width="400"
+				            MouseLeftButtonDown="Border_MouseLeftButtonDown">     
 
                             <Expander Height="Auto" Template="{StaticResource StretchyExpanderTemp}"
-					OverridesDefaultStyle="True" HorizontalAlignment="Left" VerticalAlignment="Top"                  
-					x:Name="AttributeExpander"
-					Margin="8,8,0,0" Expanded="AttributeExpander_Expanded" Collapsed="AttributeExpander_Collapsed">
+					            OverridesDefaultStyle="True" HorizontalAlignment="Left" VerticalAlignment="Top"                  
+					            x:Name="AttributeExpander" Margin="8,8,0,0" 
+					            Expanded="AttributeExpander_Expanded" Collapsed="AttributeExpander_Collapsed">
+                                <Expander.Header>
+                                    <Canvas>
+                                        <TextBlock Name="AttributeCaption" FontSize="14" Canvas.Left="4">Attribute</TextBlock>
+                                    </Canvas>
+                                </Expander.Header>
                                 <Canvas x:Name="AttributeCanvas"/>
                             </Expander>
                         </Border>
                         <Border x:Name="MiddleBorder"
-				Background="Transparent" Grid.Row="4"
-				BorderBrush="Black" BorderThickness="1.5" CornerRadius="5"
-				Height="40" Width="400"
-				MouseLeftButtonDown="Border_MouseLeftButtonDown" >
+				            Background="Transparent" Grid.Row="4"
+				            BorderBrush="Black" BorderThickness="1.5" CornerRadius="5"
+				            Height="40" Width="400"
+				            MouseLeftButtonDown="Border_MouseLeftButtonDown" >
 
                             <Expander Height="Auto" Template="{StaticResource StretchyExpanderTemp}"
-					OverridesDefaultStyle="True" HorizontalAlignment="Left" VerticalAlignment="Top"                  
-					x:Name="LevelExpander"
-					Margin="8,8,0,0" Expanded="LevelExpander_Expanded" Collapsed="LevelExpander_Collapsed">
+					            OverridesDefaultStyle="True" HorizontalAlignment="Left" VerticalAlignment="Top"                  
+					            x:Name="MiddleExpander" Margin="8,8,0,0" 
+					            Expanded="MiddleExpander_Expanded" Collapsed="MiddleExpander_Collapsed">
+                                <Expander.Header>
+                                    <Canvas>
+                                        <TextBlock Name="MiddleCaption" FontSize="14" Canvas.Left="4">Level/Rank/Property</TextBlock>
+                                    </Canvas>
+                                </Expander.Header>
                                 <Canvas x:Name="MiddleCanvas"/>
                             </Expander>
                         </Border>
@@ -459,9 +477,9 @@
 
                             <Canvas x:Name="ATKCanvas">
                                 <TextBlock Canvas.Top="8" Canvas.Left="40" FontSize="14">ATK</TextBlock>
-                                <TextBox Width="70" FontSize="14" local:Masking.Mask="([0-9])|(^\?$)"
-                                 Canvas.Left="76" Canvas.Top="5" MaxLength="4"
-                                 TextChanged="ATK_TextBox_TextChanged" FlowDirection="RightToLeft"></TextBox>
+                                <TextBox Name="ATKBox" Width="70" FontSize="14" local:Masking.Mask="([0-9])|(^\?$)"
+                                 Canvas.Left="76" Canvas.Top="5" MaxLength="4" TextAlignment="Right"
+                                 TextChanged="ATK_TextBox_TextChanged" ></TextBox>
                             </Canvas>
 
                         </Border>
@@ -472,9 +490,9 @@
 				            Grid.Row="12" MouseLeftButtonDown="Border_MouseLeftButtonDown">
                             <Canvas x:Name="DEFCanvas">
                                 <TextBlock Canvas.Top="8" Canvas.Left="40" FontSize="14">DEF</TextBlock>
-                                <TextBox Width="70" FontSize="14" local:Masking.Mask="([0-9])|(^\?$)"
+                                <TextBox Name="DEFBox" Width="70" FontSize="14" local:Masking.Mask="([0-9])|(^\?$)"
                                  Canvas.Left="76" Canvas.Top="5" MaxLength="4"
-                                 TextChanged="DEF_TextBox_TextChanged" FlowDirection="RightToLeft"></TextBox>
+                                 TextChanged="DEF_TextBox_TextChanged" TextAlignment="Right"></TextBox>
                             </Canvas>
                         </Border>
 
@@ -489,8 +507,8 @@
             		x:Name="ScaleExpander"
             		Margin="8,8,0,0" Expanded="ScaleExpander_Expanded" Collapsed="ScaleExpander_Collapsed">
                                 <Canvas x:Name="ScaleCanvas">
-                                    <TextBox Name="BoxScaleLeft" local:Masking.Mask="^([1-9]|[0-1][0-2]|\?)$"  TextChanged="ScaleLeft_TextChanged" Width="40" TextAlignment="Right"></TextBox>
-                                    <TextBox Name="BoxScaleRight" local:Masking.Mask="^([1-9]|[0-1][0-2]|\?)$" TextChanged="ScaleRight_TextChanged"  Width="40"></TextBox>
+                                    <TextBox Name="ScaleLeftBox" local:Masking.Mask="^([1-9]|[0-1][0-2]|\?)$"  TextChanged="ScaleLeft_TextChanged" Width="40" TextAlignment="Right"></TextBox>
+                                    <TextBox Name="ScaleRightBox" local:Masking.Mask="^([1-9]|[0-1][0-2]|\?)$" TextChanged="ScaleRight_TextChanged"  Width="40"></TextBox>
                                 </Canvas>
                             </Expander>
                         </Border>
@@ -509,7 +527,7 @@
                                 </Expander.Header>
                                 <Canvas x:Name="DocumentCanvas" Width="360" Height="220">
                                     <Button Name="DescriptionButton" IsEnabled="False" Width="170" Height="24"  Canvas.Left="20" Click="Description_Click">Description</Button>
-                                    <Button Name="PendulumEffectButton"  Width="170" Height="24" Canvas.Right="0">Pendulum Effect</Button>
+                                    <Button Name="PendulumEffectButton"  Width="170" Height="24" Click="PendulumEffectButton_Click" Canvas.Right="0">Pendulum Effect</Button>
                                     <RichTextBox Name="DocumentBox" Canvas.Top="30" Canvas.Left="20" Height="120" Width="340"></RichTextBox>
                                     <WrapPanel Grid.Row="1" Canvas.Top="160" Canvas.Left="20" Grid.Column="4" Orientation="Horizontal">
                                         <Button Margin="2"  Width="20" Height="20" VerticalAlignment="Top" HorizontalAlignment="Left" Content="●" Click="Symbol_Click"></Button>
@@ -523,14 +541,33 @@
 
                         </Border>
                         <Border x:Name="CirculationBorder" Height="40" Width="400"
-                	Background="Transparent" Grid.Row="18" 
-                	BorderBrush="Black" BorderThickness="1.5" CornerRadius="5"
-                	MouseLeftButtonDown="Border_MouseLeftButtonDown">
+                	            Background="Transparent" Grid.Row="18" 
+                	            BorderBrush="Black" BorderThickness="1.5" CornerRadius="5"
+                	            MouseLeftButtonDown="Border_MouseLeftButtonDown">
                             <Expander Height="Auto" Template="{StaticResource StretchyExpanderTemp}"
-                		OverridesDefaultStyle="True" HorizontalAlignment="Left" VerticalAlignment="Top"                  
-                		x:Name="CirculationExpander"
-                		Margin="8,8,0,0" Expanded="CirculationExpander_Expanded" Collapsed="CirculationExpander_Collapsed">
-                                <Canvas x:Name="CirculationCanvas"/>
+                		        OverridesDefaultStyle="True" HorizontalAlignment="Left" VerticalAlignment="Top"                  
+                		        x:Name="CirculationExpander"
+                		        Margin="8,8,0,0" Expanded="CirculationExpander_Expanded" Collapsed="CirculationExpander_Collapsed">
+                                <Expander.Header>
+                                    <Canvas>
+                                        <TextBlock Name="CirculationCaption" Canvas.Left="4" FontSize="14">Circulation</TextBlock>
+                                    </Canvas>
+                                </Expander.Header>
+                                <Canvas x:Name="CirculationCanvas">
+                                    <TextBlock Canvas.Top="12">Edition</TextBlock>
+                                    <ComboBox Name="EditionCombo" Width="120" SelectionChanged="Edition_SelectionChanged"
+                                              Canvas.Left="135" Canvas.Top="10"></ComboBox>
+                                    <TextBlock Canvas.Top="42">Card Number</TextBlock>
+                                    <TextBox Name="CardNumberEdit" Width="80" MaxLength="8" TextChanged="CardNumber_TextChanged"
+                                             Canvas.Top="40" Canvas.Left="135"></TextBox>
+                                    <Button Canvas.Top="40" Canvas.Left="225" Click="Random_Click">Random</Button>
+                                    <TextBlock Canvas.Top="72">Set Number</TextBlock>
+                                    <TextBox Name="SetNumberEdit" Width="100" MaxLength="10" TextChanged="SetNumber_TextChanged"
+                                             Canvas.Top="70" Canvas.Left="135"></TextBox>
+                                    <TextBlock Canvas.Top="102">Eye of Anubis Hologram</TextBlock>
+                                    <ComboBox Name="StickerCombo" Width="110" SelectionChanged="Sticker_SelectionChanged"
+                                              Canvas.Top="102" Canvas.Left="135"></ComboBox>
+                                </Canvas>
                             </Expander>
                         </Border>
                     </Grid>

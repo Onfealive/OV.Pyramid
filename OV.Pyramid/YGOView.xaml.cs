@@ -7,6 +7,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -226,7 +227,7 @@ namespace OV.Pyramid
                 }
                 else
                 {
-                    Canvas.SetLeft(ScaleRightBlock, CardCanvas.Width - 74 - 22);
+                    Canvas.SetLeft(ScaleRightBlock, CardCanvas.Width - 74 - 23);
                 }
             }
             else
@@ -624,14 +625,50 @@ namespace OV.Pyramid
 
             string Text = Current.Description;
 
+            /*
+            string text = @"When this card is destroyed... (This card is treated as.) XX (This is.)";
+            string[] uppercaseWords = Regex.Split(text, @"(\(.+?\.\))");
+
+            foreach(string s in uppercaseWords)
+            {
+                MessageBox.Show(s);
+            }
+             * */
             Description.Text = Text;
+
+            if (Current.IsFrame(FRAME.Normal) && string.IsNullOrWhiteSpace(Text) == false )
+            {
+                Description.Inlines.Clear();
+                string[] parts = Regex.Split(Text, @"(\(.+?\.\))");
+                foreach(string part in parts.Where(o => string.IsNullOrWhiteSpace(o) == false))
+                {
+                    string p = part;
+                    if (Regex.IsMatch(part, @"(\(.+?\.\))")) {
+                        Description.Inlines.Add(new Run
+                        {
+                            Text = p,
+                        });
+                    }
+                    else
+                    {
+                        Description.Inlines.Add(new Run
+                        {
+                            Text = p,
+                            FontStyle = FontStyles.Italic
+                        });
+                    }
+                }
+            }
+
+
+
+
             Description.Width = 694;
             if (Current.IsMonster())
             {
                 Canvas.SetTop(DescriptionBorder, 922);
                 if (Current.IsFrame(FRAME.Normal))
-                {
-                    
+                {                    
                     Description.Height = 153;
                 }
                 else

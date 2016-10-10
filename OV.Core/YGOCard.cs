@@ -55,13 +55,13 @@ namespace OV.Core
         public RARITY Rarity { get; set; }
         /// <summary>
         /// Get value of left scale of card
-        /// <para>-1 means "N/A", double.Nan means "?"</para>
+        /// <para>-1 means "N/A", double.NaN means "?"</para>
         /// </summary>
         public double ScaleLeft { get { return _ScaleLeft; } }
 
         /// <summary>
         /// Get value of right scale of card
-        /// <para>-1 means "N/A", double.Nan means "?"</para>
+        /// <para>-1 means "N/A", double.NaN means "?"</para>
         /// </summary>
         public double ScaleRight { get { return _ScaleRight; } }
 
@@ -260,9 +260,13 @@ namespace OV.Core
         {
             if (setLogic)
             {
-                if (this.IsMonster())
+                if (this.IsMonster() && this.IsFrame(FRAME.Normal) == false)
                 {
-                    //Other Logic
+                    //Another Logic
+                    if (ability.IsSingleAbility())
+                    {
+                        this._Abilities.RemoveAll(o => o.IsSingleAbility());
+                    }
                 }
                 else
                 {
@@ -552,6 +556,12 @@ namespace OV.Core
         public static bool IsTrapPropertyOnly(this PROPERTY property)
         {
             if (property == PROPERTY.Counter) return true;
+            return false;
+        }
+
+        public static bool IsSingleAbility(this ABILITY ability)
+        {
+            if (ability != ABILITY.Effect && ability != ABILITY.Tuner) { return true; }
             return false;
         }
     }
