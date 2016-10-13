@@ -1,91 +1,84 @@
 ﻿using OV.Tools;
 using System.Collections.Generic;
 using System;
+using Newtonsoft.Json;
+using OV.Pyramid;
 
 namespace OV.Core
 {   
     class YGOCard
     {
-        public FRAME DefaultFrame = FRAME.Effect;
+        private FRAME DefaultFrame = FRAME.Effect;
 
-        private List<ABILITY> _Abilities;
-        private double _ATK;
-        private ATTRIBUTE _Attribute;
-        private double _DEF;
-        private FRAME _Frame;
-        private bool _IsPendulum;
-        private double _Level;
-        private string _PendulumEffect;
-        private PROPERTY _Property;
-        private double _Rank;
-        private TYPE _Type;
-        private double _ScaleLeft;
-        private double _ScaleRight;
+        
         private YGOCard()
         {
-            this._Abilities = new List<ABILITY>();
+            this.Abilities = new List<ABILITY>();
         }
 
-        public IReadOnlyList<ABILITY> Abilities { get { return _Abilities.AsReadOnly(); } }
+        public List<ABILITY> Abilities { get; private set; }
         public byte[] ArtworkByte { get; set; }
+        
         /// <summary>
         /// Get value of ATK of card
         /// <para>-1 means "N/A", double.Nan means "?"</para>
         /// </summary>
-        public double ATK { get { return _ATK; } }
 
-        public ATTRIBUTE Attribute { get { return _Attribute; } }
-        public string Creator { get; set; }
+        public double ATK { get; private set; }
+
+        public ATTRIBUTE Attribute { get; private set; }
+        public CREATOR Creator { get; private set; }
         /// <summary>
         /// Get value of DEF of card
         /// <para>-1 means "N/A", double.Nan means "?"</para>
         /// </summary>
-        public double DEF { get { return _DEF; } }
+        public double DEF { get; private set; }
 
-        public string Description { get; set; }
-        public EDITION Edition { get; set; }
-        public FRAME Frame { get { return _Frame; } }
-        public bool IsPendulum { get { return _IsPendulum; } }
-        public double Level { get { return _Level; } }
-        public string Name { get; set; }
-        public int Number { get; set; }
-        public string PendulumEffect { get { return _PendulumEffect; } }
-        public PROPERTY Property { get { return _Property; } }
-        public double Rank { get { return _Rank; } }
-        public RARITY Rarity { get; set; }
+        public string Description { get; private set; }
+        public EDITION Edition { get; private set; }
+        
+        public FRAME Frame { get; private set; }
+        public bool IsPendulum { get; private set; }
+        public double Level { get; private set; }
+        public string Name { get; private set; }
+        public int Number { get; private set; }
+        public string PendulumEffect { get; private set; }
+        public PROPERTY Property { get; private set; }
+        public double Rank { get; private set; }
+        public RARITY Rarity { get; private set; }
         /// <summary>
         /// Get value of left scale of card
         /// <para>-1 means "N/A", double.NaN means "?"</para>
         /// </summary>
-        public double ScaleLeft { get { return _ScaleLeft; } }
+        public double ScaleLeft { get; private set; }
 
         /// <summary>
         /// Get value of right scale of card
         /// <para>-1 means "N/A", double.NaN means "?"</para>
         /// </summary>
-        public double ScaleRight { get { return _ScaleRight; } }
+        public double ScaleRight { get; private set; }
 
-        public string Set { get; set; }
-        public STICKER Sticker { get; set; }
-        public TYPE Type { get { return _Type; } }
+        public string Set { get; private set; }
+        public STICKER Sticker { get; private set; }
+        public TYPE Type { get; private set; }
         internal static YGOCard Default
         {
             get
             {
                 YGOCard defaultCard = new YGOCard();
                 defaultCard.Name = "Card Name";
-                defaultCard._ATK = 1200;
-                defaultCard._DEF = 1200;
-                defaultCard._Frame = FRAME.Effect;
-                defaultCard._Attribute = ATTRIBUTE.UNKNOWN;
-                defaultCard._Level = 4;
-                defaultCard.Creator = "© 1996 KAZUKI TAKAHASHI";
+                defaultCard.ATK = 1200;
+                defaultCard.DEF = 1200;
+                defaultCard.Frame = FRAME.Effect;
+                defaultCard.Attribute = ATTRIBUTE.UNKNOWN;
+                defaultCard.Level = 4;
+                defaultCard.Creator = CREATOR.KazukiTakahashi;;
                 defaultCard.Rarity = RARITY.Common;
-                //defaultCard._Type = TYPE.Warrior;
+                //defaultCard.Type = TYPE.Warrior;
                 defaultCard.Sticker = STICKER.PromoSilver;
                 defaultCard.ArtworkByte = Images.GetImageByte(Utilities.GetLocationPath() + @"\Template\NoneImage.png");
                 defaultCard.Set = "";
-                defaultCard._ScaleLeft = defaultCard._ScaleRight = -1;
+                defaultCard.ScaleLeft = defaultCard.ScaleRight = -1;                
                 return defaultCard;
             }
         }
@@ -101,12 +94,12 @@ namespace OV.Core
                 {
                     if (attribute == ATTRIBUTE.SPELL || attribute == ATTRIBUTE.TRAP)
                     {
-                        _ScaleLeft = _ScaleRight = _ATK = _DEF = _Level = _Rank = -1;
-                        _IsPendulum = false;
-                        _Frame = (attribute == ATTRIBUTE.SPELL) ? FRAME.Spell : FRAME.Trap;
-                        _Abilities.Clear();
-                        _Property = PROPERTY.Normal;
-                        _Type = TYPE.NONE;                       
+                        ScaleLeft = ScaleRight = ATK = DEF = Level = Rank = -1;
+                        IsPendulum = false;
+                        Frame = (attribute == ATTRIBUTE.SPELL) ? FRAME.Spell : FRAME.Trap;
+                        Abilities.Clear();
+                        Property = PROPERTY.Normal;
+                        Type = TYPE.NONE;                       
                     }
                 }
                 //Card is Spell/Trap
@@ -115,34 +108,34 @@ namespace OV.Core
                     //From Trap To Spell
                     if (attribute == ATTRIBUTE.SPELL)
                     {
-                        _Frame = FRAME.Spell;
+                        Frame = FRAME.Spell;
                         if (Property.IsTrapPropertyOnly())
                         {
-                            _Property = PROPERTY.Normal;
+                            Property = PROPERTY.Normal;
                         }
                     }
                     //From Spell To Trap
                     else if (attribute == ATTRIBUTE.TRAP)
                     {
-                        _Frame = FRAME.Trap;
+                        Frame = FRAME.Trap;
                         if (Property.IsSpellPropertyOnly())
                         {
-                            _Property = PROPERTY.Normal;
+                            Property = PROPERTY.Normal;
                         }
                     }
                     //To Monster
                     else
                     {
-                        _ScaleLeft = _ScaleRight = _ATK = _DEF = double.NaN;
-                        _Frame = DefaultFrame;
-                        _Property = PROPERTY.NONE;
-                        _Level = 4; //Default Level
-                        _Type = TYPE.NONE;
+                        ScaleLeft = ScaleRight = ATK = DEF = double.NaN;
+                        Frame = DefaultFrame;
+                        Property = PROPERTY.NONE;
+                        Level = 4; //Default Level
+                        Type = TYPE.NONE;
                     }
                 }
             }
 
-            this._Attribute = attribute;
+            this.Attribute = attribute;
         }
 
         public void SetFrame(FRAME frame, bool setLogic = true)
@@ -154,12 +147,12 @@ namespace OV.Core
                 {
                     if (frame == FRAME.Spell || frame == FRAME.Trap)
                     {
-                        _ScaleLeft = _ScaleRight = _ATK = _DEF = _Level = _Rank = -1;
-                        _IsPendulum = false;
-                        _Attribute = frame == FRAME.Spell ? ATTRIBUTE.SPELL : ATTRIBUTE.TRAP;
-                        _Abilities.Clear();
-                        _Property = PROPERTY.Normal;
-                        _Type = TYPE.NONE;
+                        ScaleLeft = ScaleRight = ATK = DEF = Level = Rank = -1;
+                        IsPendulum = false;
+                        Attribute = frame == FRAME.Spell ? ATTRIBUTE.SPELL : ATTRIBUTE.TRAP;
+                        Abilities.Clear();
+                        Property = PROPERTY.Normal;
+                        Type = TYPE.NONE;
                     }
                 }
                 //Card is Spell/Trap
@@ -168,32 +161,32 @@ namespace OV.Core
                     //From Trap To Spell
                     if (frame == FRAME.Spell)
                     {
-                        _Attribute = ATTRIBUTE.SPELL;
+                        Attribute = ATTRIBUTE.SPELL;
                         if (Property.IsTrapPropertyOnly())
                         {
-                            _Property = PROPERTY.Normal;
+                            Property = PROPERTY.Normal;
                         }
                     }
                     //From Spell To Trap
                     else if (frame == FRAME.Trap)
                     {
-                        _Attribute = ATTRIBUTE.TRAP;
+                        Attribute = ATTRIBUTE.TRAP;
                         if (Property.IsSpellPropertyOnly())
                         {
-                            _Property = PROPERTY.Normal;
+                            Property = PROPERTY.Normal;
                         }
                     }
                     //To Monster
                     else
                     {
-                        _ScaleLeft = _ScaleRight = _ATK = _DEF = double.NaN;
-                        _Attribute = ATTRIBUTE.UNKNOWN;
-                        _Property = PROPERTY.NONE;
-                        _Level = 4; //Default Level
+                        ScaleLeft = ScaleRight = ATK = DEF = double.NaN;
+                        Attribute = ATTRIBUTE.UNKNOWN;
+                        Property = PROPERTY.NONE;
+                        Level = 4; //Default Level
                     }
                 }
             }
-            this._Frame = frame;
+            this.Frame = frame;
         }
 
         public void SetLevel(double level, bool setLogic = true)
@@ -202,20 +195,20 @@ namespace OV.Core
             {
                 if (this.IsMagic())
                 {
-                    _ScaleLeft = _ScaleRight = _ATK = _DEF = double.NaN;
-                    _Attribute = ATTRIBUTE.UNKNOWN;
-                    _Frame = DefaultFrame;
-                    _Property = PROPERTY.NONE;
+                    ScaleLeft = ScaleRight = ATK = DEF = double.NaN;
+                    Attribute = ATTRIBUTE.UNKNOWN;
+                    Frame = DefaultFrame;
+                    Property = PROPERTY.NONE;
                 } else
                 {
                     if (this.IsFrame(FRAME.Xyz))
                     {
-                        _Rank = double.NaN;
-                        _Frame = DefaultFrame;
+                        Rank = double.NaN;
+                        Frame = DefaultFrame;
                     }
                 }                
             }
-            this._Level = level;
+            this.Level = level;
         }
 
         internal void SetDEF(double value, bool setLogic = true)
@@ -224,14 +217,14 @@ namespace OV.Core
             {
                 if (this.IsMagic())
                 {
-                    _Frame = DefaultFrame;
-                    _Attribute = ATTRIBUTE.UNKNOWN;
-                    _Property = PROPERTY.NONE;
-                    _Level = 4; //Default Level
-                    _ATK = double.NaN;
+                    Frame = DefaultFrame;
+                    Attribute = ATTRIBUTE.UNKNOWN;
+                    Property = PROPERTY.NONE;
+                    Level = 4; //Default Level
+                    ATK = double.NaN;
                 }
             }
-            _DEF = value;
+            DEF = value;
         }
 
         public void SetRank(double rank, bool setLogic = true)
@@ -240,20 +233,20 @@ namespace OV.Core
             {
                 if (this.IsMagic())
                 {
-                    _ScaleLeft = _ScaleRight = _ATK = _DEF = double.NaN;
-                    _Attribute = ATTRIBUTE.UNKNOWN;
-                    _Frame = DefaultFrame;
-                    _Property = PROPERTY.NONE;
+                    ScaleLeft = ScaleRight = ATK = DEF = double.NaN;
+                    Attribute = ATTRIBUTE.UNKNOWN;
+                    Frame = DefaultFrame;
+                    Property = PROPERTY.NONE;
                 }
                 else
                 {
                     if (this.IsFrame(FRAME.Xyz) == false)
                     {
-                        _Level = double.NaN;
+                        Level = double.NaN;
                     }
                 }
             }
-            this._Rank = rank;
+            this.Rank = rank;
         }
 
         internal void SetAbility(ABILITY ability, bool isAdd, bool setLogic = true)
@@ -265,28 +258,28 @@ namespace OV.Core
                     //Another Logic
                     if (ability.IsSingleAbility())
                     {
-                        this._Abilities.RemoveAll(o => o.IsSingleAbility());
+                        this.Abilities.RemoveAll(o => o.IsSingleAbility());
                     }
                 }
                 else
                 {
-                    _Frame = DefaultFrame;
-                    _Attribute = ATTRIBUTE.UNKNOWN;
-                    _Property = PROPERTY.NONE;
-                    _Level = 4; //Default Level
-                    _ATK = _DEF = double.NaN;
+                    Frame = DefaultFrame;
+                    Attribute = ATTRIBUTE.UNKNOWN;
+                    Property = PROPERTY.NONE;
+                    Level = 4; //Default Level
+                    ATK = DEF = double.NaN;
                 }
             }
-            if (isAdd && _Abilities.Contains(ability) == false)
+            if (isAdd && Abilities.Contains(ability) == false)
             {
-                _Abilities.Add(ability);
+                Abilities.Add(ability);
             }
-            else if (isAdd == false && _Abilities.Contains(ability))
+            else if (isAdd == false && Abilities.Contains(ability))
             {
-                _Abilities.Remove(ability);
+                Abilities.Remove(ability);
             }
 
-            _Abilities.Sort();
+            Abilities.Sort();
         }
 
         internal void SetATK(double value, bool setLogic = true)
@@ -295,14 +288,14 @@ namespace OV.Core
             {
                 if (this.IsMagic())
                 {
-                    _Frame = DefaultFrame;
-                    _Attribute = ATTRIBUTE.UNKNOWN;
-                    _Property = PROPERTY.NONE;
-                    _Level = 4; //Default Level
-                    _DEF = double.NaN;
+                    Frame = DefaultFrame;
+                    Attribute = ATTRIBUTE.UNKNOWN;
+                    Property = PROPERTY.NONE;
+                    Level = 4; //Default Level
+                    DEF = double.NaN;
                 }
             }
-            _ATK = value;
+            ATK = value;
         }
 
         internal void SetPendulum(bool isPendulum, bool setLogic = true)
@@ -313,20 +306,20 @@ namespace OV.Core
                 {
                     if (this.IsPendulum == false)
                     {
-                        _ScaleLeft = _ScaleRight = 4; //Default Scale
+                        ScaleLeft = ScaleRight = 4; //Default Scale
                     }
                 }
                 else
                 {
-                    _ScaleLeft = _ScaleRight = 4; //Default Scale
-                    _Frame = DefaultFrame;
-                    _Attribute = ATTRIBUTE.UNKNOWN;
-                    _Property = PROPERTY.NONE;
-                    _Level = 4; //Default Level
-                    _ATK = _DEF = double.NaN;
+                    ScaleLeft = ScaleRight = 4; //Default Scale
+                    Frame = DefaultFrame;
+                    Attribute = ATTRIBUTE.UNKNOWN;
+                    Property = PROPERTY.NONE;
+                    Level = 4; //Default Level
+                    ATK = DEF = double.NaN;
                 }
             }
-            this._IsPendulum = isPendulum;
+            this.IsPendulum = isPendulum;
         }
 
         internal void SetPendulumEffect(string text, bool setLogic = true)
@@ -335,21 +328,21 @@ namespace OV.Core
             {
                 if (this.IsMonster() && IsPendulum == false)
                 {
-                    _ScaleLeft = _ScaleRight = 4; //Default Scale
-                    _IsPendulum = true;
+                    ScaleLeft = ScaleRight = 4; //Default Scale
+                    IsPendulum = true;
                 }
                 else if (this.IsMagic())
                 {
-                    _ScaleLeft = _ScaleRight = 4; //Default Scale
-                    _Frame = DefaultFrame;
-                    _Attribute = ATTRIBUTE.UNKNOWN;
-                    _Property = PROPERTY.NONE;
-                    _Level = 4; //Default Level
-                    _ATK = _DEF = double.NaN;
-                    _IsPendulum = true;
+                    ScaleLeft = ScaleRight = 4; //Default Scale
+                    Frame = DefaultFrame;
+                    Attribute = ATTRIBUTE.UNKNOWN;
+                    Property = PROPERTY.NONE;
+                    Level = 4; //Default Level
+                    ATK = DEF = double.NaN;
+                    IsPendulum = true;
                 }
             }
-            _PendulumEffect = text;
+            PendulumEffect = text;
         }
 
         internal void SetScaleLeft(double value, bool setLogic = true)
@@ -358,21 +351,21 @@ namespace OV.Core
             {
                 if (this.IsMonster() && IsPendulum == false)
                 {
-                    _ScaleRight = 4; //Default Scale
-                    _IsPendulum = true;
+                    ScaleRight = 4; //Default Scale
+                    IsPendulum = true;
                 }
                 else if (this.IsMagic())
                 {
-                    _ScaleRight = 4; //Default Scale
-                    _Frame = DefaultFrame;
-                    _Attribute = ATTRIBUTE.UNKNOWN;
-                    _Property = PROPERTY.NONE;
-                    _Level = 4; //Default Level
-                    _ATK = _DEF = double.NaN;
-                    _IsPendulum = true;
+                    ScaleRight = 4; //Default Scale
+                    Frame = DefaultFrame;
+                    Attribute = ATTRIBUTE.UNKNOWN;
+                    Property = PROPERTY.NONE;
+                    Level = 4; //Default Level
+                    ATK = DEF = double.NaN;
+                    IsPendulum = true;
                 }
             }
-            _ScaleLeft = value;
+            ScaleLeft = value;
         }
 
         internal void SetScaleRight(double value, bool setLogic = true)
@@ -381,52 +374,52 @@ namespace OV.Core
             {
                 if (this.IsMonster() && IsPendulum == false)
                 {
-                    _ScaleLeft = 4; //Default Scale
-                    _IsPendulum = true;
+                    ScaleLeft = 4; //Default Scale
+                    IsPendulum = true;
                 }
                 else if (this.IsMagic())
                 {
-                    _ScaleLeft = 4; //Default Scale
-                    _Frame = DefaultFrame;
-                    _Attribute = ATTRIBUTE.UNKNOWN;
-                    _Property = PROPERTY.NONE;
-                    _Level = 4; //Default Level
-                    _ATK = _DEF = double.NaN;
-                    _IsPendulum = true;
+                    ScaleLeft = 4; //Default Scale
+                    Frame = DefaultFrame;
+                    Attribute = ATTRIBUTE.UNKNOWN;
+                    Property = PROPERTY.NONE;
+                    Level = 4; //Default Level
+                    ATK = DEF = double.NaN;
+                    IsPendulum = true;
                 }
             }
-            _ScaleRight = value;
+            ScaleRight = value;
         }
 
         internal void SetProperty(FRAME frame, PROPERTY property, bool setLogic = true)
         {
-            this._Frame = frame;
+            this.Frame = frame;
             if (setLogic)
             {
                 if (this.IsMonster())
                 {
-                    _ScaleLeft = _ScaleRight = _ATK = _DEF = _Level = _Rank = -1;
-                    _IsPendulum = false;                    
-                    _Attribute = _Frame == FRAME.Spell ? ATTRIBUTE.SPELL : ATTRIBUTE.TRAP;
-                    _Abilities.Clear();
-                    _Property = PROPERTY.Normal;
-                    _Type = TYPE.NONE;
+                    ScaleLeft = ScaleRight = ATK = DEF = Level = Rank = -1;
+                    IsPendulum = false;                    
+                    Attribute = Frame == FRAME.Spell ? ATTRIBUTE.SPELL : ATTRIBUTE.TRAP;
+                    Abilities.Clear();
+                    Property = PROPERTY.Normal;
+                    Type = TYPE.NONE;
                 }
                 else
                 {
                     if (property.IsSpellPropertyOnly())
                     {
-                        _Attribute = ATTRIBUTE.SPELL;
+                        Attribute = ATTRIBUTE.SPELL;
                         //_Frame = FRAME.Spell;
                     }
                     else if (property.IsTrapPropertyOnly())
                     {
-                        _Attribute = ATTRIBUTE.TRAP;
+                        Attribute = ATTRIBUTE.TRAP;
                         //_Frame = FRAME.Trap;
                     }
                 }
             }
-            _Property = property;
+            Property = property;
         }
 
         internal void SetType(TYPE type, bool setLogic = true)
@@ -435,14 +428,49 @@ namespace OV.Core
             {
                 if (this.IsMagic())
                 {                    
-                    _Frame = DefaultFrame;
-                    _Attribute = ATTRIBUTE.UNKNOWN;
-                    _Property = PROPERTY.NONE;
-                    _Level = 4; //Default Level
-                    _ATK = _DEF = double.NaN;
+                    Frame = DefaultFrame;
+                    Attribute = ATTRIBUTE.UNKNOWN;
+                    Property = PROPERTY.NONE;
+                    Level = 4; //Default Level
+                    ATK = DEF = double.NaN;
                 }
             }
-            _Type = type;
+            Type = type;
+        }
+
+        internal void SetSticker(STICKER sticker)
+        {
+            Sticker = sticker;
+        }
+
+        internal void SetSet(string set)
+        {
+            Set = set;
+        }
+
+        internal void SetDescription(string description)
+        {
+            Description = description;
+        }
+
+        internal void SetEdition(EDITION edition)
+        {
+            Edition = edition;
+        }
+
+        internal void SetNumber(int number)
+        {
+            Number = number;
+        }
+
+        internal void SetName(string name)
+        {
+            Name = name;
+        }
+
+        internal void SetRarity(RARITY rarity)
+        {
+            Rarity = rarity;
         }
         /*
         internal void CleanUp()
@@ -451,8 +479,8 @@ namespace OV.Core
             DEF = Math.Round(DEF, MidpointRounding.ToEven);
             ScaleLeft = Math.Round(ScaleLeft, MidpointRounding.ToEven);
             ScaleRight = Math.Round(ScaleRight, MidpointRounding.ToEven);
-            _Level = Math.Round(_Level, MidpointRounding.ToEven);
-            _Rank = Math.Round(_Rank, MidpointRounding.ToEven);
+            Level = Math.Round(_Level, MidpointRounding.ToEven);
+            Rank = Math.Round(_Rank, MidpointRounding.ToEven);
         }
         */
     }
@@ -523,7 +551,14 @@ namespace OV.Core
         Counter
     }
 
-    static class Static
+    internal enum CREATOR
+    {
+        NONE,
+        KazukiTakahashi
+    }
+
+
+static class Static
     {
 
         public static bool IsFrame(this YGOCard card, FRAME frame)
@@ -533,15 +568,18 @@ namespace OV.Core
 
         public static bool IsMagic(this YGOCard card)
         {
-            if (card.Frame == FRAME.Spell && card.Attribute == ATTRIBUTE.SPELL) { return true; }
-            if (card.Frame == FRAME.Trap && card.Attribute == ATTRIBUTE.TRAP) { return true; }
+            if (card != null)
+            {
+                if (card.Frame == FRAME.Spell && card.Attribute == ATTRIBUTE.SPELL) { return true; }
+                if (card.Frame == FRAME.Trap && card.Attribute == ATTRIBUTE.TRAP) { return true; }
+            }
             //if (card.Attribute == ATTRIBUTE.UNKNOWN) { return false; }
             return false;
         }
 
         public static bool IsMonster(this YGOCard card)
         {
-            return !card.IsMagic();
+            return card!= null && !card.IsMagic();
         }
 
         public static bool IsSpellPropertyOnly(this PROPERTY property)
