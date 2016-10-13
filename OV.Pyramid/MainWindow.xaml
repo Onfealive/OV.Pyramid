@@ -434,39 +434,51 @@
                             </Expander>
                         </Border>
                         <Border x:Name="FrameBorder"
-				Background="Transparent" Grid.Row="6" Grid.RowSpan="1"
-				BorderBrush="Black" BorderThickness="1.5" CornerRadius="5"
-				Width="400" Height="40" MouseLeftButtonDown="Border_MouseLeftButtonDown"
-                >
+				            Background="Transparent" Grid.Row="6" Grid.RowSpan="1"
+				            BorderBrush="Black" BorderThickness="1.5" CornerRadius="5"
+				            Width="400" Height="40" MouseLeftButtonDown="Border_MouseLeftButtonDown">
                             <Expander Height="Auto" Template="{StaticResource StretchyExpanderTemp}"
-					OverridesDefaultStyle="True" HorizontalAlignment="Left" VerticalAlignment="Top"                  
-					x:Name="FrameExpander"
-					Margin="8,8,0,0" Expanded="FrameExpander_Expanded" Collapsed="FrameExpander_Collapsed">
+					            OverridesDefaultStyle="True" HorizontalAlignment="Left" VerticalAlignment="Top"                  
+					            x:Name="FrameExpander" Margin="8,8,0,0"
+					             Expanded="FrameExpander_Expanded" Collapsed="FrameExpander_Collapsed">
+                                <Expander.Header>
+                                    <Canvas>
+                                        <TextBlock Canvas.Left="4" FontSize="14">Card Type</TextBlock>
+                                    </Canvas>
+                                </Expander.Header>
                                 <Canvas x:Name="FrameCanvas">
                                 </Canvas>
                             </Expander>
                         </Border>
                         <Border x:Name="TypeBorder"
-				Background="Transparent" Grid.Row="8" 
-				BorderBrush="Black" BorderThickness="1.5" CornerRadius="5"
-				Width="400" Height="40" MouseLeftButtonDown="Border_MouseLeftButtonDown"
-                >
+				            Background="Transparent" Grid.Row="8" 
+				            BorderBrush="Black" BorderThickness="1.5" CornerRadius="5"
+				            Width="400" Height="40" MouseLeftButtonDown="Border_MouseLeftButtonDown">
                             <Expander Height="Auto" Template="{StaticResource StretchyExpanderTemp}"
-					OverridesDefaultStyle="True" HorizontalAlignment="Left" VerticalAlignment="Top"                  
-					x:Name="TypeExpander"
-					Margin="8,8,0,0" Expanded="TypeExpander_Expanded" Collapsed="TypeExpander_Collapsed">
-                                <Canvas x:Name="TypeCanvas"/>
+					            OverridesDefaultStyle="True" HorizontalAlignment="Left" VerticalAlignment="Top"                  
+					            x:Name="TypeExpander" Margin="8,8,0,0"
+					             Expanded="TypeExpander_Expanded" Collapsed="TypeExpander_Collapsed">
+                                <Expander.Header>
+                                    <Canvas>
+                                        <TextBlock Canvas.Left="4" FontSize="14">Monster Type</TextBlock>
+                                    </Canvas>
+                                </Expander.Header>
+                                <Canvas x:Name="TypeCanvas"></Canvas>
                             </Expander>
                         </Border>
                         <Border x:Name="AbilityBorder"
-            	Background="Transparent" Grid.Row="10" 
-            	BorderBrush="Black" BorderThickness="1.5" CornerRadius="5"
-            	Width="400" Height="40" MouseLeftButtonDown="Border_MouseLeftButtonDown"
-            	>
+            	            Background="Transparent" Grid.Row="10" 
+            	            BorderBrush="Black" BorderThickness="1.5" CornerRadius="5"
+            	            Width="400" Height="40" MouseLeftButtonDown="Border_MouseLeftButtonDown">       
                             <Expander Height="Auto" Template="{StaticResource StretchyExpanderTemp}"
-            		OverridesDefaultStyle="True" HorizontalAlignment="Left" VerticalAlignment="Top"                  
-            		x:Name="AbilityExpander"
-            		Margin="8,8,0,0" Expanded="AbilityExpander_Expanded" Collapsed="AbilityExpander_Collapsed">
+            		            OverridesDefaultStyle="True" HorizontalAlignment="Left" VerticalAlignment="Top"                  
+            		            x:Name="AbilityExpander" Margin="8,8,0,0"
+            		             Expanded="AbilityExpander_Expanded" Collapsed="AbilityExpander_Collapsed">
+                                <Expander.Header>
+                                    <Canvas>
+                                        <TextBlock Canvas.Left="4" FontSize="14">Ability</TextBlock>
+                                    </Canvas>
+                                </Expander.Header>
                                 <Canvas x:Name="AbilityCanvas"/>
                             </Expander>
                         </Border>
@@ -498,14 +510,18 @@
 
 
                         <Border x:Name="ScaleBorder" Height="40" Width="400"
-            	Background="Transparent" Grid.Row="14" HorizontalAlignment="Right"
-            	BorderBrush="Black" BorderThickness="1.5" CornerRadius="5"
-                        MouseLeftButtonDown="Border_MouseLeftButtonDown">
-
+            	            Background="Transparent" Grid.Row="14" HorizontalAlignment="Right"
+            	            BorderBrush="Black" BorderThickness="1.5" CornerRadius="5"
+                            MouseLeftButtonDown="Border_MouseLeftButtonDown">
                             <Expander Height="Auto" Template="{StaticResource StretchyExpanderTemp}"
-            		OverridesDefaultStyle="True" HorizontalAlignment="Left" VerticalAlignment="Top"                  
-            		x:Name="ScaleExpander"
-            		Margin="8,8,0,0" Expanded="ScaleExpander_Expanded" Collapsed="ScaleExpander_Collapsed">
+            		            OverridesDefaultStyle="True" HorizontalAlignment="Left" VerticalAlignment="Top"                  
+            		            x:Name="ScaleExpander" Margin="8,8,0,0"
+                                Expanded="ScaleExpander_Expanded" Collapsed="ScaleExpander_Collapsed">
+                                <Expander.Header>
+                                    <Canvas>
+                                        <TextBlock Canvas.Left="4" FontSize="14">Pendulum Scale</TextBlock>
+                                    </Canvas>
+                                </Expander.Header>
                                 <Canvas x:Name="ScaleCanvas">
                                     <TextBox Name="ScaleLeftBox" local:Masking.Mask="^([1-9]|[0-1][0-2]|\?)$"  TextChanged="ScaleLeft_TextChanged" Width="40" TextAlignment="Right"></TextBox>
                                     <TextBox Name="ScaleRightBox" local:Masking.Mask="^([1-9]|[0-1][0-2]|\?)$" TextChanged="ScaleRight_TextChanged"  Width="40"></TextBox>

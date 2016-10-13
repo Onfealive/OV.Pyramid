@@ -540,16 +540,7 @@ namespace OV.Pyramid
         }
 
         private void LoadAbilityControl()
-        {
-            Canvas Panel = new Canvas();
-            TextBlock Caption = new TextBlock();
-            Caption.Name = "AbilityCaption";
-            Caption.Text = "Ability";
-            Caption.FontSize = 14;
-            Canvas.SetLeft(Caption, 4);
-            Panel.Children.Add(Caption);
-            AbilityExpander.Header = Panel;
-
+        {   
             string[] Ability_String = typeof(ABILITY).GetList().ToArray();
 
             for (int i = 1; i <= Ability_String.Length; i++)
@@ -648,16 +639,7 @@ namespace OV.Pyramid
         }
 
         private void LoadScaleControl()
-        {
-            Canvas Panel = new Canvas();
-            TextBlock Caption = new TextBlock();
-            Caption.Name = "ScaleCaption";
-            Caption.Text = "Pendulum Scale";
-            Caption.FontSize = 14;
-            Canvas.SetLeft(Caption, 4);
-            Panel.Children.Add(Caption);
-            ScaleExpander.Header = Panel;
-
+        {            
             Image InLeft = new Image();
             InLeft.Source = Images.GetImage(GetLocationPath() + @"\Template\Middle\ScaleLeft.png");
             InLeft.Width = 32;
@@ -1047,16 +1029,7 @@ namespace OV.Pyramid
         
 
         private void LoadFrameControl()
-        {
-            Canvas Panel = new Canvas();
-            TextBlock Caption = new TextBlock();
-            Caption.Name = "FrameCaption";
-            Caption.Text = "Card Type";
-            Caption.FontSize = 14;
-            Canvas.SetLeft(Caption, 4);
-            Panel.Children.Add(Caption);
-            FrameExpander.Header = Panel;
-
+        {   
             List<string> frameList = typeof(FRAME).GetList().ToList();
             frameList.Insert(frameList.IndexOf("Spell"), "Pendulum");
             string[] Frame_String = frameList.ToArray();
@@ -1117,13 +1090,6 @@ namespace OV.Pyramid
                 Button.Content = Zone;
 
                 Button.Click += Button_Frame;
-
-                /*
-                if (Current.IsFrame(Frame_String[i - 1]))
-                    Button.IsEnabled = false;
-                else
-                    Button.IsEnabled = true;
-                    */
             }
         }
 
@@ -1145,14 +1111,7 @@ namespace OV.Pyramid
 
         private void LoadTypeControl()
         {
-            Canvas Panel = new Canvas();
-            TextBlock Caption = new TextBlock();
-            Caption.Name = "TypeCaption";
-            Caption.Text = "Monster Type";
-            Caption.FontSize = 14;
-            Canvas.SetLeft(Caption, 4);
-            Panel.Children.Add(Caption);
-            TypeExpander.Header = Panel;
+            
 
             string[] Type_String = typeof(TYPE).GetList().Where(o => o != TYPE.NONE.ToString()).ToArray();
 
