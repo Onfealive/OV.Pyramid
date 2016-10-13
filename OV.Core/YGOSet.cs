@@ -13,7 +13,7 @@ namespace OV.Core
 
         public YGOSet()
         {
-            Name = "";
+            Name = "Set Name";
             Cards = new List<YGOCard>();
             Prefix = "";
             Type = SETTYPE.BoosterPack;

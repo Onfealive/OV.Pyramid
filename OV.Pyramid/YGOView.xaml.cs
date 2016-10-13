@@ -127,6 +127,8 @@ namespace OV.Pyramid
 
             ScaleLeft.Source = Images.GetImage(GetLocationPath() + @"\Template\Middle\ScaleLeft.png");
             ScaleRight.Source = Images.GetImage(GetLocationPath() + @"\Template\Middle\ScaleRight.png");
+
+            
         }
 
         public void SetDefaultArtwork(string filePath)
@@ -408,14 +410,13 @@ namespace OV.Pyramid
             {
                 Creator.Foreground = Brushes.Black;
             }
-            Creator.Text = Current.Creator;
+            Creator.Text = Current.Creator == CREATOR.KazukiTakahashi ? "© 1996 KAZUKI TAKAHASHI" : "";
         }
 
         public void Save()
         {
-            YGOSet set = new YGOSet();
-            set.Cards.Add(Current);
-            string text = JsonConvert.SerializeObject(set, Formatting.Indented);
+            
+            string text = JsonConvert.SerializeObject(Current, Formatting.Indented);
             //MessageBox.Show(xml);
 
 
@@ -425,13 +426,13 @@ namespace OV.Pyramid
             else
                 dlg.FileName = Current.Name.Replace(":", " -"); // Default file name
             //dlg.DefaultExt = ".png"; // Default file extension
-            dlg.Filter = "OV.Creation Card File|*.ocj"; // Filter files by extension 
+            dlg.Filter = "OV.Creation Card|*.occ"; // Filter files by extension 
 
             // Show save file dialog box
-            Nullable<bool> result = dlg.ShowDialog();
+            
 
             // Process save file dialog box results 
-            if (result == true)
+            if (dlg.ShowDialog() == true)
             {
                 // Save document 
                 string filename = dlg.FileName;
@@ -439,30 +440,12 @@ namespace OV.Pyramid
             }
         }
 
-        public void Load(string filePath = "")
+        internal void Load(YGOCard card)
         {
-            string path = null;
-            if (String.IsNullOrEmpty(filePath)) {
-                Microsoft.Win32.OpenFileDialog choofdlog = new Microsoft.Win32.OpenFileDialog();
-                choofdlog.Filter = "OV.Creation Card|*.ocj";
-                choofdlog.FilterIndex = 1;
-                choofdlog.Multiselect = false;
-                
-                if (choofdlog.ShowDialog() == true)
-                {
-                    path = choofdlog.FileName;
-                }
-            } else
-            {
-                path = filePath;
-            }
-
-            if (String.IsNullOrEmpty(path) || !File.Exists(path))
-                return;
-            //var settings = new ObjectCustomerSettings();
-            Current = JsonConvert.DeserializeObject<YGOCard>(File.ReadAllText(path));
             //Current.CleanUp();
+            Current = card;
             Render(Current);
+            //Render(Current);
         }
 
         public void Export()
@@ -617,213 +600,201 @@ namespace OV.Pyramid
             }
         }
 
-        
-
         private void HandleDescription()
         {
             if (Current == null) {return; }
 
-            string Text = Current.Description;
-
-            /*
-            string text = @"When this card is destroyed... (This card is treated as.) XX (This is.)";
-            string[] uppercaseWords = Regex.Split(text, @"(\(.+?\.\))");
-
-            foreach(string s in uppercaseWords)
+            string Text = Current.Description ?? "";
+            double fontDefault = 32.4;
+            Description.Width = 694;
+            Description.Inlines.Clear();
+            richTextBox.Visibility = Visibility.Hidden;
+            DescriptionBorder.Visibility = Visibility.Visible;
+            Description.Visibility = Visibility.Visible;
+            if (Current.IsFrame(FRAME.Normal))
             {
-                MessageBox.Show(s);
-            }
-             * */
-            Description.Text = Text;
+                Canvas.SetTop(DescriptionBorder, 922);
+                Description.Height = 153; //153                
+                
 
-            if (Current.IsFrame(FRAME.Normal) && string.IsNullOrWhiteSpace(Text) == false )
-            {
-                Description.Inlines.Clear();
-                string[] parts = Regex.Split(Text, @"(\(.+?\.\))");
-                foreach(string part in parts.Where(o => string.IsNullOrWhiteSpace(o) == false))
+                if (Regex.IsMatch(Text, @"(\(.+?\.\))"))
+                {
+                    
+                    richTextBox.Visibility = Visibility.Visible;
+                    DescriptionBorder.Visibility = Visibility.Hidden;
+                    Description.Visibility = Visibility.Hidden;
+                    /* test */
+                    Paragraph Para = new Paragraph();
+
+                    Para.TextAlignment = TextAlignment.Justify;
+                    Para.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
+                    
+                    //if (Text != null)
+                    //Text = Text.Replace("\r\n", Environment.NewLine);
+                    richTextBox.Document.Blocks.Clear();
+                    richTextBox.Document.Blocks.Add(Para);
+
+                    string First = Text != null ? (Text.Split('(') != null ? Text.Split('(')[0] : null) : null;
+                    //MessageBox.Show(Text.Split('(')[0]);
+                    string Second = null;
+                    if (Text != null && Text.Contains("(") && Text.Contains(")"))
+                    {
+                        Second = Text.Substring(Text.IndexOf("("), Text.LastIndexOf(")") + 1 - Text.IndexOf("("));
+
+                    }
+                    if (Second == null)
+                        First = Text;
+
+                    //MessageBox.Show(First);
+                    Para.Inlines.Add(new Run(First));
+                    Para.Inlines.Add(new Run(Second));
+                    Para.Inlines.ElementAt(0).FontFamily = Fonts.StoneSerifItalic; ;//new FontFamily("Times New Roman Italic");
+                    Para.Inlines.ElementAt(0).FontStyle = FontStyles.Italic;
+                    Para.Inlines.ElementAt(1).FontFamily = Fonts.MatrixBook;
+                    double Default = 27; //29.8-32.4 -- 33.1
+                    Para.FontSize = Default;
+                    while (Para.FontSize * 1.1 * richTextBox.CountLine() > richTextBox.Height)
+                    {
+                        Para.FontSize -= 0.07; //0.1
+                        richTextBox.Document.Blocks.Clear();
+                        richTextBox.Document.Blocks.Add(Para);
+                    }
+
+                    int Line = richTextBox.CountLine();
+                    if (Line > 6)
+                    {
+                        richTextBox.Height = 150;    
+                    } else
+                    {
+                       richTextBox.Height = 153;  
+                    }
+                    double param = 1.1;
+                    if (Text != null)
+                    {
+                        if (Text.IsVietnamese())
+                        {
+                            param = 1.2;
+                        }
+                        if (Text.ContainsAny("Ễ"))
+                        {
+                            param = 1.3;
+                        }
+                    }
+                    Para.LineHeight = param * Para.FontSize;
+
+
+                    if (Para.Inlines.Count > 1)
+                    {
+                        Para.Inlines.ElementAt(1).FontSize = Para.Inlines.ElementAt(0).FontSize * 1.15; //29.8-32.4
+                    }
+                    /*
+                     * double scaleFont = 1;
+                double height = 0;
+
+
+                     string[] parts = Regex.Split(Text, @"(\(.+?\.\))");
+
+                foreach (string part in parts.Where(o => string.IsNullOrWhiteSpace(o) == false))
                 {
                     string p = part;
-                    if (Regex.IsMatch(part, @"(\(.+?\.\))")) {
+                    if (Regex.IsMatch(part, @"(\(.+?\.\))")) //Condition
+                    {
                         Description.Inlines.Add(new Run
                         {
                             Text = p,
+                            FontFamily = Fonts.MatrixBook,
+                            FontSize = fontDefault * scaleFont
                         });
+
+
+                        TextBlock t = new TextBlock();
+                        t.Text
+                        height += fontDefault * scaleFont;
                     }
                     else
                     {
                         Description.Inlines.Add(new Run
                         {
                             Text = p,
-                            FontStyle = FontStyles.Italic
+                            FontStyle = FontStyles.Italic,
+                            FontFamily = Fonts.StoneSerifItalic,
+                            FontSize = 27 * scaleFont,
                         });
+                        height += 27 * scaleFont;
                     }
                 }
-            }
+                scaleFont *= 0.9;
+                //Description.LineHeight = scaleFont * fontDefault;
 
+                if (scaleFont < 0.004)
+                {
 
-
-
-            Description.Width = 694;
-            if (Current.IsMonster())
-            {
-                Canvas.SetTop(DescriptionBorder, 922);
-                if (Current.IsFrame(FRAME.Normal))
-                {                    
-                    Description.Height = 153;
+                }  */
                 }
                 else
                 {
-                    Description.Height = 160;//160
+                    Description.Text = Text;
+                    Description.FontFamily = Fonts.StoneSerifItalic;
+                    Description.FontStyle = FontStyles.Italic;
+                    Description.FontSize = 27;                    
+
+                    double lineScale = 1 / 1.2;
+                    //Description.LineHeight = lineScale * Description.FontSize;
+                    //while (Description.FontSize * 1 * Description.GetLines().Count() > Description.Height)
+                    while (Description.FontSize * 1 * Description.GetLines().Count() > Description.Height)
+                    {
+                        //MessageBox.Show(Description.GetFormattedText().Height.ToString());
+                        Description.FontSize *= 0.9; //0.1
+                        /*
+                        lineScale = 0.95;
+                        if (Description.GetLines().Count() > 6)
+                        {
+                            lineScale = 0.94;
+                        }
+                        
+                        */
+                        Description.LineHeight = lineScale * Description.FontSize;
+                    }
                 }
             }
             else
             {
-                Canvas.SetTop(DescriptionBorder, 891);
-                Description.Height = 226;//226
-            }
+                Description.Text = Text;
+                Description.FontFamily = Fonts.MatrixBook;
+                Description.FontStyle = FontStyles.Normal;
+                Description.FontSize = fontDefault;
 
-            Description.FontFamily = Fonts.MatrixBook;
-            double fontDefault = 32.4;
-            Description.FontSize = fontDefault;
-            Description.LineHeight = fontDefault * 1;
-            Description.Padding = new Thickness(5, 0, 5, 0);
-            
-            
-            while (Description.FontSize * (Current.IsFrame(FRAME.Normal) && (Text != null && Text.IsVietnamese())
-                ? 1.1 : 1) * Description.GetLines().Count() > Description.Height)
-            {
-                Description.FontSize -= 0.05; //0.1
-                Description.LineHeight = 0.95 * Description.FontSize;
-                if (Description.GetLines().Count() > 6)
+                Description.LineHeight = fontDefault * 1;
+
+
+                if (Current.IsMonster())
                 {
-                    Description.LineHeight = 0.94 * Description.FontSize;
+                    Canvas.SetTop(DescriptionBorder, 922);
+                    Description.Height = 155;//160
+
                 }
-                //Target.Document.Blocks.Clear();
-                //Target.Document.Blocks.Add(Para);
-            }
-            /*
-            RichTextBox Target = Description;
-            Paragraph Para = new Paragraph();
-
-            Para.TextAlignment = TextAlignment.Justify;
-            Para.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
-            double Default = 0;
-
-            
-            
-
-            Target.Document.Blocks.Clear();
-            Target.Document.Blocks.Add(Para);
-
-
-            if (Current.IsMonster())
-            {                
-                Canvas.SetTop(DescriptionBorder, 920);
-                if (Current.IsFrame(FRAME.Normal))
+                else
                 {
-                    Description.Width = 694;
-                    Description.Height = 153;
-                } else
-                {
-                    Description.Width = 694;
-                    Description.Height = 160;//160
+                    Canvas.SetTop(DescriptionBorder, 891);
+                    Description.Height = 226;//226
                 }
-            }
-            else
-            {               
-                Canvas.SetTop(DescriptionBorder, 891);
-                Description.Height = 230;//226
-                Description.Width = 694;
-            }
 
-            if (Current.IsFrame(FRAME.Normal))
-            {
-                if (Text != null) { Text = Text.Replace("\"", "''"); }
-
-                string First = Text != null ? (Text.Split('(') != null ? Text.Split('(')[0] : null) : null;
-                //MessageBox.Show(Text.Split('(')[0]);
-                string Second = null;
-                if (Text != null && Text.Contains("(") && Text.Contains(")"))
-                {
-                    Second = Text.Substring(Text.IndexOf("("), Text.LastIndexOf(")") + 1 - Text.IndexOf("("));
-                }
-                if (Second == null)
-                    First = Text;
-
-                //MessageBox.Show(First);
-                Para.Inlines.Add(new Run(First));
-                Para.Inlines.Add(new Run(Second));
-                Para.Inlines.ElementAt(0).FontFamily = Fonts.StoneSerifItalic; ;//new FontFamily("Times New Roman Italic");
-                Para.Inlines.ElementAt(0).FontStyle = FontStyles.Italic;
-                Para.Inlines.ElementAt(1).FontFamily = Fonts.MatrixBook;
-                Default = 27; //29.8-32.4 -- 33.1
-                Para.FontSize = Default;
-            }
-            else
-            {                
-                Para.Inlines.Add(new Run(Text));
-                Para.FontFamily = Fonts.MatrixBook;
-                Default = 32.4; //32.4-33.1
                 
-                if (Current.IsMagic())
+                
+
+
+                while (Description.FontSize * (Text.IsVietnamese()
+                    ? 1.1 : 1) * Description.GetLines().Count() > Description.Height)
                 {
-                    Default = 32.8;
-                    
-                }
-            }
-
-
-            Para.FontSize = Default;
-            // 6-26.5
-
-            int Line = Target.CountLine();
-            while (Para.FontSize * (Current.IsFrame(FRAME.Normal) && (Text != null && Text.IsVietnamese()) ? 1.1 : 1.25) * Target.CountLine() > Target.Height)
-            {
-                Para.FontSize -= 0.07; //0.1
-                Target.Document.Blocks.Clear();
-                Target.Document.Blocks.Add(Para);
-            }
-            
-            if (Current.IsFrame(FRAME.Normal))
-            {
-                double param = 1;
-                if (Text != null)
-                {
-                    if (Text.IsVietnamese())
+                    Description.FontSize -= 0.05; //0.1
+                    double lineScale = 0.95;
+                    if (Description.GetLines().Count() > 6)
                     {
-                        param = 1.2;
+                        lineScale = 0.94;
                     }
-                    if (Text.ContainsAny("Ễ"))
-                    {
-                        param = 1.3;
-                    }
+                    Description.LineHeight = lineScale * Description.FontSize;
                 }
-                Para.LineHeight = param * Para.FontSize * 1.0; // 1.0 
-            }
-            else
-            {
-                if (Line <= (Current.IsMagic() ? 7 : 4))
-                {
-                    Para.LineHeight = 0.95 * Para.FontSize; //0.95
-                }
-                else
-                {
-                    double multiply = 1.25;
-                    if (Line > 6)
-                    {
-                        multiply = 1.05;
-                    }
-                    Para.LineHeight = Target.Height / (Line * multiply); //1.05
-                }
-            }
-
-            if (Para.Inlines.Count > 1)
-            {
-                Para.Inlines.ElementAt(1).FontSize = Para.Inlines.ElementAt(0).FontSize * 1.15; //29.8-32.4
-            }
-            //if (IsAlert && Line > (Current.IsMagic ? 10 : 7))
-            //    MessageBox.Show("Số dòng đề nghị là " + (Current.IsMagic ? 10 : 7) + " để dễ hiển thị và in ấn.", "Tiêu chuẩn");
-            */
+            }           
         }
 
         private void HandleRarity()

@@ -1,4 +1,6 @@
 ﻿using Microsoft.Win32;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using OV.Core;
 using OV.Tools;
 using System;
@@ -7,6 +9,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
@@ -82,7 +85,8 @@ namespace OV.Pyramid
             if (Application.Current.Properties["ArbitraryArgName"] != null)
             {
                 string fname = Application.Current.Properties["ArbitraryArgName"].ToString();
-                RenderCard.Load(fname);
+                //RenderCard.Load(fname);
+                LoadSet(fname);
             }
         }
 
@@ -130,6 +134,7 @@ namespace OV.Pyramid
 
         private void RefreshControl()
         {
+            if (currentIndex == -1) { return;  }
             inRefreshControl = true;
             NameEdit.Text = Current.Name;
 
@@ -420,12 +425,98 @@ namespace OV.Pyramid
 
         private void Load_Click(object sender, RoutedEventArgs e)
         {
-            RenderCard.Load();
+            LoadSet();
+            
+        }
+
+        private void LoadSet(string filePath = "")
+        {
+            string path = null;
+            if (string.IsNullOrEmpty(filePath))
+            {
+                OpenFileDialog choofdlog = new OpenFileDialog();
+                choofdlog.Filter = "OV.Creation Set Card|*.ocs|OV.Creation Card|*.occ";
+                choofdlog.FilterIndex = 1;
+                choofdlog.Multiselect = false;
+
+                if (choofdlog.ShowDialog() == true)
+                {
+                    path = choofdlog.FileName;
+                }
+            }
+            else
+            {
+                path = filePath;
+            }
+
+            if (string.IsNullOrEmpty(path) || !File.Exists(path))
+                return;
+            //var settings = new ObjectCustomerSettings();
+            //Current = JsonConvert.DeserializeObject<YGOSet>(File.ReadAllText(path)).Cards[0];
+
+            if (path.IsEndWith(".ocs"))
+            {
+                var contractResolver = new DefaultContractResolver();
+                contractResolver.DefaultMembersSearchFlags |= BindingFlags.NonPublic;
+                var settings = new JsonSerializerSettings
+                {
+                    ContractResolver = contractResolver
+                };
+                Set = JsonConvert.DeserializeObject<YGOSet>(File.ReadAllText(path), settings);
+
+            }
+            else
+            {
+                Set.Cards.Clear();
+                Set.Cards.Add(JsonConvert.DeserializeObject<YGOCard>(File.ReadAllText(path)));
+            }
+            cardList.SelectionChanged -= cardList_SelectionChanged;
+            cardList.ItemsSource = Set.Cards;
+            currentIndex = 0;
+            cardList.SelectionChanged += cardList_SelectionChanged;
+
+            RefreshArtwork();
+            RenderCard.Load(Current);
+            RefreshControl();
         }
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
-            RenderCard.Save();
+            SaveSet();            
+        }
+
+        private void SaveSet()
+        {
+            string text;
+            //MessageBox.Show(xml);
+
+
+            SaveFileDialog dlg = new SaveFileDialog();
+            if (string.IsNullOrWhiteSpace(Set.Name))
+                dlg.FileName = "Set Name";
+            else
+                dlg.FileName = Set.Name.Replace(":", " -"); // Default file name
+            //dlg.DefaultExt = ".png"; // Default file extension
+            dlg.Filter = "OV.Creation Set Card|*.ocs|OV.Creation Card|*.occ"; // Filter files by extension 
+
+            // Show save file dialog box
+
+            // Process save file dialog box results 
+            if (dlg.ShowDialog() == true)
+            {
+                // Save document 
+                string filename = dlg.FileName;
+                if (filename.IsEndWith(".ocs"))
+                {
+                    text = JsonConvert.SerializeObject(Set, Formatting.Indented);
+                }
+                else
+                {
+                    text = JsonConvert.SerializeObject(Current, Formatting.Indented);
+                    
+                }
+                File.WriteAllText(filename, text);
+            }
         }
 
         private void Export_Click(object sender, RoutedEventArgs e)
@@ -1211,13 +1302,13 @@ namespace OV.Pyramid
         private void Sticker_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             string Text = (sender as ComboBox).SelectedValue.ToString();
-            Current.Sticker = Text.Remove(" ").ToEnum<STICKER>();
+            Current.SetSticker(Text.Remove(" ").ToEnum<STICKER>());
             RenderCard.Render(Current);
         }
 
         private void SetNumber_TextChanged(object sender, TextChangedEventArgs e)
         {
-            Current.Set = (sender as TextBox).Text;
+            Current.SetSet((sender as TextBox).Text);
             RenderCard.Render(Current);
         }
 
@@ -1225,7 +1316,7 @@ namespace OV.Pyramid
         {
             int value;
             int.TryParse((sender as TextBox).Text, out value);
-            Current.Number = value;
+            Current.SetNumber(value);
             RenderCard.Render(Current);
         }
 
@@ -1239,7 +1330,7 @@ namespace OV.Pyramid
         private void Edition_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             string Text = (sender as ComboBox).SelectedValue.ToString();
-            Current.Edition = Text.Remove(" ").Replace("1st", "First").ToEnum<EDITION>();
+            Current.SetEdition(Text.Remove(" ").Replace("1st", "First").ToEnum<EDITION>());
             RenderCard.Render(Current);
         }
 
@@ -1251,7 +1342,7 @@ namespace OV.Pyramid
         private void Name_TextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (inRefreshControl) { return; }
-            Current.Name = (sender as TextBox).Text;            
+            Current.SetName((sender as TextBox).Text); 
             RenderCard.Render(Current);
         }
 
@@ -1266,7 +1357,7 @@ namespace OV.Pyramid
         {
             Button button = sender as Button;
             //ChangeRarity(Button.Content.ToString().Replace('_', ' '));
-            Current.Rarity = button.Tag.ToString().ToEnum<RARITY>();
+            Current.SetRarity(button.Tag.ToString().ToEnum<RARITY>());
             RenderCard.Render(Current);
             RefreshRarityControl();
         }
@@ -1567,7 +1658,7 @@ namespace OV.Pyramid
 
             if (DescriptionButton.IsEnabled == false) //Current is Description
             {
-                Current.Description = Text;
+                Current.SetDescription(Text);
             }
             else
             {
@@ -1580,8 +1671,12 @@ namespace OV.Pyramid
 
         private void cardList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            currentIndex = cardList.SelectedIndex;            
-            ControlArtwork.Source = Current.ArtworkByte.GetBitmapImageFromByteArray();
+            
+            currentIndex = cardList.SelectedIndex;
+            if (currentIndex != -1)
+            {
+                ControlArtwork.Source = Current.ArtworkByte.GetBitmapImageFromByteArray();
+            }
             RefreshArtwork();
             RefreshControl();
         }
