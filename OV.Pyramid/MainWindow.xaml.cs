@@ -179,6 +179,8 @@ namespace OV.Pyramid
 
             SetNumberEdit.Text = Current.Set.ToString();            
             CardNumberEdit.Text = Current.Number > 0 ? Current.Number.ToString() : "";
+
+            CreatorCheckBox.IsChecked = Current.Creator == CREATOR.NONE ? false : true;
         }
 
         private void RefreshTextControl()
@@ -629,6 +631,8 @@ namespace OV.Pyramid
 
             Current.SetDEF(int.TryParse(txtBox.Text, out value) ? value : double.NaN);
             RenderCard.Render(Current);
+
+            RefreshControl();
         }
 
         private void ATK_TextBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -1393,22 +1397,22 @@ namespace OV.Pyramid
 
         private void CirculationExpander_Expanded(object sender, RoutedEventArgs e)
         {
-            Grid.Height += 172 - 40;
-            SynchroAnimation(CirculationBorder, 172, Border.HeightProperty);
+            Grid.Height += CirculationCanvas.Height - 40;
+            SynchroAnimation(CirculationBorder, CirculationCanvas.Height, Border.HeightProperty);
 
-            TextBlock Caption = (CirculationExpander.Header as Canvas).FindChildren<TextBlock>("CirculationCaption");
-            SynchroAnimation(Caption, (CirculationBorder.Width - Caption.ActualWidth) / 2 - 32, Canvas.LeftProperty);
+
+            SynchroAnimation(CirculationCaption,
+                (CirculationBorder.Width - CirculationCaption.ActualWidth) / 2 - 32, Canvas.LeftProperty);
 
             Scroll.ScrollToEnd();
         }
 
         private void CirculationExpander_Collapsed(object sender, RoutedEventArgs e)
         {
-            Grid.Height -= 172 - 40;
+            Grid.Height -= CirculationCanvas.Height - 40;
             SynchroAnimation(CirculationBorder, 40, Border.HeightProperty);
-
-            TextBlock Caption = (CirculationExpander.Header as Canvas).FindChildren<TextBlock>("CirculationCaption");
-            SynchroAnimation(Caption, 2, Canvas.LeftProperty);
+            
+            SynchroAnimation(CirculationCaption, 2, Canvas.LeftProperty);
         }
 
         private void NameExpander_Expanded(object sender, RoutedEventArgs e)
@@ -1717,6 +1721,15 @@ namespace OV.Pyramid
             DocumentBox.Document.Blocks.Clear();
             DocumentBox.AppendText(Current.PendulumEffect);
             */
+            RefreshControl();
+        }
+
+        private void CreatorCheckBox_Checked(object sender, RoutedEventArgs e)
+        {
+            if (inRefreshControl) { return; }
+            bool isChecked = (sender as CheckBox).IsChecked ?? false;
+            Current.SetCreator(isChecked ? CREATOR.KazukiTakahashi : CREATOR.NONE);            
+            RenderCard.Render(Current);
             RefreshControl();
         }
     }

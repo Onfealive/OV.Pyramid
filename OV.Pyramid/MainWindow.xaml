@@ -553,7 +553,7 @@
                                         <TextBlock Name="CirculationCaption" Canvas.Left="4" FontSize="14">Circulation</TextBlock>
                                     </Canvas>
                                 </Expander.Header>
-                                <Canvas x:Name="CirculationCanvas">
+                                <Canvas x:Name="CirculationCanvas" Height="196">
                                     <TextBlock Canvas.Top="12">Edition</TextBlock>
                                     <ComboBox Name="EditionCombo" Width="120" SelectionChanged="Edition_SelectionChanged"
                                               Canvas.Left="135" Canvas.Top="10"></ComboBox>
@@ -567,6 +567,8 @@
                                     <TextBlock Canvas.Top="102">Eye of Anubis Hologram</TextBlock>
                                     <ComboBox Name="StickerCombo" Width="110" SelectionChanged="Sticker_SelectionChanged"
                                               Canvas.Top="102" Canvas.Left="135"></ComboBox>
+                                    <TextBlock Canvas.Top="132">Creator</TextBlock>
+                                    <CheckBox Name="CreatorCheckBox" Canvas.Top="132" Canvas.Left="135" Click="CreatorCheckBox_Checked">Display</CheckBox>
                                 </Canvas>
                             </Expander>
                         </Border>

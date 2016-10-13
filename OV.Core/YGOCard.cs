@@ -472,17 +472,22 @@ namespace OV.Core
         {
             Rarity = rarity;
         }
-        /*
-        internal void CleanUp()
+
+        internal void SetCreator(CREATOR creator)
         {
-            ATK = Math.Round(ATK, MidpointRounding.ToEven);
-            DEF = Math.Round(DEF, MidpointRounding.ToEven);
-            ScaleLeft = Math.Round(ScaleLeft, MidpointRounding.ToEven);
-            ScaleRight = Math.Round(ScaleRight, MidpointRounding.ToEven);
-            Level = Math.Round(_Level, MidpointRounding.ToEven);
-            Rank = Math.Round(_Rank, MidpointRounding.ToEven);
+            Creator = creator;
         }
-        */
+        /*
+internal void CleanUp()
+{
+   ATK = Math.Round(ATK, MidpointRounding.ToEven);
+   DEF = Math.Round(DEF, MidpointRounding.ToEven);
+   ScaleLeft = Math.Round(ScaleLeft, MidpointRounding.ToEven);
+   ScaleRight = Math.Round(ScaleRight, MidpointRounding.ToEven);
+   Level = Math.Round(_Level, MidpointRounding.ToEven);
+   Rank = Math.Round(_Rank, MidpointRounding.ToEven);
+}
+*/
     }
 
     public enum ABILITY
