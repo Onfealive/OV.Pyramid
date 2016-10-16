@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System;
 using Newtonsoft.Json;
 using OV.Pyramid;
+using System.Runtime.CompilerServices;
+using System.Linq;
 
 namespace OV.Core
 {   
@@ -487,7 +489,44 @@ internal void CleanUp()
    Level = Math.Round(_Level, MidpointRounding.ToEven);
    Rank = Math.Round(_Rank, MidpointRounding.ToEven);
 }
+
+
 */
+            
+        public override bool Equals(Object obj)
+        {
+            if (obj == null) return false;
+            var other = obj as YGOCard;
+            if (other== null) return false;
+
+            if (other.Name == this.Name
+                && (!other.Abilities.Except(this.Abilities).Any() && !this.Abilities.Except(other.Abilities).Any())
+                && other.ArtworkByte.SequenceEqual(this.ArtworkByte)
+                && other.ATK.Equals(this.ATK)
+                && other.DEF.Equals(this.DEF)                
+                && other.Attribute == this.Attribute
+                && other.Description == this.Description
+                && other.Frame == this.Frame
+                && other.IsPendulum == this.IsPendulum
+                && other.Level.Equals(this.Level)
+                && other.PendulumEffect == this.PendulumEffect
+                && other.Number == this.Number
+                && other.Property == this.Property
+                && other.Rank.Equals( this.Rank)
+                && other.ScaleLeft.Equals(this.ScaleLeft)
+                && other.ScaleRight.Equals(this.ScaleRight)
+                && other.Type == this.Type) { return true; }
+
+            return this.GetHashCode() == other.GetHashCode();
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
+
+
+
     }
 
     public enum ABILITY
