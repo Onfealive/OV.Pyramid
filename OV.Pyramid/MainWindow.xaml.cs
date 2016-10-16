@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using JsonNet.PrivateSettersContractResolvers;
+using Microsoft.Win32;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using OV.Core;
@@ -11,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -46,7 +48,9 @@ namespace OV.Pyramid
     {
         private YGOSet Set = new YGOSet();
         private int currentIndex = -1;
+
         private bool inRefreshControl = false;
+        private bool inChangeSetCard;
 
         private YGOCard Current
         {
@@ -120,23 +124,27 @@ namespace OV.Pyramid
             cardList.ItemsSource = Set.Cards;
             cardList.SelectedIndex = 0;
 
-            
-
         }
 
         private void RefreshArtwork()
         {
+            inChangeSetCard = true;
             ICollectionView view = CollectionViewSource.GetDefaultView(Set.Cards);
             view.Refresh();
+            inChangeSetCard = false;
             if (Current == null) { return; }
             RenderCard.Render(Current);
+            
         }
 
         private void RefreshControl()
         {
             if (currentIndex == -1) { return;  }
             inRefreshControl = true;
+            
             NameEdit.Text = Current.Name;
+
+            
 
             RefreshRarityControl();
             RefreshAttributeControl();
@@ -145,16 +153,20 @@ namespace OV.Pyramid
             RefreshTypeControl();
             RefreshAbilityControl();
 
+            
 
             RefreshATKControl();
             RefreshDEFControl();
             RefreshScaleControl();
+
+            
             RefreshTextControl();
-
+            
             RefreshCirculationControl();
-
-            ArtworkPath.Text = "";     
+            ArtworkPath.Text = "";
+            
             inRefreshControl = false;
+
         }
 
         private void RefreshCirculationControl()
@@ -458,11 +470,17 @@ namespace OV.Pyramid
 
             if (path.IsEndWith(".ocs"))
             {
+                /*
                 var contractResolver = new DefaultContractResolver();
                 contractResolver.DefaultMembersSearchFlags |= BindingFlags.NonPublic;
                 var settings = new JsonSerializerSettings
                 {
                     ContractResolver = contractResolver
+                }; */
+
+                var settings = new JsonSerializerSettings
+                {
+                    ContractResolver = new PrivateSetterContractResolver()
                 };
                 Set = JsonConvert.DeserializeObject<YGOSet>(File.ReadAllText(path), settings);
 
@@ -472,10 +490,11 @@ namespace OV.Pyramid
                 Set.Cards.Clear();
                 Set.Cards.Add(JsonConvert.DeserializeObject<YGOCard>(File.ReadAllText(path)));
             }
-            cardList.SelectionChanged -= cardList_SelectionChanged;
+
+            inChangeSetCard = true;
             cardList.ItemsSource = Set.Cards;
             currentIndex = 0;
-            cardList.SelectionChanged += cardList_SelectionChanged;
+            inChangeSetCard = false;
 
             RefreshArtwork();
             RenderCard.Load(Current);
@@ -1264,6 +1283,7 @@ namespace OV.Pyramid
 
         private void Sticker_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (inRefreshControl) { return; }
             string Text = (sender as ComboBox).SelectedValue.ToString();
             Current.SetSticker(Text.Remove(" ").ToEnum<STICKER>());
             RenderCard.Render(Current);
@@ -1271,16 +1291,22 @@ namespace OV.Pyramid
 
         private void SetNumber_TextChanged(object sender, TextChangedEventArgs e)
         {
+            if (inRefreshControl) { return; }
             Current.SetSet((sender as TextBox).Text);
             RenderCard.Render(Current);
         }
 
         private void CardNumber_TextChanged(object sender, TextChangedEventArgs e)
         {
+            if (inRefreshControl) { return; }
             int value;
             int.TryParse((sender as TextBox).Text, out value);
             Current.SetNumber(value);
+           
+
             RenderCard.Render(Current);
+            //RefreshAttributeControl();
+            RefreshControl();
         }
 
         private void Random_Click(object sender, RoutedEventArgs e)
@@ -1292,6 +1318,7 @@ namespace OV.Pyramid
 
         private void Edition_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (inRefreshControl) { return; }
             string Text = (sender as ComboBox).SelectedValue.ToString();
             Current.SetEdition(Text.Remove(" ").Replace("1st", "First").ToEnum<EDITION>());
             RenderCard.Render(Current);
@@ -1305,8 +1332,12 @@ namespace OV.Pyramid
         private void Name_TextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (inRefreshControl) { return; }
-            Current.SetName((sender as TextBox).Text); 
-            RenderCard.Render(Current);
+            Current.SetName((sender as TextBox).Text);
+
+            RefreshArtwork();
+            RefreshControl();
+
+
         }
 
         private void Symbol_Click(object sender, RoutedEventArgs e)
@@ -1536,25 +1567,23 @@ namespace OV.Pyramid
             SynchroAnimation(Caption, 142, Canvas.LeftProperty);
         }
 
-        private void ScaleExpander_Expanded(object sender, RoutedEventArgs e)
+        private async void ScaleExpander_Expanded(object sender, RoutedEventArgs e)
         {
-            Grid.Height += 190 - 40;
-            SynchroAnimation(ScaleBorder, 190, Border.HeightProperty);
-
-            TextBlock Caption = (ScaleExpander.Header as Canvas).FindChildren<TextBlock>("ScaleCaption");
-
-            SynchroAnimation(Caption, (ScaleBorder.Width - Caption.ActualWidth) / 2 - 34, Canvas.LeftProperty);
+            Grid.Height += ScaleCanvas.Height - 40;
+            SynchroAnimation(ScaleBorder, ScaleCanvas.Height, Border.HeightProperty);
+            
+            SynchroAnimation(ScaleCaption, (ScaleBorder.Width - ScaleCaption.ActualWidth) / 2 - 34, Canvas.LeftProperty);
+            await Task.Delay(400);
             Scroll.ScrollToEnd();
         }
 
         private void ScaleExpander_Collapsed(object sender, RoutedEventArgs e)
         {
-            Grid.Height -= 190 - 40;
+            Grid.Height -= ScaleCanvas.Height - 40;
             //ScaleBorder.MinHeight = 40;
             SynchroAnimation(ScaleBorder, 40, Border.HeightProperty);
-
-            TextBlock Caption = (ScaleExpander.Header as Canvas).FindChildren<TextBlock>("ScaleCaption");
-            SynchroAnimation(Caption, 2, Canvas.LeftProperty);
+            
+            SynchroAnimation(ScaleCaption, 2, Canvas.LeftProperty);
         }
 
         private void ScaleLeft_TextChanged(object sender, TextChangedEventArgs e)
@@ -1634,17 +1663,74 @@ namespace OV.Pyramid
 
         private void cardList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            
+            if (inChangeSetCard) { return; }
             currentIndex = cardList.SelectedIndex;
+            //MessageBox.Show(currentIndex.ToString());
             if (currentIndex != -1)
             {
                 ControlArtwork.Source = Current.ArtworkByte.GetBitmapImageFromByteArray();
             }
-            RefreshArtwork();
+            RefreshArtwork();            
             RefreshControl();
+
+
         }
 
-        
+        private void cardList_PreviewKeyDown(object sender, KeyEventArgs e)
+        {
+            if (inChangeSetCard) { return; }
+            if (e.Key == Key.Delete)
+            {
+                if (Set.Cards.Count() <= 1)
+                {
+                    return;
+                }
+                int previewIndex = currentIndex;
+                Set.Cards.Remove(cardList.SelectedItem as YGOCard);
+                cardList.ItemsSource = Set.Cards;
+                
+                currentIndex = previewIndex - 1;
+                
+                if (currentIndex < 0)
+                {
+                    currentIndex = 0;
+                }
+
+                
+                ControlArtwork.Source = Current.ArtworkByte.GetBitmapImageFromByteArray();
+                
+                RefreshArtwork();
+                RefreshControl();
+            }
+        }
+
+        private void InsertNewCard_Click(object sender, RoutedEventArgs e)
+        {
+            if (inChangeSetCard) { return; }
+
+            //MessageBox.Show(Set.Cards[0].GetHashCode().ToString());
+            if (Set.Cards.Where(o => o.Equals(YGOCard.Default)).Count() >= 3)
+            {
+
+            }
+            else
+            {
+                
+                Set.Cards.Add(YGOCard.Default);
+                cardList.ItemsSource = Set.Cards;
+
+                //currentIndex = cardList;
+
+                if (currentIndex != -1)
+                {
+                    ControlArtwork.Source = Current.ArtworkByte.GetBitmapImageFromByteArray();
+                }
+                RefreshArtwork();
+                RefreshControl();
+            }
+        }
+
+
 
         private void ArtworkBrowser_Click(object sender, RoutedEventArgs e)
         {
@@ -1690,6 +1776,16 @@ namespace OV.Pyramid
             Current.SetCreator(isChecked ? CREATOR.KazukiTakahashi : CREATOR.NONE);            
             RenderCard.Render(Current);
             RefreshControl();
+        }
+
+        private void resizeArtworkButton_Click(object sender, RoutedEventArgs e)
+        {
+            RenderCard.ResizeArtwork(true);
+        }
+
+        private void previewResizeArtworkButton_Click(object sender, RoutedEventArgs e)
+        {
+            RenderCard.ResizeArtwork(true);
         }
     }
 
