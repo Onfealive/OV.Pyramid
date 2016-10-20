@@ -5,14 +5,15 @@ using Newtonsoft.Json;
 using OV.Pyramid;
 using System.Runtime.CompilerServices;
 using System.Linq;
+using System.Windows;
 
 namespace OV.Core
 {   
     class YGOCard
     {
         private FRAME DefaultFrame = FRAME.Effect;
-
         
+
         private YGOCard()
         {
             this.Abilities = new List<ABILITY>();
@@ -77,10 +78,10 @@ namespace OV.Core
                 defaultCard.Creator = CREATOR.KazukiTakahashi;;
                 defaultCard.Rarity = RARITY.Common;
                 //defaultCard.Type = TYPE.Warrior;
-                defaultCard.Sticker = STICKER.PromoSilver;
-                defaultCard.ArtworkByte = Images.GetImageByte(Utilities.GetLocationPath() + @"\Template\NoneImage.png");
+                defaultCard.Sticker = STICKER.PromoSilver;                
+                defaultCard.ArtworkByte = Images.GetImageByte(Utilities.GetLocationPath() + @"\Resources\Template\NoneImage.png");
                 defaultCard.Set = "";
-                defaultCard.ScaleLeft = defaultCard.ScaleRight = -1;                
+                defaultCard.ScaleLeft = defaultCard.ScaleRight = -1;
                 return defaultCard;
             }
         }
@@ -501,7 +502,8 @@ internal void CleanUp()
 
             if (other.Name == this.Name
                 && (!other.Abilities.Except(this.Abilities).Any() && !this.Abilities.Except(other.Abilities).Any())
-                && other.ArtworkByte.SequenceEqual(this.ArtworkByte)
+                && ((other.ArtworkByte == null && this.ArtworkByte == null)
+                    || (other.ArtworkByte != null && other.ArtworkByte.SequenceEqual(this.ArtworkByte)))
                 && other.ATK.Equals(this.ATK)
                 && other.DEF.Equals(this.DEF)                
                 && other.Attribute == this.Attribute
@@ -524,9 +526,6 @@ internal void CleanUp()
         {
             return base.GetHashCode();
         }
-
-
-
     }
 
     public enum ABILITY
