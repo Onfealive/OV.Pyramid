@@ -1,7 +1,6 @@
 ﻿using JsonNet.PrivateSettersContractResolvers;
 using Microsoft.Win32;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using OV.Core;
 using OV.Tools;
 using System;
@@ -10,7 +9,6 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
@@ -21,6 +19,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using static OV.Tools.Animations;
 using static OV.Tools.Utilities;
+using Forms = System.Windows.Forms;
 
 namespace OV.Pyramid
 {
@@ -51,6 +50,10 @@ namespace OV.Pyramid
 
         private bool inRefreshControl = false;
         private bool inChangeSetCard;
+
+        private string TempFolder = GetTemporaryDirectory();
+
+        private ByteDatabase FontDatabase;
 
         private YGOCard Current
         {
@@ -96,12 +99,45 @@ namespace OV.Pyramid
 
         public MainWindow()
         {
-            InitializeComponent();            
+            InitializeComponent();
+            LoadBDatabase();         
             FirstLoad();           
+        }
+
+        private void SaveBDatabase()
+        {
+            ByteDatabase database = new ByteDatabase( ByteDatabaseType.Fonts);
+            database.GetDataFromFolder(GetLocationPath() + @"\Resources\");
+            string text = JsonConvert.SerializeObject(database, Formatting.Indented);
+            File.WriteAllText(GetLocationPath() + @"\Fonts.bdb", text);
+
+            database = new ByteDatabase(ByteDatabaseType.Images);
+            database.GetDataFromFolder(GetLocationPath() + @"\Resources\");
+            text = JsonConvert.SerializeObject(database, Formatting.Indented);
+            File.WriteAllText(GetLocationPath() + @"\Images.bdb", text);
+
+        }
+
+        private void LoadBDatabase()
+        {
+            RenderCard.SetTempFolder(TempFolder);
+            //SaveBDatabase();
+            
+            FontDatabase = JsonConvert.DeserializeObject<ByteDatabase>(File.ReadAllText(@"Fonts.bdb"));
+            foreach (ByteData b in FontDatabase.Datas)
+            {
+                byte[] font = b.Bytes;
+                string filePath = TempFolder + b.Name;
+                File.WriteAllBytes(filePath, font);
+            } 
         }
 
         private void FirstLoad()
         {
+
+            
+            
+
             //Set default global Style for Paragraph: Margin = 0
             Style style = new Style(typeof(Paragraph));
             style.Setters.Add(new Setter(Paragraph.MarginProperty, new Thickness(0)));
@@ -109,8 +145,8 @@ namespace OV.Pyramid
 
 
             Set.Cards.Add(YGOCard.Default);
-            Set.Cards.Add(YGOCard.Default);
-            RenderCard.SetDefaultArtwork(GetLocationPath() + @"\Template\NoneImage.png");
+            //Set.Cards.Add(YGOCard.Default);
+            RenderCard.SetDefaultArtwork(GetLocationPath() + @"\Resources\Template\NoneImage.png");
 
             //RenderCard.Render(Current);
 
@@ -124,6 +160,7 @@ namespace OV.Pyramid
             cardList.ItemsSource = Set.Cards;
             cardList.SelectedIndex = 0;
 
+            //ControlArtwork.Source = t.Images.Find(o => o.Name == "About.png").Bytes.GetBitmapImageFromByteArray();
         }
 
         private void RefreshArtwork()
@@ -133,6 +170,7 @@ namespace OV.Pyramid
             view.Refresh();
             inChangeSetCard = false;
             if (Current == null) { return; }
+            
             RenderCard.Render(Current);
             
         }
@@ -164,7 +202,7 @@ namespace OV.Pyramid
             
             RefreshCirculationControl();
             ArtworkPath.Text = "";
-            
+            artworkPaddingHeight.Text = RenderCard.RecommendedHeight.ToString();
             inRefreshControl = false;
 
         }
@@ -296,13 +334,13 @@ namespace OV.Pyramid
                     if (Current.Abilities.Contains(button.Tag.ToString().ToEnum<ABILITY>()))
                     {
                         content.Text = "Un-" + button.Tag;
-                        icon.Source = Images.GetImage(GetLocationPath() + @"\Template\Ability\"+ button.Tag +".png")
+                        icon.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Ability\"+ button.Tag +".png")
                             .ToBitmap().Grayscale().ToBitmapSource();
                     }
                     else
                     {
                         content.Text = button.Tag.ToString();
-                        icon.Source = Images.GetImage(GetLocationPath() + @"\Template\Ability\" + button.Tag + ".png");
+                        icon.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Ability\" + button.Tag + ".png");
                     }                    
                 }
             }
@@ -345,12 +383,12 @@ namespace OV.Pyramid
                         if (Current.IsPendulum)
                         {
                             content.Text = "Un-Pendulum";
-                            icon.Source = Images.GetImage(GetLocationPath() + @"\Template\PendulumGrey.png");
+                            icon.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\PendulumGrey.png");
                         }
                         else
                         {
                             content.Text = "Pendulum";
-                            icon.Source = Images.GetImage(GetLocationPath() + @"\Template\Pendulum.png");
+                            icon.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Pendulum.png");
                         }
                     }
                 }
@@ -418,7 +456,7 @@ namespace OV.Pyramid
                 Zone.Orientation = Orientation.Vertical;
 
                 Image Icon = new Image();
-                Icon.Source = Images.GetImage(GetLocationPath() + @"Avatar\" + Stack[i].Name + ".png");
+                Icon.Source = Images.GetImage(GetLocationPath() + @"\Resources\Avatar\" + Stack[i].Name + ".png");
                 Icon.Width = 24;
                 Icon.Height = 24;
                 Icon.Stretch = Stretch.Uniform;
@@ -576,7 +614,7 @@ namespace OV.Pyramid
                 Zone.Orientation = Orientation.Horizontal;
 
                 Image Icon = new Image();
-                Icon.Source = Images.GetImage(GetLocationPath() + "Template/Ability/" + Ability_String[i - 1] + ".png");
+                Icon.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Ability\" + Ability_String[i - 1] + ".png");
                 Icon.Width = 20;
                 Icon.Height = 20;
                 Icon.Stretch = Stretch.Uniform;
@@ -603,7 +641,7 @@ namespace OV.Pyramid
                 StackPanel Zone = new StackPanel();
                 Zone.Orientation = Orientation.Horizontal;
                 Image Icon = new Image();
-                Icon.Source = Images.GetImage(GetLocationPath() + "Other/Reset.png");
+                Icon.Source = Images.GetImage(GetLocationPath() + @"\Resources\Other\Reset.png");
                 Icon.Width = 20;
                 Icon.Height = 20;
                 Icon.Stretch = Stretch.Uniform;
@@ -660,7 +698,7 @@ namespace OV.Pyramid
         private void LoadScaleControl()
         {            
             Image InLeft = new Image();
-            InLeft.Source = Images.GetImage(GetLocationPath() + @"\Template\Middle\ScaleLeft.png");
+            InLeft.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Middle\ScaleLeft.png");
             InLeft.Width = 32;
             InLeft.Height = 32;
             Canvas.SetLeft(InLeft, 178);
@@ -671,7 +709,7 @@ namespace OV.Pyramid
             ScaleCanvas.Children.Add(InLeft);
             {
                 Image InRight = new Image();
-                InRight.Source = Images.GetImage(GetLocationPath() + @"\Template\Middle\ScaleRight.png");
+                InRight.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Middle\ScaleRight.png");
                 InRight.Width = 32;
                 InRight.Height = 32;
                 Canvas.SetLeft(InRight, 322);
@@ -713,7 +751,7 @@ namespace OV.Pyramid
                 Zone.Orientation = Orientation.Horizontal;
 
                 Image Icon = new Image();
-                Icon.Source = Images.GetImage(GetLocationPath() + @"Template\Pendulum.png");
+                Icon.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Pendulum.png");
                 Icon.Width = 20;
                 Icon.Height = 20;
                 Icon.Stretch = Stretch.Uniform;
@@ -815,7 +853,7 @@ namespace OV.Pyramid
                         StackPanel Zone = new StackPanel();
                         Zone.Orientation = Orientation.Horizontal;
                         Image Icon = new Image();
-                        Icon.Source = Images.GetImage(GetLocationPath() + @"Template\Middle\" + type + ".png");
+                        Icon.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Middle\" + type + ".png");
                         Icon.Width = 20;
                         Icon.Height = 20;
                         Icon.Stretch = Stretch.Uniform;
@@ -848,7 +886,7 @@ namespace OV.Pyramid
                     StackPanel Zone = new StackPanel();
                     Zone.Orientation = Orientation.Horizontal;
                     Image Icon = new Image();
-                    Icon.Source = Images.GetImage(GetLocationPath() + "Template/Other/Reset.png");
+                    Icon.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Other\Reset.png");
                     Icon.Width = 20;
                     Icon.Height = 20;
                     Icon.Stretch = Stretch.Uniform;
@@ -873,7 +911,7 @@ namespace OV.Pyramid
                 while (count <= Magic.Length)
                 {
                     Image IconMonster = new Image();
-                    IconMonster.Source = Images.GetImage(GetLocationPath() + "Template/Attribute/" + Magic[count - 1] + ".png");
+                    IconMonster.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Attribute\" + Magic[count - 1] + ".png");
                     IconMonster.Height = 20;
                     Canvas.SetTop(IconMonster, 8 + (count - 1) * 90);
                     Canvas.SetLeft(IconMonster, 10);
@@ -925,7 +963,7 @@ namespace OV.Pyramid
                         Zone.Orientation = Orientation.Horizontal;
                         Button.Content = Zone;
                         Image Icon = new Image();
-                        Icon.Source = Images.GetImage(GetLocationPath() + "Template/Middle/" + Property_String[i - 1] + ".png");
+                        Icon.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Middle\" + Property_String[i - 1] + ".png");
                         Icon.Width = 20;
                         Icon.Height = 20;
                         Icon.Stretch = Stretch.Uniform;
@@ -1020,7 +1058,7 @@ namespace OV.Pyramid
                 Zone.Orientation = Orientation.Horizontal;
 
                 Image Icon = new Image();
-                Icon.Source = Images.GetImage(GetLocationPath() + "/Template/Attribute/" + Attribute_String[i - 1] + ".png");
+                Icon.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Attribute\" + Attribute_String[i - 1] + ".png");
                 Icon.Width = 20;
                 Icon.Height = 20;
                 Icon.Stretch = Stretch.Uniform;
@@ -1094,9 +1132,9 @@ namespace OV.Pyramid
 
                 Image Icon = new Image();
                 if (i == 8)
-                    Icon.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Pendulum.png");
+                    Icon.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Pendulum.png");
                 else
-                    Icon.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Frame/" + Frame_String[i - 1] + ".png");
+                    Icon.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Frame\" + Frame_String[i - 1] + ".png");
                 Icon.Width = 20;
                 Icon.Height = 20;
                 Icon.Stretch = Stretch.Uniform;
@@ -1171,7 +1209,7 @@ namespace OV.Pyramid
                 Zone.Orientation = Orientation.Horizontal;
 
                 Image Icon = new Image();
-                Icon.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Type/" + Type_String[i - 1] + ".png");
+                Icon.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Type\" + Type_String[i - 1] + ".png");
                 Icon.Width = 20;
                 Icon.Height = 20;
                 Icon.Stretch = Stretch.Uniform;
@@ -1258,19 +1296,6 @@ namespace OV.Pyramid
                 Button.Tag = Rarity[i];
                 NameCanvas.Children.Add(Button);
             }
-
-            string[] Symbol = { "●", "α", "β", "Ω" };
-
-            for (int i = 0; i < Symbol.Length; i++)
-            {
-                Button button = new Button();
-                NameCanvas.Children.Add(button);
-                button.Content = Symbol[i];
-                button.Click += Symbol_Click;
-                Canvas.SetTop(button, 2);
-                Canvas.SetLeft(button, 300 + i * 18);
-            }
-            
         }
 
         private void Button_Type(object sender, RoutedEventArgs e)
@@ -1329,23 +1354,36 @@ namespace OV.Pyramid
             NameExpander.IsExpanded = true;
         }
 
+        private string RenderText(string text)
+        {
+            string futureText = text;
+            futureText = futureText.Replace("{.}", "●");
+            futureText = futureText.Replace("{a}", "α");
+            futureText = futureText.Replace("{b}", "β");
+            futureText = futureText.Replace("{o}", "Ω");
+
+            return futureText;
+        }
+
         private void Name_TextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (inRefreshControl) { return; }
-            Current.SetName((sender as TextBox).Text);
+            string futureText = (sender as TextBox).Text;
+            Current.SetName(RenderText(futureText));
 
             RefreshArtwork();
             RefreshControl();
 
 
         }
-
+        /*
         private void Symbol_Click(object sender, RoutedEventArgs e)
         {
             TextBox Edit = (NameExpander.Header as Canvas).FindChildren<TextBox>("NameEdit");
 
             Edit.Text = Edit.Text.Insert(Edit.CaretIndex, (sender as Button).Content.ToString());
         }
+        */
 
         private void Button_Rarity(object sender, RoutedEventArgs e)
         {
@@ -1650,11 +1688,11 @@ namespace OV.Pyramid
 
             if (DescriptionButton.IsEnabled == false) //Current is Description
             {
-                Current.SetDescription(Text);
+                Current.SetDescription(RenderText(Text));
             }
             else
             {
-                Current.SetPendulumEffect(Text);
+                Current.SetPendulumEffect(RenderText(Text));
                 RefreshControl();
             }
 
@@ -1748,7 +1786,7 @@ namespace OV.Pyramid
             string filePath = (sender as TextBox).Text;
             if (string.IsNullOrWhiteSpace(filePath))
             {
-                filePath = GetLocationPath() + @"\Template\NoneImage.png";                
+                filePath = GetLocationPath() + @"\Resources\Template\NoneImage.png";                
             }
             if (File.Exists(filePath))
             {
@@ -1780,12 +1818,18 @@ namespace OV.Pyramid
 
         private void resizeArtworkButton_Click(object sender, RoutedEventArgs e)
         {
-            RenderCard.ResizeArtwork(true);
+            RenderCard.ResizeArtwork(0, true);
         }
 
         private void previewResizeArtworkButton_Click(object sender, RoutedEventArgs e)
         {
-            RenderCard.ResizeArtwork(true);
+            ControlArtwork.Source = RenderCard.ResizeArtwork(0, false);
+        }
+        
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            Directory.Delete(TempFolder, true);
         }
     }
 

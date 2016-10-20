@@ -6,7 +6,8 @@
         xmlns:local="clr-namespace:OV.Pyramid"
         xmlns:converters="clr-namespace:OV.Pyramid"
         mc:Ignorable="d"
-        Title="OV.Land.Pyramid.Creation 1.0 Alpha" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize">
+        Title="OV.Land.Pyramid.Creation 1.0 Alpha" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize"
+        Closed="Window_Closed">
     <Window.Resources>
         <local:ImageConverter x:Key="imageConverter"/>
 
@@ -341,7 +342,8 @@
 
         <TabControl x:Name="tabControl" Height="640" Canvas.Left="445" Canvas.Top="20" Width="430"
                     Style="{DynamicResource DockTabControl}">
-
+            <TabItem Header="Name &amp; Text">
+            </TabItem>
             <TabItem Header="Card Detail">
                 <ScrollViewer  Name="Scroll" VerticalScrollBarVisibility="Hidden" Width="Auto" Height="600"
                        Canvas.Left="461" Canvas.Top="44" >
@@ -544,13 +546,7 @@
                                 <Canvas x:Name="DocumentCanvas" Width="360" Height="220">
                                     <Button Name="DescriptionButton" IsEnabled="False" Width="170" Height="24"  Canvas.Left="20" Click="Description_Click">Description</Button>
                                     <Button Name="PendulumEffectButton"  Width="170" Height="24" Click="PendulumEffectButton_Click" Canvas.Right="0">Pendulum Effect</Button>
-                                    <RichTextBox Name="DocumentBox" Canvas.Top="30" Canvas.Left="20" Height="120" Width="340"></RichTextBox>
-                                    <WrapPanel Grid.Row="1" Canvas.Top="160" Canvas.Left="20" Grid.Column="4" Orientation="Horizontal">
-                                        <Button Margin="2"  Width="20" Height="20" VerticalAlignment="Top" HorizontalAlignment="Left" Content="●" Click="Symbol_Click"></Button>
-                                        <Button Margin="2" Width="20" Height="20" VerticalAlignment="Top" HorizontalAlignment="Left"  Content="α" Click="Symbol_Click"></Button>
-                                        <Button Margin="2" Width="20" Height="20" VerticalAlignment="Top" HorizontalAlignment="Left"  Content="β" Click="Symbol_Click"></Button>
-                                        <Button Margin="2" Width="20" Height="20" VerticalAlignment="Top" HorizontalAlignment="Left"  Content="Ω" Click="Symbol_Click"></Button>
-                                    </WrapPanel>
+                                    <RichTextBox Name="DocumentBox" Canvas.Top="30" Canvas.Left="20" Height="120" Width="340"></RichTextBox>                                    
                                     <Button Canvas.Top="160" Canvas.Right="0" Click="ApplyDocument_Click">Apply</Button>
                                 </Canvas>
                             </Expander>
@@ -601,7 +597,7 @@
                     <Button Canvas.Left="335" Canvas.Top="320" Width="75" Click="ArtworkBrowser_Click">Browse</Button>
 
                     <TextBlock Canvas.Left="10" TextWrapping="Wrap" Text="Reduce/Increase Height" Canvas.Top="366"/>
-                    <TextBox x:Name="textBox" Height="23" Canvas.Left="141" TextWrapping="Wrap" Text="0" TextAlignment="Right" Canvas.Top="363" Width="95"/>
+                    <TextBox x:Name="artworkPaddingHeight" Height="23" Canvas.Left="141" TextWrapping="Wrap" Text="0" TextAlignment="Right" Canvas.Top="363" Width="95"/>
                     <Button x:Name="previewResizeArtworkButton" Content="Preview" Canvas.Left="255" Canvas.Top="364" Width="75" Click="previewResizeArtworkButton_Click"/>
                     <Button x:Name="resizeArtworkButton" Content="Apply" Canvas.Left="335" Canvas.Top="363" Width="75" Click="resizeArtworkButton_Click"/>
                 </Canvas>
