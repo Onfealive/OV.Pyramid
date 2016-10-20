@@ -5,9 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.IO.Packaging;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
@@ -25,12 +27,13 @@ namespace OV.Pyramid
     {
         YGOCard Current = YGOCard.Default;
         private string NoneImagePath = "";
+        private static string TempFolder = "";
 
         public YGOView()
         {
             InitializeComponent();
-            
         }
+                
 
         public class Fonts
         {  
@@ -39,7 +42,7 @@ namespace OV.Pyramid
                 get
                 {
                     return new FontFamily(
-                        new Uri(Utilities.GetLocationPath() + @"\Fonts\"), "./#StoneSerif LT Bold");
+                        new Uri(TempFolder), "./#StoneSerif LT Bold");
                 }
             }
 
@@ -48,7 +51,7 @@ namespace OV.Pyramid
                 get
                 {
                     return new FontFamily(
-                        new Uri(Utilities.GetLocationPath() + @"\Fonts\"), "./#Stone Serif");
+                        new Uri(TempFolder), "./#Stone Serif");
                 }
             }
 
@@ -56,8 +59,10 @@ namespace OV.Pyramid
             {
                 get
                 {
-                    return new FontFamily(
-                        new Uri(Utilities.GetLocationPath() + @"\Fonts\"), "./#Matrix-Book");
+                    //return new FontFamily(new Uri(GetLocationPath() + @"\Resources\Fonts\"), "./#Matrix-Book");
+                    
+                    return new FontFamily(new Uri(TempFolder), "./#Matrix-Book");
+
                 }
             }
 
@@ -67,7 +72,7 @@ namespace OV.Pyramid
                 get
                 {
                     return new FontFamily(
-                        new Uri(Utilities.GetLocationPath() + @"\Fonts\"), "./#Yu-Gi-Oh! Matrix Small Caps 2");
+                        new Uri(TempFolder), "./#Yu-Gi-Oh! Matrix Small Caps 2");
                 }
             }
 
@@ -76,7 +81,7 @@ namespace OV.Pyramid
                 get
                 {
                     return new FontFamily(
-                        new Uri(Utilities.GetLocationPath() + @"\Fonts\"), "./#Stone Serif");
+                        new Uri(TempFolder), "./#Stone Serif");
                 }
             }
             /*
@@ -85,7 +90,7 @@ namespace OV.Pyramid
                 get
                 {
                     return new FontFamily(
-                        new Uri(Utilities.GetLocationPath() + @"\Fonts\"), "./#MatrixBoldFractions");
+                        new Uri(GetLocationPath() + @"\Resources\Fonts\"), "./#MatrixBoldFractions");
                 }
             }  */
 
@@ -94,7 +99,7 @@ namespace OV.Pyramid
                 get
                 {
                     return new FontFamily(
-                        new Uri(Utilities.GetLocationPath() + @"\Fonts\"), "./#Palatino Linotype");
+                        new Uri(TempFolder), "./#Palatino Linotype");
                 }
             }
 
@@ -103,11 +108,15 @@ namespace OV.Pyramid
                 get
                 {
                     return new FontFamily(
-                        new Uri(Utilities.GetLocationPath() + @"\Fonts\"), "./#BankGothic Md BT");
+                        new Uri(TempFolder), "./#BankGothic Md BT");
                 }
             }
         };
-                
+
+        internal void SetTempFolder(string tempFolder)
+        {
+            TempFolder = tempFolder;
+        }
 
         private void FirstLoad()
         {
@@ -118,17 +127,17 @@ namespace OV.Pyramid
             Creator.FontFamily = Fonts.StoneSerifRegular;
             CardNumber.FontFamily = Fonts.StoneSerifRegular;
             SetNumber.FontFamily = Fonts.StoneSerifRegular;
-            CardBorder.Source = Images.GetImage(Utilities.GetLocationPath() + @"\Template\Border\Card\Default.png");
+            CardBorder.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Border\Card\Default.png");
             AttributeText.FontFamily = Fonts.PalatinoLinotype;
-            ArtworkBorder.Source = Images.GetImage(Utilities.GetLocationPath() + @"\Template\Border\Artwork\Default.png");
-            LoreBorder.Source = Images.GetImage(Utilities.GetLocationPath() + @"\Template\Border\Lore\Default.png");
+            ArtworkBorder.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Border\Artwork\Default.png");
+            LoreBorder.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Border\Lore\Default.png");
             ScaleLeftBlock.FontFamily = ScaleRightBlock.FontFamily = Fonts.YGOMatrixSmallCap2;
 
 
-            ScaleLeft.Source = Images.GetImage(GetLocationPath() + @"\Template\Middle\ScaleLeft.png");
-            ScaleRight.Source = Images.GetImage(GetLocationPath() + @"\Template\Middle\ScaleRight.png");
-
+            ScaleLeft.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Middle\ScaleLeft.png");
+            ScaleRight.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Middle\ScaleRight.png");
             
+           
         }
 
         public void SetDefaultArtwork(string filePath)
@@ -139,9 +148,9 @@ namespace OV.Pyramid
 
 
         internal void Render(YGOCard card)
-        {
-            
+        {            
             Current = card;
+            
             RenderCard();
         }
 
@@ -152,17 +161,78 @@ namespace OV.Pyramid
             HandleAttribute();
             HandleMiddle();
             HandleArtwork();
-            HandleFrame();
+            
             HandleAD();
             HandleAbility();
-            HandleRarity();
+            
             HandleCreator();
-            HandleScale();
+            
             HandleDescription();
+            
+            HandlePendulum();
+            HandleFrame();
+            HandleScale();
+            HandleRarity();
             HandleSticker();
             HandleEdition();
             HandleCartNumber();
             HandleSetCard();
+            
+        }
+
+        private void HandlePendulum()
+        {
+            if (Current == null) { return; }
+
+            string Text = Current.PendulumEffect ?? "";
+            double fontDefault = 31;
+            //Pendulum.Width = 694;
+            Pendulum.Inlines.Clear();
+
+            Pendulum.Text = Text;
+            Pendulum.FontFamily = Fonts.MatrixBook;
+            Pendulum.FontStyle = FontStyles.Normal;
+            Pendulum.FontSize = fontDefault;
+
+            Pendulum.LineHeight = fontDefault * 1;
+            
+
+            /*
+            while (Pendulum.FontSize * (Text.IsVietnamese()
+                ? 1.1 : 1) * Pendulum.GetLines().Count() > Pendulum.Height)
+            {
+                Pendulum.FontSize -= 0.05; //0.1
+                double lineScale = 0.95;
+                if (Pendulum.GetLines().Count() > 6)
+                {
+                    lineScale = 0.94;
+                }
+                Pendulum.LineHeight = lineScale * Pendulum.FontSize;
+            } */
+
+            while (Pendulum.FontSize * Pendulum.GetLines().Count() > Pendulum.MaxHeight)
+            {
+                Pendulum.FontSize -= 0.1;                
+            }
+
+            if (Pendulum.GetLines().Count() != 4)
+            {
+                Pendulum.LineHeight = 0.95 * Pendulum.FontSize;
+            }
+            else
+            {
+                Pendulum.LineHeight = 1.04 * Pendulum.FontSize;
+            }
+
+
+            if (Pendulum.GetLines().Count() < 4)
+            {
+                Canvas.SetTop(PendulumBorder, 785);
+            }
+            else
+            {
+                Canvas.SetTop(PendulumBorder, 746);
+            }
         }
 
         private void HandleScale()
@@ -178,15 +248,15 @@ namespace OV.Pyramid
             ScaleRightBlock.Text = double.IsNaN(Current.ScaleRight) ? "?" : Current.ScaleRight.ToString();
 
 
-            if (Pendulum.CountLine() < 4)
+            if (Pendulum.GetLines().Count() < 4)
             {
                 Canvas.SetTop(ScaleLeftBlock, 824);
                 Canvas.SetTop(ScaleRightBlock, 824);
             }
             else
             {
-                Canvas.SetTop(ScaleLeftBlock, 800);
-                Canvas.SetTop(ScaleRightBlock, 800);
+                Canvas.SetTop(ScaleLeftBlock, 804);
+                Canvas.SetTop(ScaleRightBlock, 804);
             }
 
 
@@ -396,7 +466,7 @@ namespace OV.Pyramid
         private void HandleSticker()
         {
             if (Current == null) { return; }
-            Sticker.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Sticker/" 
+            Sticker.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Sticker\"
                 + Current.Sticker.ToString() + ".png");
         }
 
@@ -741,6 +811,7 @@ namespace OV.Pyramid
                     double lineScale = 1 / 1.2;
                     //Description.LineHeight = lineScale * Description.FontSize;
                     //while (Description.FontSize * 1 * Description.GetLines().Count() > Description.Height)
+                    
                     while (Description.FontSize * 1 * Description.GetLines().Count() > Description.Height)
                     {
                         //MessageBox.Show(Description.GetFormattedText().Height.ToString());
@@ -796,6 +867,9 @@ namespace OV.Pyramid
                 }
             }           
         }
+
+
+        
 
         private void HandleRarity()
         {
@@ -867,12 +941,12 @@ namespace OV.Pyramid
 
 
 
-                ArtworkFoil.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Foil/Super.png");
+                ArtworkFoil.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Foil\Super.png");
             }
             else if (Current.Rarity == RARITY.UltraRare)
             {
                 CardName.Foreground = new SolidColorBrush(Color.FromRgb(88, 76, 12));//222, 178, 29));
-                ArtworkFoil.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Foil/Super.png");
+                ArtworkFoil.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Foil\Super.png");
 
                 DropShadowEffect shadow = new DropShadowEffect();
                 shadow.BlurRadius = 2;
@@ -886,7 +960,7 @@ namespace OV.Pyramid
             else if (Current.Rarity == RARITY.SecretRare)
             {
                 CardName.Foreground = new SolidColorBrush(Color.FromRgb(211, 252, 252));//234,255,255
-                ArtworkFoil.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Foil/Secret.png");
+                ArtworkFoil.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Foil\Secret.png");
 
                 DropShadowEffect shadow = new DropShadowEffect();
                 shadow.BlurRadius = 2;
@@ -900,7 +974,7 @@ namespace OV.Pyramid
             else if (Current.Rarity == RARITY.ParallelRare)
             {
                 CardName.Foreground = new SolidColorBrush(Color.FromRgb(88, 76, 12));//234,255,255
-                CardFoil.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Foil/Parallel.png");
+                CardFoil.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Foil\Parallel.png");
 
                 DropShadowEffect shadow = new DropShadowEffect();
                 shadow.BlurRadius = 2;
@@ -917,7 +991,7 @@ namespace OV.Pyramid
                     CardName.Foreground = Brushes.White;
                 else
                     CardName.Foreground = Brushes.Black;
-                CardFoil.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Foil/Star.png");
+                CardFoil.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Foil\Star.png");
 
                 DropShadowEffect shadow = new DropShadowEffect();
                 shadow.BlurRadius = 2;
@@ -934,7 +1008,7 @@ namespace OV.Pyramid
                     CardName.Foreground = Brushes.White;
                 else
                     CardName.Foreground = Brushes.Black;
-                CardFoil.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Foil/Mosaic.png");
+                CardFoil.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Foil\Mosaic.png");
 
                 DropShadowEffect shadow = new DropShadowEffect();
                 shadow.BlurRadius = 2;
@@ -947,7 +1021,7 @@ namespace OV.Pyramid
             }
             else if (Current.Rarity == RARITY.GoldRare)
             {
-                CardBorder.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Border/Card/Gold.png");
+                CardBorder.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Border\Card\Gold.png");
                 CardName.Foreground = new SolidColorBrush(Color.FromRgb(88, 76, 12));//234,255,255
 
                 DropShadowEffect shadow = new DropShadowEffect();
@@ -958,27 +1032,25 @@ namespace OV.Pyramid
                 shadow.Color = Color.FromRgb(255, 215, 0);
 
                 CardName.Effect = shadow;
-                /*
-                if (!Current.IsMagic && Current.Middle != null)
-                {
-                    string type = Current.Middle.Split('_')[0];
-                    int number = Int32.Parse(Current.Middle.Split('_')[1]);
-                    ChangeLevel(number, type);
-                }
 
-                if (!Current.IsFrame("Pendulum"))
+                if (Current.IsPendulum)
                 {
-                    Lore_Border.Source = Uti.GetImage("/Lore_Border_Gold");
-                    Artwork_Border.Source = Uti.GetImage("/Border_Artwork_Gold");
-                }
-                else
-                {
-                    if (GetLine(Pendulum) < 4)
-                        Artwork_Border.Source = Uti.GetImage("/Border_Pendulum_Small_Gold");
+                    if (Pendulum.GetLines().Count() < 4)
+                    {
+                        ArtworkBorder.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Border\Pendulum\SmallGold.png");
+                        //PendulumBoxMiddle.Source = Images.GetImage(GetLocationPath() + "Template/Border/Pendulum/SmallBox.png");
+                        //PendulumBoxText.Source = Images.GetImage(GetLocationPath() + "Template/Border/Pendulum/TextBox.png");
+                    }
                     else
-                        Artwork_Border.Source = Uti.GetImage("/Border_Pendulum_Medium_Gold");
+                    {
+                        ArtworkBorder.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Border\Pendulum\MediumGold.png");
+                        //PendulumBoxMiddle.Source = Images.GetImage(GetLocationPath() + "Template/Border/Pendulum/MediumBox.png");
+                        //PendulumBoxText.Source = Images.GetImage(GetLocationPath() + "Template/Border/Pendulum/TextBox.png");
+                    }
+                } else
+                {
+                    ArtworkBorder.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Border\Artwork\Gold.png");
                 }
-                */
             }
             else if (Current.Rarity == RARITY.UltimateRare)
             {
@@ -998,10 +1070,10 @@ namespace OV.Pyramid
                     Lore_Border.Source = Uti.GetImage("/Lore_Border_Emboss");
                     */
                 CardName.Foreground = new SolidColorBrush(Color.FromRgb(69, 34, 12));//222, 178, 29));
-                ArtworkFoil.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Foil/Ultimate.png");
+                ArtworkFoil.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Foil\Ultimate.png");
                 ArtworkFoil.Opacity = 0.2;
 
-                CardBorder.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Border/Card/Emboss.png");
+                CardBorder.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Border\Card\Emboss.png");
                 //Frame.Source = Uti.GetImage("/Frame/" + Current.Frame + "_Emboss");
                 //Frame.Source = G.ToBitmapSource(G.Brightness(G.ToBitmap(Uti.GetImage("/Frame/" + Current.Frame) as BitmapImage), -40, 100, 100));
                 //Frame.Source = G.ToBitmapSource(G.Brightness(G.ToBitmap(Uti.GetBitmapImage(@"C:\Effect.ovpng")), -40));
@@ -1021,7 +1093,7 @@ namespace OV.Pyramid
                 /*Source = Source.ToBitmap().EmbossArtwork().ToBitmapSource();
                 Source = Source.ToBitmap().Brightness(-40).ToBitmapSource();
                 Source = Source.ToBitmap().Contrast(-10).ToBitmapSource();*/
-                Source = Source.ToBitmap().EmbossArtwork().Brightness(-40).Contrast(-10).ToBitmapSource();
+                Source = (Source as BitmapImage).ToBitmap().Emboss().Brightness(-40).Contrast(-10).ToBitmapSource();
 
             }
 
@@ -1033,7 +1105,7 @@ namespace OV.Pyramid
                     //Source = Graphic.ToBitmapSource(Graphic.ColorBalance(Graphic.ToBitmap(Source), 255, 0, -35));
                     //Source = Graphic.ToBitmapSource(Graphic.Contrast(Graphic.ToBitmap(Source), 10));
                     //Source = Graphic.Negative(Source);
-                    Source = Source.ToBitmap().Brightness(-110)
+                    Source = (Source as BitmapImage).ToBitmap().Brightness(-110)
                         .ColorBalance(255, 0, -35).Contrast(10).Negative().ToBitmapSource();
                 }
 
@@ -1079,7 +1151,7 @@ namespace OV.Pyramid
 
             if (Current.Edition == EDITION.DuelTerminal)
             {
-                CardFoil.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Foil/Shatter.png");
+                CardFoil.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Foil\Shatter.png");
             }
 
 
@@ -1093,17 +1165,27 @@ namespace OV.Pyramid
             {
                 return;
             }
-            Frame.Source = Images.GetImage(Utilities.GetLocationPath() + 
-                "Template/Frame/" + Current.Frame.ToString() + ".png");
+            Frame.Source = Images.GetImage(GetLocationPath() + 
+                @"\Resources\Template\Frame\" + Current.Frame.ToString() + ".png");
             if (Current.IsPendulum)
-            {
-                ArtworkBorder.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Border/Pendulum/Small.png");
+            {                
                 LoreBorder.Visibility = Visibility.Hidden;
-                PendulumBoxMiddle.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Border/Pendulum/SmallBox.png");
-                PendulumBoxText.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Border/Pendulum/TextBox.png");
-                PendulumLine.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Border/Pendulum/Line"+ Current.Frame.ToString() + ".png");
-                SpellHalf.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Border/Pendulum/SpellHalf.png");
-                LoreBackground.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/Border/Pendulum/LoreBoxMedium.png");
+
+                if (Pendulum.GetLines().Count() < 4)
+                {
+                    ArtworkBorder.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Border\Pendulum\Small.png");
+                    PendulumBoxMiddle.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Border\Pendulum\SmallBox.png");
+                    PendulumBoxText.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Border\Pendulum\TextBox.png");
+                }
+                else
+                {
+                    ArtworkBorder.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Border\Pendulum\Medium.png");
+                    PendulumBoxMiddle.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Border\Pendulum\MediumBox.png");
+                    PendulumBoxText.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Border\Pendulum\TextBox.png");
+                }
+                PendulumLine.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Border\Pendulum\Line" + Current.Frame.ToString() + ".png");
+                SpellHalf.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Border\Pendulum\SpellHalf.png");
+                LoreBackground.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\Border\Pendulum\LoreBoxMedium.png");
                 Artwork.Width = 707;
                 Artwork.Height = 663;
                 Canvas.SetLeft(Artwork, 53);
@@ -1338,8 +1420,8 @@ namespace OV.Pyramid
                 {
                     futureText += "    ";
                     Image property = new Image();
-                    property.Source = Images.GetImage(Utilities.GetLocationPath()
-                        + "Template/Middle/" + Current.Property.ToString() + ".png");
+                    property.Source = Images.GetImage(GetLocationPath()
+                        + @"\Resources\Template\Middle\" + Current.Property.ToString() + ".png");
                     Middle.Children.Add(property);
                     //MessageBox.Show(Current.Property.ToString());
                     Canvas.SetLeft(property, 575);
@@ -1413,7 +1495,7 @@ namespace OV.Pyramid
                     for (int i = 1; i <= number; i++)
                     {
                         Image Star = new Image();
-                        Star.Source = Images.GetImage(Utilities.GetLocationPath() + "Template/" + type + 
+                        Star.Source = Images.GetImage(GetLocationPath() + @"\Resources\Template\" + type + 
                             (Current.Rarity == RARITY.UltimateRare ? "Emboss" : null) + ".png");
 
 
@@ -1484,8 +1566,8 @@ namespace OV.Pyramid
             {
                 return;
             }
-            Attribute.Source = Images.GetImage(Utilities.GetLocationPath() + 
-                @"\Template\Attribute\" + Current.Attribute.ToString() + ".png");
+            Attribute.Source = Images.GetImage(GetLocationPath() + 
+                @"\Resources\Template\Attribute\" + Current.Attribute.ToString() + ".png");
             
             if (Current.Attribute !=ATTRIBUTE.UNKNOWN)
             {
@@ -1497,6 +1579,49 @@ namespace OV.Pyramid
             {
                 AttributeText.Text = null;
             }
+        }
+
+        public int RecommendedHeight
+        {
+            get {
+                if (Current.IsPendulum)
+                {
+                    if (Pendulum.GetLines().Count() < 4)
+                    {
+                        return -85;
+                    }
+                    else
+                    {
+                        return -122;
+                    }
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+        }
+
+        internal ImageSource ResizeArtwork(int padding, bool isAplly)
+        {
+            //if (Current.IsPendulum == false) { return Current.ArtworkByte.GetBitmapImageFromByteArray(); }
+            //if (padding == 0)
+                     
+            
+            System.Drawing.Bitmap bitmap = Current.ArtworkByte.GetBitmapImageFromByteArray().ToBitmap();
+            ImageSource Source = bitmap.ReduceHeightThenPadding(padding).ToBitmapSource();
+            if (isAplly)
+            {
+                Current.ArtworkByte = (Source as BitmapSource).GetImageArray();
+                Render(Current);
+            }
+            else
+            {
+                Render(Current);
+                Artwork.Source = Source;
+            }
+            
+            return Source;
         }
     }
 }

@@ -56,10 +56,7 @@
                          Canvas.Left="{Binding ElementName=DescriptionBorder, Path=(Canvas.Left)}" Canvas.Top="922">
                 </RichTextBox>
             
-            <Border Name="PendulumBorder" Canvas.Left="122" Canvas.Top="797">
-                <RichTextBox Name="Pendulum" Width="568" Height="0" MaxHeight="133" BorderThickness="0"
-                             IsReadOnly="True" Background="Transparent"></RichTextBox>
-            </Border>
+            
             <Viewbox Name="CardNumberViewbox" Height="30.66" Canvas.Left="37" Canvas.Top="1128">
                 <TextBlock Name="CardNumber" FontSize="24"></TextBlock>
             </Viewbox>
@@ -76,6 +73,12 @@
             
             <Image Name="PendulumBoxMiddle" Width="813" Height="1185"></Image>
             <Image Name="PendulumBoxText" Width="813" Height="1185"></Image>
+            <Border Name="PendulumBorder" Canvas.Left="122" Canvas.Top="797">
+                <!--<RichTextBox Name="Pendulum" Width="568" Height="0" MaxHeight="133" BorderThickness="0"
+                             IsReadOnly="True" Background="Transparent"></RichTextBox>-->
+                <TextBlock Name="Pendulum" Width="568" MaxHeight="130" TextWrapping="Wrap" TextAlignment="Justify"
+                     Opacity="0.9" Background="Transparent" Padding="5,0,5,0"></TextBlock>
+            </Border>
             <Image Name="ScaleLeft" Width="50" Canvas.Left="60"></Image>
             <Image Name="ScaleRight" Width="50" Canvas.Right="60"></Image>
             <TextBlock Name="ScaleLeftBlock"  FontSize="58"></TextBlock>
