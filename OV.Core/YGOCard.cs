@@ -6,13 +6,16 @@ using OV.Pyramid;
 using System.Runtime.CompilerServices;
 using System.Linq;
 using System.Windows;
+using System.Windows.Media.Imaging;
 
 namespace OV.Core
 {   
     class YGOCard
     {
         private FRAME DefaultFrame = FRAME.Effect;
-        
+        private static string DatabasePath = @"MyData.ldb";
+
+        private static ByteDatabase Database = new ByteDatabase(DatabasePath);
 
         private YGOCard()
         {
@@ -79,7 +82,7 @@ namespace OV.Core
                 defaultCard.Rarity = RARITY.Common;
                 //defaultCard.Type = TYPE.Warrior;
                 defaultCard.Sticker = STICKER.PromoSilver;                
-                defaultCard.ArtworkByte = Images.GetImageByte(Utilities.GetLocationPath() + @"\Resources\Template\NoneImage.png");
+                defaultCard.ArtworkByte = (Database.GetImage(@"Template\NoneImage.png") as BitmapImage).GetImageArray();
                 defaultCard.Set = "";
                 defaultCard.ScaleLeft = defaultCard.ScaleRight = -1;
                 return defaultCard;
@@ -148,6 +151,7 @@ namespace OV.Core
                 //Card is Monster
                 if (this.IsMonster())
                 {
+                    //To Spell/Trap
                     if (frame == FRAME.Spell || frame == FRAME.Trap)
                     {
                         ScaleLeft = ScaleRight = ATK = DEF = Level = Rank = -1;
@@ -156,6 +160,18 @@ namespace OV.Core
                         Abilities.Clear();
                         Property = PROPERTY.Normal;
                         Type = TYPE.NONE;
+                    }
+                    //To Xyz
+                    if (frame == FRAME.Xyz && Frame != FRAME.Xyz)
+                    {                        
+                        Level = double.NaN;
+                        Rank = 4;
+                    }
+
+                    if (frame != FRAME.Xyz && Frame == FRAME.Xyz)
+                    {                       
+                        Rank = double.NaN;
+                        Level = 4;
                     }
                 }
                 //Card is Spell/Trap
@@ -245,6 +261,7 @@ namespace OV.Core
                 {
                     if (this.IsFrame(FRAME.Xyz) == false)
                     {
+                        Frame = FRAME.Xyz;
                         Level = double.NaN;
                     }
                 }
