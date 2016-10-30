@@ -346,14 +346,14 @@
                 <StackPanel>
                     <Canvas Height="50">
                         <TextBox Name="NameEdit" FontSize="15" Canvas.Left="80" Canvas.Top="10" Width="330"
-                        TextChanged="Name_TextBox_TextChanged"></TextBox>
+                            TextChanged="Name_TextBox_TextChanged"
+                                 GotFocus="NameEdit_GotFocus"></TextBox>
                         <Label Content="Name" FontSize="14" Canvas.Left="10" Canvas.Top="9"/>
                     </Canvas>
-                    <Canvas x:Name="DocumentCanvas" Width="360" Height="220">
-                        <Button Name="DescriptionButton" IsEnabled="False" Width="170" Height="24"  Canvas.Left="20" Click="Description_Click">Description</Button>
-                        <Button Name="PendulumEffectButton"  Width="170" Height="24" Click="PendulumEffectButton_Click" Canvas.Right="0">Pendulum Effect</Button>
-                        <RichTextBox Name="DocumentBox" Canvas.Top="30" Canvas.Left="20" Height="120" Width="340"></RichTextBox>
-                        <Button Canvas.Top="160" Canvas.Right="0" Click="ApplyDocument_Click">Apply</Button>
+                    <Canvas x:Name="DocumentCanvas"  Height="330">
+                        <RichTextBox Name="PendulumBox" Canvas.Top="30" Canvas.Left="20" Height="120" Width="380"></RichTextBox>
+                        <RichTextBox x:Name="DescriptionBox" Canvas.Top="160" Canvas.Left="20" Height="120" Width="380"/>
+                        <Button Canvas.Top="290" Canvas.Right="20" Click="ApplyDocument_Click">Apply</Button>
                     </Canvas>
                     <Canvas Height="50">
                         <TextBlock Canvas.Top="8" Canvas.Left="40" FontSize="14">ATK</TextBlock>
@@ -403,7 +403,7 @@
                             <TextBlock Canvas.Top="102">Set Number</TextBlock>
                             <TextBox Name="SetNumberEdit" Width="100" MaxLength="10" TextChanged="SetNumber_TextChanged"
                                              Canvas.Top="100" Canvas.Left="135"></TextBox>
-                            <TextBlock Canvas.Top="102">Eye of Anubis Hologram</TextBlock>
+                            <TextBlock Canvas.Top="135">Eye of Anubis Hologram</TextBlock>
                             <ComboBox Name="StickerCombo" Width="110" SelectionChanged="Sticker_SelectionChanged"
                                               Canvas.Top="132" Canvas.Left="135"></ComboBox>
                             <TextBlock Canvas.Top="162">Creator</TextBlock>
@@ -430,7 +430,7 @@
             <TabItem Header="Set Detail">
                 <Canvas Background="#FFE5E5E5">
                     <Label Canvas.Left="10" Canvas.Top="10">Name</Label>
-                    <TextBox Canvas.Top="12" Canvas.Left="67" Width="343">Set Name</TextBox>
+                    <TextBox Name="SetEdit" Canvas.Top="12" Canvas.Left="67" Width="343" TextChanged="SetEdit_TextChanged">Set Name</TextBox>
 
                     <ListView Name="cardList" Canvas.Left="10" Canvas.Top="66" Width="400"                         
                               SelectionChanged="cardList_SelectionChanged" SelectionMode="Single"
@@ -460,7 +460,11 @@
                 </Canvas>
             </TabItem>
             <TabItem Header="Settings" HorizontalAlignment="Right">
-                <Canvas></Canvas>
+                <Canvas>
+                    <Label Content="File Extensions: *.OCC, *OCS" Canvas.Left="10" Canvas.Top="10"/>
+                    <Button Name="Associate" Canvas.Left="182" Canvas.Top="9" Padding="5" Click="Associate_Click">Associate</Button>
+                    <Button x:Name="Unassociate" Canvas.Left="251" Canvas.Top="9" Padding="5" Content="Unassociate" Click="Unassociate_Click"/>
+                </Canvas>
             </TabItem>
         </TabControl>
     </Canvas>

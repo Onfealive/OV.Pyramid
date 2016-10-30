@@ -1,6 +1,5 @@
 ﻿using CustomFileExtensionControl;
 using JsonNet.PrivateSettersContractResolvers;
-using LiteDB;
 using Microsoft.Win32;
 using Newtonsoft.Json;
 using OV.Core;
@@ -12,16 +11,13 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using static OV.Tools.Animations;
 using static OV.Tools.Utilities;
-using Forms = System.Windows.Forms;
 
 namespace OV.Pyramid
 {
@@ -38,7 +34,7 @@ namespace OV.Pyramid
         private bool inChangeSetCard;
 
         private string TempFolder = GetTemporaryDirectory();
-        private static string DatabasePath = @"MyData.ldb";
+        private static string DatabasePath = GetLocationPath() + @"\Datas.ld";
 
         private ByteDatabase Database = new ByteDatabase(DatabasePath);        
         
@@ -56,37 +52,17 @@ namespace OV.Pyramid
                 Set.Cards[currentIndex] = value;
             }
         }
-
-        private CustomFileExtension DefaultExtension
-        {
-            get
-            {
-                CustomFileExtension extenstion = new CustomFileExtension();
-                extenstion.ApplicationName = "OV.Creation.exe";
-                extenstion.Description = "OV.Creation Card";
-                extenstion.EmbeddedIcon = false;
-                extenstion.Extension = ".ocj";
-                extenstion.Handler = "OV.Land.Pyramid";
-                extenstion.IconName = "OV.Creation.Icon.ico";
-                extenstion.IconPosition = 0;
-                extenstion.OpenText = "CardIZE with OV.Creation";
-
-                return extenstion;
-            }
-        }
-
         
 
         public MainWindow()
         {
-            InitializeComponent();
-            LoadDatabase();         
+            InitializeComponent();                  
             FirstLoad();           
         }
 
         private void SaveDatabase()
         {
-            Database.Generate(GetLocationPath() + @"\Resources\");
+            Database.Generate(GetLocationPath() + @"\Resources2\");
         }
 
         private void LoadDatabase()
@@ -95,12 +71,11 @@ namespace OV.Pyramid
             Database.GenerateFonts(TempFolder);            
         }
 
-        
-
-        
-
         private void FirstLoad()
         {
+            //SaveDatabase();
+            LoadDatabase();
+
             //Set default global Style for Paragraph: Margin = 0
             Style style = new Style(typeof(Paragraph));
             style.Setters.Add(new Setter(Paragraph.MarginProperty, new Thickness(0)));
@@ -108,22 +83,15 @@ namespace OV.Pyramid
 
 
             Set.Cards.Add(YGOCard.Default);
-            //Set.Cards.Add(YGOCard.Default);
-            RenderCard.SetDefaultArtwork(Database.GetImage(@"Template\NoneImage.png").GetImageArray());
-
-            //RenderCard.Render(Current);
+            RenderCard.SetDefaultArtwork(Database.GetData(@"Template\NoneImage.png").Bytes);
 
             LoadControl();
             LoadButton();
-
+            RefreshSetting();
             this.Loaded += new RoutedEventHandler(MainContainer_Loaded);
-            //DefaultExtension.RegisterFileType();
-            //DefaultExtension.RemoveFileType();
 
             cardList.ItemsSource = Set.Cards;
             cardList.SelectedIndex = 0;
-
-            //ControlArtwork.Source = t.Images.Find(o => o.Name == "About.png").Bytes.GetBitmapImageFromByteArray();
         }
 
         private void RefreshArtwork()
@@ -161,13 +129,30 @@ namespace OV.Pyramid
             RefreshScaleControl();
 
             
-            RefreshTextControl();
-            
+            RefreshPendulumControl();
+            RefreshDescriptionControl();
+
             RefreshCirculationControl();
             ArtworkPath.Text = "";
             artworkPaddingHeight.Text = RenderCard.RecommendedHeight.ToString();
+            
             inRefreshControl = false;
 
+        }
+
+        private void RefreshSetting()
+        {
+            if (Properties.Settings.Default.Associated)
+            {
+                Associate.IsEnabled = false;
+                Unassociate.IsEnabled = true;
+            }
+            else
+            {
+                Associate.IsEnabled = true;
+                Unassociate.IsEnabled = false;
+            }
+            Properties.Settings.Default.Save();
         }
 
         private void RefreshCirculationControl()
@@ -196,17 +181,16 @@ namespace OV.Pyramid
             CreatorCheckBox.IsChecked = Current.Creator == CREATOR.NONE ? false : true;
         }
 
-        private void RefreshTextControl()
+        private void RefreshPendulumControl()
         {
-            DocumentBox.Document.Blocks.Clear();
-            if (DescriptionButton.IsEnabled == false)
-            {
-                DocumentBox.AppendText(Current.Description);
-            }
-            else
-            {
-                DocumentBox.AppendText(Current.PendulumEffect);
-            }            
+            PendulumBox.Document.Blocks.Clear();            
+            PendulumBox.AppendText(Current.PendulumEffect);
+        }
+
+        private void RefreshDescriptionControl()
+        {
+            DescriptionBox.Document.Blocks.Clear();
+            DescriptionBox.AppendText(Current.Description);
         }
 
         private void RefreshScaleControl()
@@ -473,20 +457,12 @@ namespace OV.Pyramid
 
             if (path.IsEndWith(".ocs"))
             {
-                /*
-                var contractResolver = new DefaultContractResolver();
-                contractResolver.DefaultMembersSearchFlags |= BindingFlags.NonPublic;
-                var settings = new JsonSerializerSettings
-                {
-                    ContractResolver = contractResolver
-                }; */
 
                 var settings = new JsonSerializerSettings
                 {
-                    ContractResolver = new PrivateSetterContractResolver()
+                    ContractResolver = new PrivateSetterContractResolver(),                    
                 };
                 Set = JsonConvert.DeserializeObject<YGOSet>(File.ReadAllText(path), settings);
-
             }
             else
             {
@@ -495,6 +471,7 @@ namespace OV.Pyramid
             }
 
             inChangeSetCard = true;
+            SetEdit.Text = Set.Name;
             cardList.ItemsSource = Set.Cards;
             currentIndex = 0;
             inChangeSetCard = false;
@@ -502,6 +479,13 @@ namespace OV.Pyramid
             RefreshArtwork();
             RenderCard.Load(Current);
             RefreshControl();
+        }
+
+        private void HandleDeserializationError(object sender, Newtonsoft.Json.Serialization.ErrorEventArgs e)
+        {
+            var currentError =e.ErrorContext.Error.Message;
+            MessageBox.Show(currentError);
+            e.ErrorContext.Handled = true;
         }
 
         private void MainContainer_Loaded(object sender, RoutedEventArgs e)
@@ -582,7 +566,7 @@ namespace OV.Pyramid
 
                 AbilityCanvas.Children.Add(Button);
 
-                Canvas.SetTop(Button, 6 + ((i - 1) / 4) * 33);
+                Canvas.SetTop(Button, 36 + ((i - 1) / 4) * 33);
                 Canvas.SetLeft(Button, 22 + ((i - 1) % 4) * (Button.Width + 4) - 32);
                 StackPanel Zone = new StackPanel();
 
@@ -597,8 +581,7 @@ namespace OV.Pyramid
                 Zone.Children.Add(Icon);
                 Zone.Children.Add(new TextBlock(new Run(Ability_String[i - 1])));
                 Zone.Margin = new Thickness(0, 4, 0, 0);
-
-                //Button.Name = Ability_String[i - 1].Replace(' ', '_').Replace("-", "0X0");
+                
                 Button.Content = Zone;
                 Button.Tag = Ability_String[i - 1];
                 Button.Click += Button_Ability;
@@ -608,7 +591,7 @@ namespace OV.Pyramid
             Reset.IsEnabled = false;
             Reset.Width = 90;
             Reset.Name = "Ability_Reset";
-            Canvas.SetTop(Reset, 39 + 39);
+            Canvas.SetTop(Reset, 108);
             Canvas.SetLeft(Reset, 272);
             AbilityCanvas.Children.Add(Reset);
             //Reset.Click += Button_Reset;
@@ -677,7 +660,7 @@ namespace OV.Pyramid
             InLeft.Width = 32;
             InLeft.Height = 32;
             Canvas.SetLeft(InLeft, 178);
-            Canvas.SetTop(InLeft, 54);
+            Canvas.SetTop(InLeft, 84);
 
             Canvas.SetTop(ScaleLeftBox, Canvas.GetTop(InLeft) + 40);
             Canvas.SetLeft(ScaleLeftBox, Canvas.GetLeft(InLeft) + 20);
@@ -708,10 +691,10 @@ namespace OV.Pyramid
             Button.Tag = "?";
             //Button.Style = (Style)FindResource("Windows8Button");
             ScaleCanvas.Children.Add(Button);
-            Canvas.SetTop(Button, 38);
+            Canvas.SetTop(Button, 78);
             Canvas.SetLeft(Button, 216);
 
-            int left = 20, top = 0; //110-36
+            int left = 20, top = 30; //110-36
             for (int i = 1; i <= 12; i++)
             {
                 Button ButtonX = new Button();
@@ -791,7 +774,7 @@ namespace OV.Pyramid
             MiddleCanvas.Children.Clear();
             if (type != "Property")
             {
-                int left = 46, top = 30;
+                int left = 90, top = 30;
                 for (int i = 1; i <= 12; i++)
                 {
                     Button Button = new Button();
@@ -834,7 +817,7 @@ namespace OV.Pyramid
 
                     Button.Click += Button_LR;
                 }
-
+                /*
                 Button Reset = new Button();
                 Reset.Width = 80;
                 Reset.Name = "Middle_" + type + "_Reset";
@@ -846,7 +829,7 @@ namespace OV.Pyramid
                     StackPanel Zone = new StackPanel();
                     Zone.Orientation = Orientation.Horizontal;
                     Image Icon = new Image();
-                    Icon.Source = Database.GetImage(@"Template\Other\Reset.png");
+                    Icon.Source = Database.GetImage(@"Other\Reset.png");
                     Icon.Width = 20;
                     Icon.Height = 20;
                     Icon.Stretch = Stretch.Uniform;
@@ -856,7 +839,7 @@ namespace OV.Pyramid
                     Zone.Margin = new Thickness(0, 4, 0, 0);
 
                     Reset.Content = Zone;
-                }                
+                }  */              
             }
             else
             {
@@ -909,14 +892,14 @@ namespace OV.Pyramid
                         Button.Click += Button_Property;
 
                         Canvas.SetTop(Button, 34 + ((i - 1) / 3) * 33 + (count - 1) * 90);
-                        Canvas.SetLeft(Button, 54 + ((i - 1) % 3) * (Button.Width + 4) - 32);
+                        Canvas.SetLeft(Button, 60 + ((i - 1) % 3) * (Button.Width + 4) - 32);
 
                         StackPanel Zone = new StackPanel();
 
                         Zone.Orientation = Orientation.Horizontal;
                         Button.Content = Zone;
                         Image Icon = new Image();
-                        Icon.Source = Database.GetImage(@"Template\Middle\" + Property_String[i - 1] + ".png");
+                        Icon.Source = Database.GetImage(@"Template\Middle\" + Property_String[i - 1].Remove("-") + ".png");
                         Icon.Width = 20;
                         Icon.Height = 20;
                         Icon.Stretch = Stretch.Uniform;
@@ -1192,7 +1175,7 @@ namespace OV.Pyramid
             {
                 Button Button = new Button();
                 Button.Content = Rarity[i].AddSpaceBetweenCapital();                
-                Button.Width = 75;
+                Button.Width = 85;
                 if (i >= 8)
                     Button.Width += 14;
                 Button.Height = 30;
@@ -1200,9 +1183,9 @@ namespace OV.Pyramid
 
                 int Left = 0;
                 if (i >= 8)
-                    Left = 42;
+                    Left = 32;
                 else if (i >= 4)
-                    Left = 46;
+                    Left = 0;
                 Canvas.SetLeft(Button, Left + (i % 4) * (Button.Width + 10));
                 Button.Click += Button_Rarity;
                 Button.Tag = Rarity[i];
@@ -1263,7 +1246,7 @@ namespace OV.Pyramid
         
         private string RenderText(string text)
         {
-            string futureText = text;
+            string futureText = text ?? "";
             futureText = futureText.Replace("{.}", "●");
             futureText = futureText.Replace("{a}", "α");
             futureText = futureText.Replace("{b}", "β");
@@ -1334,36 +1317,18 @@ namespace OV.Pyramid
             RenderCard.Render(Current);
             RefreshControl();
         }
-        
 
-        private void Description_Click(object sender, RoutedEventArgs e)
-        {
-            DescriptionButton.IsEnabled = false;
-            PendulumEffectButton.IsEnabled = true;
-            /*
-            DocumentBox.Document.Blocks.Clear();
-            DocumentBox.AppendText(Current.Description);
-            */
-            RefreshControl();
-        }
 
         private void ApplyDocument_Click(object sender, RoutedEventArgs e)
         {
             if (inRefreshControl) { return; }
-            TextRange textRange = new TextRange(DocumentBox.Document.ContentStart, DocumentBox.Document.ContentEnd);
+            
 
-            string Text = @textRange.Text;
-            Text = Text.ReplaceLastOccurrence(Environment.NewLine, "");
 
-            if (DescriptionButton.IsEnabled == false) //Current is Description
-            {
-                Current.SetDescription(RenderText(Text));
-            }
-            else
-            {
-                Current.SetPendulumEffect(RenderText(Text));
-                RefreshControl();
-            }
+            Current.SetDescription(RenderText(DescriptionBox.GetText()));
+            Current.SetPendulumEffect(RenderText(PendulumBox.GetText()));
+            RefreshControl();
+
 
             RenderCard.Render(Current);
         }
@@ -1455,27 +1420,22 @@ namespace OV.Pyramid
             string filePath = (sender as TextBox).Text;
             if (string.IsNullOrWhiteSpace(filePath))
             {
-                filePath = GetLocationPath() + @"\Resources\Template\NoneImage.png";                
+                //filePath = Database.GetImage(@"Template\NoneImage.png");
+                Current.ArtworkByte = Database.GetImage(@"Template\NoneImage.png").GetImageArray();
+                ControlArtwork.Source = Current.ArtworkByte.GetBitmapImageFromByteArray();
+                RefreshArtwork();
             }
-            if (File.Exists(filePath))
+            else if (File.Exists(filePath))
             {
                 Current.ArtworkByte = Images.GetImageByte(filePath);
                 ControlArtwork.Source = Images.GetImage(filePath);
                 RefreshArtwork();
+            } else
+            {
+                MessageBox.Show("Error #1");
             }
         }
-
-        private void PendulumEffectButton_Click(object sender, RoutedEventArgs e)
-        {
-            DescriptionButton.IsEnabled = true;
-            PendulumEffectButton.IsEnabled = false;
-            /*
-            DocumentBox.Document.Blocks.Clear();
-            DocumentBox.AppendText(Current.PendulumEffect);
-            */
-            RefreshControl();
-        }
-
+        
         private void CreatorCheckBox_Checked(object sender, RoutedEventArgs e)
         {
             if (inRefreshControl) { return; }
@@ -1507,6 +1467,65 @@ namespace OV.Pyramid
         private void Window_Closed(object sender, EventArgs e)
         {
             Directory.Delete(TempFolder, true);
+        }
+
+        private void NameEdit_GotFocus(object sender, RoutedEventArgs e)
+        {
+            NameEdit.CaretIndex = NameEdit.Text.Length;
+        }
+
+        private void SetEdit_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            //if (inChangeSetCard) { return; }
+            Set.SetName(SetEdit.Text);
+        }
+
+        private void AssociateExtension(bool isAssociate)
+        {
+            CustomFileExtension cardExtension = new CustomFileExtension();
+            cardExtension.ApplicationName = "OV.Creation.exe";
+            cardExtension.Description = "OV.Creation Card";
+            cardExtension.EmbeddedIcon = false;
+            cardExtension.Extension = ".occ";
+            cardExtension.Handler = "OV.Creation.Card";
+            cardExtension.IconName = @"Resources\OV.Card.ico";
+            cardExtension.IconPosition = 0;
+            cardExtension.OpenText = "CardIZE with OV.Creation";
+
+            CustomFileExtension setExtension =  cardExtension;
+            setExtension.Description = "OV.Creation Set Card";
+            setExtension.Extension = ".ocs";
+            setExtension.Handler = "OV.Creation.Set";
+            setExtension.IconName = @"Resources\OV.Set.ico";
+
+            if (isAssociate)
+            {
+                cardExtension.RegisterFileType();
+                setExtension.RegisterFileType();
+            } else
+            {
+                
+                cardExtension.RemoveFileType();
+                setExtension.RemoveFileType();
+            }
+
+        }
+
+        private void Associate_Click(object sender, RoutedEventArgs e)
+        {
+            AssociateExtension(true);
+
+            Properties.Settings.Default.Associated = true;
+            RefreshSetting();
+        }
+
+        private void Unassociate_Click(object sender, RoutedEventArgs e)
+        {
+            AssociateExtension(false);
+
+
+            Properties.Settings.Default.Associated = false;            
+            RefreshSetting();
         }
     }
 

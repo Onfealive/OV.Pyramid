@@ -26,7 +26,7 @@ namespace OV.Pyramid
         YGOCard Current = YGOCard.Default;
         private static string TempFolder = "";
 
-        private static string DatabasePath = @"MyData.ldb";
+        private static string DatabasePath = GetLocationPath() + @"\Datas.ld";
 
         private ByteDatabase Database = new ByteDatabase(DatabasePath);
         private byte[] NoneImageArray;
@@ -1356,7 +1356,7 @@ namespace OV.Pyramid
             if (Current.ArtworkByte == null)
             {
                 Current.ArtworkByte = NoneImageArray;
-                
+                //Current.ArtworkByte = Database.GetImage(@"Template\NoneImage.png").GetImageArray();
             }
             Artwork.Source = Current.ArtworkByte.GetBitmapImageFromByteArray();
             
