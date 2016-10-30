@@ -136,9 +136,7 @@
     <EmbeddedResource Include="Resources\OV.Card.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\OV.Creation.ico">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\OV.Creation.ico" />
   </ItemGroup>
   <Import Project="..\OV.Core\OV.Core.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
