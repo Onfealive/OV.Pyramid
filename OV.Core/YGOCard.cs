@@ -1,25 +1,25 @@
 ﻿using OV.Tools;
 using System.Collections.Generic;
 using System;
-using Newtonsoft.Json;
-using OV.Pyramid;
-using System.Runtime.CompilerServices;
 using System.Linq;
-using System.Windows;
 using System.Windows.Media.Imaging;
+using System.Runtime.Serialization;
+using System.Windows;
 
 namespace OV.Core
-{   
+{
     class YGOCard
     {
         private FRAME DefaultFrame = FRAME.Effect;
-        private static string DatabasePath = @"MyData.ldb";
+        private static string DatabasePath = Utilities.GetLocationPath() + @"\Datas.ld";
 
         private static ByteDatabase Database = new ByteDatabase(DatabasePath);
+        public Version Version { get; private set; }
 
         private YGOCard()
         {
             this.Abilities = new List<ABILITY>();
+            this.Version = new Version("0.1");
         }
 
         public List<ABILITY> Abilities { get; private set; }
@@ -82,7 +82,7 @@ namespace OV.Core
                 defaultCard.Rarity = RARITY.Common;
                 //defaultCard.Type = TYPE.Warrior;
                 defaultCard.Sticker = STICKER.PromoSilver;                
-                defaultCard.ArtworkByte = (Database.GetImage(@"Template\NoneImage.png") as BitmapImage).GetImageArray();
+                defaultCard.ArtworkByte = Database.GetData(@"Template\NoneImage.png").Bytes;
                 defaultCard.Set = "";
                 defaultCard.ScaleLeft = defaultCard.ScaleRight = -1;
                 return defaultCard;
@@ -91,7 +91,20 @@ namespace OV.Core
 
         
 
-        public void SetAttribute(ATTRIBUTE attribute, bool setLogic = true)
+        [OnDeserialized]
+         private void OnDeserialized(StreamingContext context)
+         {
+            /*
+            if (Creator.ToString().TryEnum<CREATOR>() == false)
+            {
+                //MessageBox.Show("here");
+            } else
+            {
+                
+            } */
+         }
+
+    public void SetAttribute(ATTRIBUTE attribute, bool setLogic = true)
         {
             if (setLogic)
             {
@@ -344,7 +357,7 @@ namespace OV.Core
 
         internal void SetPendulumEffect(string text, bool setLogic = true)
         {
-            if (setLogic)
+            if (string.IsNullOrWhiteSpace(text) == false && setLogic)
             {
                 if (this.IsMonster() && IsPendulum == false)
                 {
