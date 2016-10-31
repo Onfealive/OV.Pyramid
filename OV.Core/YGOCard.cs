@@ -10,21 +10,33 @@ namespace OV.Core
 {
     class YGOCard
     {
-        private FRAME DefaultFrame = FRAME.Effect;
-        private static string DatabasePath = Utilities.GetLocationPath() + @"\Datas.ld";
+        private FRAME DefaultFrame;
+        private static string DatabasePath;
 
-        private static ByteDatabase Database = new ByteDatabase(DatabasePath);
+        private static ByteDatabase Database;
         public Version Version { get; private set; }
 
         private YGOCard()
         {
+            DefaultFrame = FRAME.Effect;
+            DatabasePath = DatabasePath = Utilities.GetLocationPath() + @"\Datas.ld";
+            Database = new ByteDatabase(DatabasePath);
             this.Abilities = new List<ABILITY>();
             this.Version = new Version("0.1");
         }
 
+        #region ICloneable Members
+
+        public object Clone()
+        {
+            return this.MemberwiseClone();
+        }
+
+        #endregion
+
         public List<ABILITY> Abilities { get; private set; }
         public byte[] ArtworkByte { get; set; }
-        
+
         /// <summary>
         /// Get value of ATK of card
         /// <para>-1 means "N/A", double.Nan means "?"</para>
@@ -42,7 +54,7 @@ namespace OV.Core
 
         public string Description { get; private set; }
         public EDITION Edition { get; private set; }
-        
+
         public FRAME Frame { get; private set; }
         public bool IsPendulum { get; private set; }
         public double Level { get; private set; }
@@ -71,29 +83,38 @@ namespace OV.Core
         {
             get
             {
+                
                 YGOCard defaultCard = new YGOCard();
+                
                 defaultCard.Name = "Card Name";
                 defaultCard.ATK = 1200;
                 defaultCard.DEF = 1200;
                 defaultCard.Frame = FRAME.Effect;
                 defaultCard.Attribute = ATTRIBUTE.UNKNOWN;
                 defaultCard.Level = 4;
-                defaultCard.Creator = CREATOR.KazukiTakahashi;;
+                defaultCard.Creator = CREATOR.KazukiTakahashi;
                 defaultCard.Rarity = RARITY.Common;
-                //defaultCard.Type = TYPE.Warrior;
-                defaultCard.Sticker = STICKER.PromoSilver;                
+                defaultCard.Type = TYPE.NONE;
+                defaultCard.Sticker = STICKER.PromoSilver;
                 defaultCard.ArtworkByte = Database.GetData(@"Template\NoneImage.png").Bytes;
                 defaultCard.Set = "";
                 defaultCard.ScaleLeft = defaultCard.ScaleRight = -1;
+                defaultCard.Description = "";
+                defaultCard.Edition = EDITION.UnlimitedEdition;
+                defaultCard.IsPendulum = false;
+                defaultCard.Number = 0;
+                defaultCard.PendulumEffect = "";
+                defaultCard.Property = PROPERTY.NONE;
+                defaultCard.Rank = double.NaN;
                 return defaultCard;
             }
         }
 
-        
+
 
         [OnDeserialized]
-         private void OnDeserialized(StreamingContext context)
-         {
+        private void OnDeserialized(StreamingContext context)
+        {
             /*
             if (Creator.ToString().TryEnum<CREATOR>() == false)
             {
@@ -102,9 +123,9 @@ namespace OV.Core
             {
                 
             } */
-         }
+        }
 
-    public void SetAttribute(ATTRIBUTE attribute, bool setLogic = true)
+        public void SetAttribute(ATTRIBUTE attribute, bool setLogic = true)
         {
             if (setLogic)
             {
@@ -118,12 +139,12 @@ namespace OV.Core
                         Frame = (attribute == ATTRIBUTE.SPELL) ? FRAME.Spell : FRAME.Trap;
                         Abilities.Clear();
                         Property = PROPERTY.Normal;
-                        Type = TYPE.NONE;                       
+                        Type = TYPE.NONE;
                     }
                 }
                 //Card is Spell/Trap
                 else
-                {                    
+                {
                     //From Trap To Spell
                     if (attribute == ATTRIBUTE.SPELL)
                     {
@@ -176,13 +197,13 @@ namespace OV.Core
                     }
                     //To Xyz
                     if (frame == FRAME.Xyz && Frame != FRAME.Xyz)
-                    {                        
+                    {
                         Level = double.NaN;
                         Rank = 4;
                     }
 
                     if (frame != FRAME.Xyz && Frame == FRAME.Xyz)
-                    {                       
+                    {
                         Rank = double.NaN;
                         Level = 4;
                     }
@@ -222,7 +243,7 @@ namespace OV.Core
         }
 
         public void SetLevel(double level, bool setLogic = true)
-        {            
+        {
             if (setLogic)
             {
                 if (this.IsMagic())
@@ -231,14 +252,15 @@ namespace OV.Core
                     Attribute = ATTRIBUTE.UNKNOWN;
                     Frame = DefaultFrame;
                     Property = PROPERTY.NONE;
-                } else
+                }
+                else
                 {
                     if (this.IsFrame(FRAME.Xyz))
                     {
                         Rank = double.NaN;
                         Frame = DefaultFrame;
                     }
-                }                
+                }
             }
             this.Level = level;
         }
@@ -432,7 +454,7 @@ namespace OV.Core
                 if (this.IsMonster())
                 {
                     ScaleLeft = ScaleRight = ATK = DEF = Level = Rank = -1;
-                    IsPendulum = false;                    
+                    IsPendulum = false;
                     Attribute = Frame == FRAME.Spell ? ATTRIBUTE.SPELL : ATTRIBUTE.TRAP;
                     Abilities.Clear();
                     Property = PROPERTY.Normal;
@@ -460,7 +482,7 @@ namespace OV.Core
             if (setLogic)
             {
                 if (this.IsMagic())
-                {                    
+                {
                     Frame = DefaultFrame;
                     Attribute = ATTRIBUTE.UNKNOWN;
                     Property = PROPERTY.NONE;
@@ -523,19 +545,19 @@ internal void CleanUp()
 
 
 */
-            
+
         public override bool Equals(Object obj)
         {
             if (obj == null) return false;
             var other = obj as YGOCard;
-            if (other== null) return false;
+            if (other == null) return false;
 
             if (other.Name == this.Name
                 && (!other.Abilities.Except(this.Abilities).Any() && !this.Abilities.Except(other.Abilities).Any())
                 && ((other.ArtworkByte == null && this.ArtworkByte == null)
                     || (other.ArtworkByte != null && other.ArtworkByte.SequenceEqual(this.ArtworkByte)))
                 && other.ATK.Equals(this.ATK)
-                && other.DEF.Equals(this.DEF)                
+                && other.DEF.Equals(this.DEF)
                 && other.Attribute == this.Attribute
                 && other.Description == this.Description
                 && other.Frame == this.Frame
@@ -544,7 +566,7 @@ internal void CleanUp()
                 && other.PendulumEffect == this.PendulumEffect
                 && other.Number == this.Number
                 && other.Property == this.Property
-                && other.Rank.Equals( this.Rank)
+                && other.Rank.Equals(this.Rank)
                 && other.ScaleLeft.Equals(this.ScaleLeft)
                 && other.ScaleRight.Equals(this.ScaleRight)
                 && other.Type == this.Type) { return true; }
@@ -631,9 +653,8 @@ internal void CleanUp()
     }
 
 
-static class Static
+    static class Static
     {
-
         public static bool IsFrame(this YGOCard card, FRAME frame)
         {
             return frame == card.Frame;
@@ -652,7 +673,7 @@ static class Static
 
         public static bool IsMonster(this YGOCard card)
         {
-            return card!= null && !card.IsMagic();
+            return card != null && !card.IsMagic();
         }
 
         public static bool IsSpellPropertyOnly(this PROPERTY property)
