@@ -61,7 +61,7 @@
                 <TextBlock Name="CardNumber" FontSize="24"></TextBlock>
             </Viewbox>
             <TextBlock Name="Edition" Canvas.Left="155" Canvas.Top="1127"></TextBlock>
-            <TextBlock Name="SetNumber" Panel.ZIndex="10" Canvas.Left="581" Canvas.Top="849" FontSize="23" Width="150" TextAlignment="Right"></TextBlock>
+            <TextBlock Name="SetNumber" Panel.ZIndex="10" Canvas.Right="82" Canvas.Top="849" FontSize="23" TextAlignment="Right"></TextBlock>
             <TextBlock Name="Creator" Panel.ZIndex="10" FontSize="21" Canvas.Right="70" HorizontalAlignment="Right" Canvas.Top="1130" ></TextBlock>
             <Image Name="Artwork" Stretch="Fill" Width="620" Height="620" Canvas.Left="98" Canvas.Top="217"></Image>
             <Image Name="ArtworkFoil" Stretch="Fill" Width="{Binding ElementName=Artwork, Path=Width}"

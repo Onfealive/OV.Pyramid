@@ -34,7 +34,7 @@ namespace OV.Pyramid
         private bool inRefreshControl = false;
         private bool inChangeSetCard;
         
-        private static string DatabasePath = GetLocationPath() + @"\Datas.ld";
+        private static string DatabasePath = GetLocationPath() + @"\Resources\Datas.ld";
 
         private ByteDatabase Database = new ByteDatabase(DatabasePath);
 
@@ -265,14 +265,14 @@ namespace OV.Pyramid
         private void RefreshAbilityControl()
         {
             foreach (Button button in AbilityCanvas.FindChildrens<Button>())
-            {
+            {                
                 if (button.IsEnabled == false)
                 {
-                    button.IsEnabled = true;
+                    button.IsEnabled = true;                    
                 }
                 if (button.Tag != null)
-                {
-                    if (button.Tag.ToString() == Current.Frame.ToString())
+                {                    
+                    if (button.Tag.ToString() == Current.Frame.ToString()) //Effect Ability
                     {
                         button.IsEnabled = false;
                     }
@@ -281,14 +281,20 @@ namespace OV.Pyramid
                     Image icon = button.FindChildrens<Image>().ToList()[0] as Image;
                     if (Current.Abilities.Contains(button.Tag.ToString().ToEnum<ABILITY>()))
                     {
-                        content.Text = "Un-" + button.Tag;
-                        icon.Source = Database.GetImage(@"Template\Ability\" + button.Tag + ".png")
-                            .ToBitmap().Grayscale().ToBitmapSource();
+                        if (content.Text != "Un-" + button.Tag)
+                        {
+                            content.Text = "Un-" + button.Tag;
+                            icon.Source = Database.GetImage(@"Template\Ability\" + button.Tag + ".png")
+                                .ToBitmap().Grayscale().ToBitmapSource();
+                        }
                     }
                     else
                     {
-                        content.Text = button.Tag.ToString();
-                        icon.Source = Database.GetImage(@"Template\Ability\" + button.Tag + ".png");
+                        if (content.Text != button.Tag.ToString())
+                        {
+                            content.Text = button.Tag.ToString();
+                            icon.Source = Database.GetImage(@"Template\Ability\" + button.Tag + ".png");
+                        }
                     }
                 }
             }
@@ -438,7 +444,7 @@ namespace OV.Pyramid
             if (string.IsNullOrEmpty(filePath))
             {
                 OpenFileDialog choofdlog = new OpenFileDialog();
-                choofdlog.Filter = "OV.Creation Set Card|*.ocs|OV.Creation Card|*.occ";
+                choofdlog.Filter = "OV.Creation Card|*.occ|OV.Creation Set Card|*.ocs";
                 choofdlog.FilterIndex = 1;
                 choofdlog.Multiselect = false;
 
@@ -517,7 +523,7 @@ namespace OV.Pyramid
             else
                 dlg.FileName = Set.Name.Replace(":", " -"); // Default file name
             //dlg.DefaultExt = ".png"; // Default file extension
-            dlg.Filter = "OV.Creation Set Card|*.ocs|OV.Creation Card|*.occ"; // Filter files by extension 
+            dlg.Filter = "OV.Creation Card|*.occ|OV.Creation Set Card|*.ocs"; // Filter files by extension 
 
             // Show save file dialog box
 
@@ -1037,8 +1043,6 @@ namespace OV.Pyramid
                         Button.Width += 32;
                         Canvas.SetTop(Button, 120);
                         Canvas.SetLeft(Button, (i - 8) * (Button.Width + 16) + sub);
-                        Button.Visibility = Visibility.Hidden;
-                        
                     }
                     else if (i >= 9)
                     {
@@ -1546,5 +1550,6 @@ namespace OV.Pyramid
         {
             Window.GetWindow(this).Close();
         }
+        
     }
 }

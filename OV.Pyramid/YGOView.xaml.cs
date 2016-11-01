@@ -39,7 +39,7 @@ namespace OV.Pyramid
         {            
 
             InitializeComponent();
-            DatabasePath = GetLocationPath() + @"\Datas.ld";
+            DatabasePath = GetLocationPath() + @"\Resources\Datas.ld";
             Database = new ByteDatabase(DatabasePath);
         }        
 
@@ -145,7 +145,7 @@ namespace OV.Pyramid
 
         internal void Render(YGOCard card)
         {
-            card.SetPendulum(false, false); //prevent because Bugs
+            
             SetDefaultValue();
             YGOCard preCard = (YGOCard)Current.Clone();
             Current = (YGOCard)card.Clone();
@@ -864,7 +864,7 @@ namespace OV.Pyramid
                 CardName.Effect = null;
                 LoreBorder.Source = null;
                 ArtworkBorder.Source = ArtworkBorder.Source ?? null;
-
+                ArtworkBorder.Effect = null;
                 /*
                 if (Current.Attribute !=  AttributeEnum.UNKNOWN)
                     Attribute.Source = Uti.GetImage("/Attribute/" + Current.Attribute + Language);
@@ -992,9 +992,11 @@ namespace OV.Pyramid
             }
             else if (Current.Rarity == RARITY.GoldRare)
             {
-                CardBorder.Source = Database.GetImage(@"Template\Border\Card\Gold.png");
-                CardName.Foreground = new SolidColorBrush(Color.FromRgb(88, 76, 12));//234,255,255
 
+                CardBorder.Source = Database.GetImage(@"Template\Border\Card\Gold.png");
+                LoreBorder.Source = Database.GetImage(@"Template\Border\Lore\Gold.png");
+                CardName.Foreground = new SolidColorBrush(Color.FromRgb(88, 76, 12));//234,255,255
+                
                 DropShadowEffect shadow = new DropShadowEffect();
                 shadow.BlurRadius = 2;
                 shadow.RenderingBias = RenderingBias.Quality;
@@ -1003,11 +1005,12 @@ namespace OV.Pyramid
                 shadow.Color = Color.FromRgb(255, 215, 0);
 
                 CardName.Effect = shadow;
-
+                
                 if (Current.IsPendulum)
                 {
                     if (Pendulum.GetLines().Count() < 4)
                     {
+                        //ArtworkBorder.Source = Database.GetImage(@"Template\Border\Pendulum\Small.png");
                         ArtworkBorder.Source = Database.GetImage(@"Template\Border\Pendulum\SmallGold.png");
                         //PendulumBoxMiddle.Source = Images.GetImage(GetLocationPath() + "Template/Border/Pendulum/SmallBox.png");
                         //PendulumBoxText.Source = Images.GetImage(GetLocationPath() + "Template/Border/Pendulum/TextBox.png");
@@ -1018,6 +1021,10 @@ namespace OV.Pyramid
                         //PendulumBoxMiddle.Source = Images.GetImage(GetLocationPath() + "Template/Border/Pendulum/MediumBox.png");
                         //PendulumBoxText.Source = Images.GetImage(GetLocationPath() + "Template/Border/Pendulum/TextBox.png");
                     }
+                    shadow = new DropShadowEffect();
+                    shadow.BlurRadius = 15;
+                    shadow.ShadowDepth = 0;
+                    ArtworkBorder.Effect = shadow;
                 } else
                 {
                     ArtworkBorder.Source = Database.GetImage(@"Template\Border\Artwork\Gold.png");

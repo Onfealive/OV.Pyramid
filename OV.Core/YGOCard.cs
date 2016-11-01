@@ -19,7 +19,7 @@ namespace OV.Core
         private YGOCard()
         {
             DefaultFrame = FRAME.Effect;
-            DatabasePath = DatabasePath = Utilities.GetLocationPath() + @"\Datas.ld";
+            DatabasePath = DatabasePath = Utilities.GetLocationPath() + @"\Resources\Datas.ld";
             Database = new ByteDatabase(DatabasePath);
             this.Abilities = new List<ABILITY>();
             this.Version = new Version("0.1");
@@ -195,6 +195,11 @@ namespace OV.Core
                         Property = PROPERTY.Normal;
                         Type = TYPE.NONE;
                     }
+
+                    if (Abilities.Contains(ABILITY.Effect) && frame == FRAME.Effect)
+                    {
+                        Abilities.Remove(ABILITY.Effect);
+                    }
                     //To Xyz
                     if (frame == FRAME.Xyz && Frame != FRAME.Xyz)
                     {
@@ -363,6 +368,7 @@ namespace OV.Core
                     {
                         ScaleLeft = ScaleRight = 4; //Default Scale
                     }
+                    PendulumEffect = "";
                 }
                 else
                 {
