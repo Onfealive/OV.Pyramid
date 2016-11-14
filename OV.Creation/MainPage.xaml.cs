@@ -28,15 +28,15 @@ namespace OV.Pyramid
     /// </summary>
     public partial class MainPage : Page
     {
-        private YGOSet Set = new YGOSet();
-        private int currentIndex = -1;
+        private YGOSet Set;
+        private int currentIndex;
 
-        private bool inRefreshControl = false;
+        private bool inRefreshControl;
         private bool inChangeSetCard;
-        
-        private static string DatabasePath = GetLocationPath() + @"\Resources\Datas.ld";
 
-        private ByteDatabase Database = new ByteDatabase(DatabasePath);
+        private static string DatabasePath;
+
+        private ByteDatabase Database;
 
         private YGOCard Current
         {
@@ -53,17 +53,13 @@ namespace OV.Pyramid
         }
         public MainPage()
         {
-            
+            currentIndex = -1;
+            Set = new YGOSet();
+            inRefreshControl = false;
+            DatabasePath = GetLocationPath() + @"\Resources\Datas.ld";
+            Database = new ByteDatabase(DatabasePath);
             InitializeComponent();
             FirstLoad();
-            
-            //this.Dispatcher.ShutdownStarted += Dispatcher_ShutdownStarted;
-            //this.Dispatcher.ShutdownFinished += Dispatcher_ShutdownFinished;
-            /*
-            Loaded += (s, e) => { // only at this point the control is ready
-                Window.GetWindow(this) // get the parent window
-                      .Closed += (s1, e1) => Directory.Delete(TempFolder, true);  //disposing logic here
-            }; */
         }
 
         private void FirstLoad()
@@ -75,9 +71,11 @@ namespace OV.Pyramid
             style.Setters.Add(new Setter(Paragraph.MarginProperty, new Thickness(0)));
             Resources.Add(typeof(Paragraph), style);
 
-
             Set.Cards.Add(YGOCard.Default);
+            
             RenderCard.SetDefaultArtwork(Database.GetData(@"Template\NoneImage.png").Bytes);
+            //RenderCard.Render(YGOCard.Default);
+            
 
             LoadControl();
             LoadButton();
@@ -86,6 +84,18 @@ namespace OV.Pyramid
 
             cardList.ItemsSource = Set.Cards;
             cardList.SelectedIndex = 0;
+
+            RenderCard.AttributeClick += RenderCard_AttributeClick;
+        }
+
+        private void RenderCard_AttributeClick(object sender, EventArgs e)
+        {
+            tabControl.SelectedIndex = 0;
+            var control = AttributeCanvas;
+            UIElement container = AttributeCanvas.Parent as StackPanel;
+            Point relativeLocation = control.TranslatePoint(new Point(0, 0), container);
+            var offset = relativeLocation.Y;
+            cardDetailsScroll.ScrollToVerticalOffset(offset);
         }
 
         private void SaveDatabase()
@@ -462,22 +472,22 @@ namespace OV.Pyramid
                 return;
             //var settings = new ObjectCustomerSettings();
             //Current = JsonConvert.DeserializeObject<YGOSet>(File.ReadAllText(path)).Cards[0];
-
-            if (path.IsEndWith(".ocs"))
+            var settings = new JsonSerializerSettings
             {
-
-                var settings = new JsonSerializerSettings
-                {
-                    ContractResolver = new PrivateSetterContractResolver(),
-                };
+                ContractResolver = new PrivateSetterContractResolver(),
+            };
+            if (path.IsExtension(".ocs"))
+            {
                 Set = JsonConvert.DeserializeObject<YGOSet>(File.ReadAllText(path), settings);
             }
             else
             {
                 Set.Cards.Clear();
-                Set.Cards.Add(JsonConvert.DeserializeObject<YGOCard>(File.ReadAllText(path)));
+                
+                Set.Cards.Add(JsonConvert.DeserializeObject<YGOCard>(File.ReadAllText(path), settings));
+                currentIndex = 0;
             }
-
+            
             inChangeSetCard = true;
             SetEdit.Text = Set.Name;
             cardList.ItemsSource = Set.Cards;
@@ -532,7 +542,7 @@ namespace OV.Pyramid
             {
                 // Save document 
                 string filename = dlg.FileName;
-                if (filename.IsEndWith(".ocs"))
+                if (filename.IsExtension(".ocs"))
                 {
                     text = JsonConvert.SerializeObject(Set, Formatting.Indented);
                 }
@@ -630,6 +640,7 @@ namespace OV.Pyramid
             else
             {
                 Current.SetAbility(ability, true);
+                
             }
 
             RenderCard.Render(Current);
@@ -939,7 +950,9 @@ namespace OV.Pyramid
             if (type == "Level")
             {
                 Current.SetLevel(number);
+                
                 Current.SetRank(double.NaN, false);
+                
             }
             else
             {
@@ -947,7 +960,6 @@ namespace OV.Pyramid
                 Current.SetLevel(double.NaN, false);
                 Current.SetRank(number);
             }
-
             RenderCard.Render(Current);
             //RefreshMiddleControl();
             RefreshControl();
@@ -1089,6 +1101,7 @@ namespace OV.Pyramid
             else
             {
                 Current.SetFrame(frameName.ToEnum<FRAME>());
+                //Current = RenderCard.SetFrame(frameName.ToEnum<FRAME>());
             }
             RenderCard.Render(Current);
             //RefreshFrameControl();

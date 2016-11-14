@@ -75,8 +75,9 @@
     </Page.Resources>
     <Canvas Name="mainCanvas" Width="974" Height="670">
 
-        <local:YGOView x:Name="RenderCard" Canvas.Left="15" Canvas.Top="44"></local:YGOView >
-
+        <local:YGOView x:Name="RenderCard" Canvas.Left="15" Canvas.Top="44" ></local:YGOView >
+        <Image Canvas.Left="15" Canvas.Top="44" Width="{Binding ElementName=RenderCard, Path=Width}"
+               Height="{Binding ElementName=RenderCard, Path=Height}"></Image>
         <TextBlock Canvas.Left="15" TextWrapping="Wrap" Text="CARD LAYOUT" Canvas.Top="20"/>
 
         <Button x:Name="Exit" Height="60" Canvas.Left="886" Canvas.Top="32" Width="60" BorderBrush="Black" BorderThickness="1.5" Click="Exit_Click" />
@@ -90,35 +91,16 @@
 
         <TabControl x:Name="tabControl" Height="640" Canvas.Left="445" Canvas.Top="20" Width="430"
                     Style="{DynamicResource DockTabControl}" >
-            <TabItem Header="Name &amp; Text">
-                <StackPanel>
-                    <Canvas Height="50">
-                        <TextBox Name="NameEdit" FontSize="15" Canvas.Left="80" Canvas.Top="10" Width="330"
+            
+            <TabItem Header="Card Details">
+                <ScrollViewer Name="cardDetailsScroll" MaxHeight="600" Width="Auto" VerticalScrollBarVisibility="Auto" Padding="10">
+                    <StackPanel>
+                        <Canvas Height="50">
+                            <TextBox Name="NameEdit" FontSize="15" Canvas.Left="80" Canvas.Top="10" Width="330"
                             TextChanged="Name_TextBox_TextChanged"
                                  GotFocus="NameEdit_GotFocus"></TextBox>
-                        <Label Content="Name" FontSize="14" Canvas.Left="10" Canvas.Top="9"/>
-                    </Canvas>
-                    <Canvas x:Name="DocumentCanvas"  Height="330">
-                        <RichTextBox Name="PendulumBox" Canvas.Top="30" Canvas.Left="20" Height="120" Width="380"></RichTextBox>
-                        <RichTextBox x:Name="DescriptionBox" Canvas.Top="160" Canvas.Left="20" Height="120" Width="380"/>
-                        <Button Canvas.Top="290" Canvas.Right="20" Click="ApplyDocument_Click">Apply</Button>
-                        <TextBlock Canvas.Left="16" FontSize="14" TextWrapping="Wrap" Text="Pendulum Effect and Description" Canvas.Top="2"/>
-                    </Canvas>
-                    <Canvas Height="50">
-                        <TextBlock Canvas.Top="8" Canvas.Left="40" FontSize="14">ATK</TextBlock>
-                        <TextBox Name="ATKBox" Width="70" FontSize="14" local:Masking.Mask="([0-9])|(^\?$)"
-                                 Canvas.Left="76" Canvas.Top="5" MaxLength="4" TextAlignment="Right"
-                                 TextChanged="ATK_TextBox_TextChanged" ></TextBox>
-                        <TextBlock Canvas.Top="8" Canvas.Left="250" FontSize="14">DEF</TextBlock>
-                        <TextBox Name="DEFBox" Width="70" FontSize="14" local:Masking.Mask="([0-9])|(^\?$)"
-                                 Canvas.Left="286" Canvas.Top="5" MaxLength="4"
-                                 TextChanged="DEF_TextBox_TextChanged" TextAlignment="Right"></TextBox>
-                    </Canvas>
-                </StackPanel>
-            </TabItem>
-            <TabItem Header="Card Details">
-                <ScrollViewer MaxHeight="600" Width="Auto" VerticalScrollBarVisibility="Auto" Padding="10">
-                    <StackPanel>
+                            <Label Content="Name" FontSize="14" Canvas.Left="10" Canvas.Top="9"/>
+                        </Canvas>
                         <Canvas x:Name="RarityCanvas" Height="160">
                             <Label Width="383" HorizontalContentAlignment="Center" FontSize="14">Rarity</Label>
                         </Canvas>
@@ -139,6 +121,23 @@
                             <Label Width="383" HorizontalContentAlignment="Center" FontSize="14">Pendulum Scale</Label>
                             <TextBox Name="ScaleLeftBox" local:Masking.Mask="^([1-9]|[0-1][0-2]|\?)$"  TextChanged="ScaleLeft_TextChanged" Width="40" TextAlignment="Right"></TextBox>
                             <TextBox Name="ScaleRightBox" local:Masking.Mask="^([1-9]|[0-1][0-2]|\?)$" TextChanged="ScaleRight_TextChanged"  Width="40"></TextBox>
+                        </Canvas>
+                        <Canvas x:Name="DocumentCanvas"  Height="330">
+                            <RichTextBox Name="PendulumBox" Canvas.Top="30" Canvas.Left="20" Height="120" Width="380"></RichTextBox>
+                            <RichTextBox x:Name="DescriptionBox" Canvas.Top="160" Canvas.Left="20" Height="120" Width="380"/>
+                            <Button Canvas.Top="290" Canvas.Right="20" Padding="5" Click="ApplyDocument_Click">Apply</Button>
+                            <TextBlock Canvas.Left="16" FontSize="14" TextWrapping="Wrap" Text="Pendulum Effect and Description" Canvas.Top="2"/>
+                            <TextBlock Canvas.Left="20" Canvas.Top="290" TextWrapping="Wrap"><Run Text="{}{.}, {a}, {b} , {o} =&gt;●, α, β, Ω"/><Run/></TextBlock>
+                        </Canvas>
+                        <Canvas Height="50">
+                            <TextBlock Canvas.Top="8" Canvas.Left="40" FontSize="14">ATK</TextBlock>
+                            <TextBox Name="ATKBox" Width="70" FontSize="14" local:Masking.Mask="([0-9])|(^\?$)"
+                                 Canvas.Left="76" Canvas.Top="5" MaxLength="4" TextAlignment="Right"
+                                 TextChanged="ATK_TextBox_TextChanged" ></TextBox>
+                            <TextBlock Canvas.Top="8" Canvas.Left="250" FontSize="14">DEF</TextBlock>
+                            <TextBox Name="DEFBox" Width="70" FontSize="14" local:Masking.Mask="([0-9])|(^\?$)"
+                                 Canvas.Left="286" Canvas.Top="5" MaxLength="4"
+                                 TextChanged="DEF_TextBox_TextChanged" TextAlignment="Right"></TextBox>
                         </Canvas>
                         <Canvas x:Name="CirculationCanvas" Height="196">
                             <Label Width="383" HorizontalContentAlignment="Center" FontSize="14">Circulation</Label>

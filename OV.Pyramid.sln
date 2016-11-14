@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OV.Creation", "OV.Pyramid\OV.Creation.csproj", "{2ED715DD-8E74-4091-A2CB-CFF8C3EEBA05}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OV.Creation", "OV.Creation\OV.Creation.csproj", "{2ED715DD-8E74-4091-A2CB-CFF8C3EEBA05}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "OV.Core", "OV.Core\OV.Core.shproj", "{81107376-4103-4696-8285-4F4ACB1E12F4}"
 EndProject
@@ -21,6 +21,10 @@ Global
 		{2ED715DD-8E74-4091-A2CB-CFF8C3EEBA05}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2ED715DD-8E74-4091-A2CB-CFF8C3EEBA05}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2ED715DD-8E74-4091-A2CB-CFF8C3EEBA05}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A7EF8705-497F-40FE-A7AA-2815AEEBF3BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7EF8705-497F-40FE-A7AA-2815AEEBF3BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7EF8705-497F-40FE-A7AA-2815AEEBF3BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7EF8705-497F-40FE-A7AA-2815AEEBF3BD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

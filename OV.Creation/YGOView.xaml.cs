@@ -3,6 +3,7 @@ using OV.Core;
 using OV.Tools;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -20,27 +21,21 @@ namespace OV.Pyramid
     /// <summary>
     /// Interaction logic for YGOView.xaml
     /// </summary>
-    public partial class YGOView : UserControl
-    {
-        private YGOCard _Current;
-        private YGOCard Current
-        {
-            get { return _Current ?? YGOCard.Default; }
-            set { _Current = value; }
-        }
-        
-
+    public partial class YGOView : UserControl, INotifyPropertyChanged
+    {        
+        private YGOCard CurrentCard;
         private static string DatabasePath;
 
         private ByteDatabase Database;
         private byte[] NoneImageArray;
+        private bool isInitialize;
 
         public YGOView()
-        {            
-
+        {     
             InitializeComponent();
             DatabasePath = GetLocationPath() + @"\Resources\Datas.ld";
             Database = new ByteDatabase(DatabasePath);
+            isInitialize = false;
         }        
 
         public class Fonts
@@ -118,9 +113,20 @@ namespace OV.Pyramid
                 }
             }
         };
-        
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void OnPropertyChanged(object sender, string propertyName)
+        {
+            if (this.PropertyChanged != null)
+            {
+                PropertyChanged(sender, new PropertyChangedEventArgs(propertyName));
+            }
+        }
+
         private void SetDefaultValue()
         {
+            if (isInitialize) { return; }
+            isInitialize = true;
             CardName.FontFamily = Fonts.YGOMatrixSmallCap2;
             Ability.FontFamily = BracketLeft.FontFamily = BracketRight.FontFamily = Fonts.StoneSerifLTBold;
             ATKBlock.FontFamily = DEFBlock.FontFamily = Fonts.YGOMatrixSmallCap2;
@@ -140,49 +146,141 @@ namespace OV.Pyramid
         public void SetDefaultArtwork(byte[] imageBytes)
         {
             NoneImageArray = imageBytes;
-            Current.ArtworkByte = imageBytes;
+            if (CurrentCard != null)
+            {
+                CurrentCard.ArtworkByte = imageBytes;
+            }
         }
+
+        
 
         internal void Render(YGOCard card)
         {
-            
             SetDefaultValue();
-            YGOCard preCard = (YGOCard)Current.Clone();
-            Current = (YGOCard)card.Clone();
-
-            HandleName();
-            HandleAttribute();
-            HandleMiddle();
+            YGOCard preCard = this.CurrentCard != null ? (YGOCard)this.CurrentCard.Clone() : null;
+            this.CurrentCard = (YGOCard)card.Clone();
             
-            HandleArtwork();
-            
-            HandleAD();
-            HandleAbility();
-            HandleCreator();
-            if (Current.Description != preCard.Description
-                || (Current.IsMagic() && preCard.IsMonster())
-                || (Current.IsMonster() && preCard.IsMagic()))
+            if (preCard == null)            
             {
-                HandleDescription();                
+                HandleName();
+                HandleAttribute();
+                HandleMiddle();
+                HandleArtwork();
+                HandleAD();
+                HandleAbility();
+                HandleCreator();
+                HandleDescription();
+                HandlePendulum();
+                HandleFrame();
+                HandleScale();
+                HandleRarity();
+                HandleSticker();
+                HandleEdition();
+                HandleCartNumber();
+                HandleSetCard();                
             }
-            HandlePendulum();
-            HandleFrame();
-            HandleScale();
-            //
-            
-            HandleRarity();
-            HandleSticker();
-            HandleEdition();
-            HandleCartNumber();
-            HandleSetCard();
+            else
+            {                
+                if (preCard.Name != CurrentCard.Name
+                    || preCard.Frame != CurrentCard.Frame) { HandleName(); }
+                if (preCard.Attribute != CurrentCard.Attribute) { HandleAttribute(); }
+                if (preCard.Level.CompareTo(CurrentCard.Level) != 0
+                    || preCard.Rank.CompareTo(CurrentCard.Rank) != 0
+                    || preCard.Property != CurrentCard.Property)
+                {
+                    HandleMiddle();
+                }
+                
+                if (preCard.ArtworkByte.SequenceEqual(CurrentCard.ArtworkByte) == false)
+                    HandleArtwork();
+
+                if (preCard.ATK.CompareTo(CurrentCard.ATK) != 0
+                    || preCard.DEF.CompareTo(CurrentCard.DEF) != 0)
+                {
+                    HandleAD();
+                }
+                if (preCard.Abilities.ListEquals(CurrentCard.Abilities) == false
+                    || preCard.Type != CurrentCard.Type
+                    || (CurrentCard.IsMagic() && preCard.IsMonster())
+                    || (CurrentCard.IsMonster() && preCard.IsMagic()))
+                {
+                    HandleAbility();
+                }
+
+                if (CurrentCard.Description != preCard.Description
+                    || (CurrentCard.IsMagic() && preCard.IsMonster())
+                    || (CurrentCard.IsMonster() && preCard.IsMagic()))
+                {
+                    HandleDescription();
+                }
+                
+                if (preCard.IsPendulum != CurrentCard.IsPendulum
+                    || preCard.PendulumEffect != CurrentCard.PendulumEffect
+                    || (preCard.IsPendulum && preCard.Frame != CurrentCard.Frame))
+                {
+                    HandlePendulum();
+                }
+                
+                if (preCard.Frame != CurrentCard.Frame
+                    || preCard.Equals(YGOCard.Default))
+                {
+                    HandleFrame();
+                }
+                if (preCard.IsPendulum != CurrentCard.IsPendulum
+                    || preCard.ScaleLeft.Equals(CurrentCard.ScaleLeft) == false
+                    || preCard.ScaleRight.Equals(CurrentCard.ScaleRight) == false)
+                {
+                    HandleScale();
+                }
+                
+                if (preCard.Rarity != CurrentCard.Rarity)
+                {
+                    HandleRarity();
+                }
+                //Circulation
+                if (preCard.Creator != CurrentCard.Creator
+                    || preCard.IsPendulum != CurrentCard.IsPendulum
+                    || preCard.Frame != CurrentCard.Frame)
+                {
+                    HandleCreator();
+                }
+                if (preCard.Sticker != CurrentCard.Sticker)
+                {
+                    HandleSticker();
+                }
+                if (preCard.Edition != CurrentCard.Edition
+                    || preCard.IsPendulum != CurrentCard.IsPendulum
+                    || preCard.Frame != CurrentCard.Frame)
+                {
+                    HandleEdition();
+                }
+                if (preCard.Number != CurrentCard.Number
+                    || preCard.IsPendulum != CurrentCard.IsPendulum
+                    || preCard.Frame != CurrentCard.Frame)
+                {
+                    HandleCartNumber();
+                }
+                if (preCard.Set != CurrentCard.Set
+                    || preCard.IsPendulum != CurrentCard.IsPendulum
+                    || preCard.Frame != CurrentCard.Frame)
+                {
+                    HandleSetCard();
+                }
+
+                
+            }
+            //this.OnPropertyChanged(this, "RenderedImageSource");
+            //return RenderedImageSource;
+           
         }
- 
+
+        public event EventHandler AttributeClick;
 
         private void HandlePendulum()
         {
-            if (Current == null) { return; }
+            if (CurrentCard == null) { return; }
 
-            string Text = Current.PendulumEffect ?? "";
+            string Text = CurrentCard.PendulumEffect ?? "";
             double fontDefault = 31;
             Pendulum.Inlines.Clear();
             Pendulum.Text = Text;
@@ -213,19 +311,68 @@ namespace OV.Pyramid
             {
                 Canvas.SetTop(PendulumBorder, 746);
             }
+
+            //Is Pendulum?
+            if (CurrentCard.IsPendulum)
+            {
+                LoreBorder.Visibility = Visibility.Hidden;
+                if (Pendulum.GetLines().Count() < 4)
+                {
+                    ArtworkBorder.Source = Database.GetImage(@"Template\Border\Pendulum\Small.png");
+                    PendulumBoxMiddle.Source = Database.GetImage(@"Template\Border\Pendulum\SmallBox.png");
+                    PendulumBoxText.Source = Database.GetImage(@"Template\Border\Pendulum\TextBox.png");
+                }
+                else
+                {
+                    ArtworkBorder.Source = Database.GetImage(@"Template\Border\Pendulum\Medium.png");
+                    PendulumBoxMiddle.Source = Database.GetImage(@"Template\Border\Pendulum\MediumBox.png");
+                    PendulumBoxText.Source = Database.GetImage(@"Template\Border\Pendulum\TextBox.png");
+                }
+                PendulumLine.Source = Database.GetImage(@"Template\Border\Pendulum\Line" + CurrentCard.Frame.ToString() + ".png");
+                SpellHalf.Source = Database.GetImage(@"Template\Border\Pendulum\SpellHalf.png");
+                LoreBackground.Source = Database.GetImage(@"Template\Border\Pendulum\LoreBoxMedium.png");
+                Artwork.Width = 707;
+                Artwork.Height = 663;
+                Canvas.SetLeft(Artwork, 53);
+                Canvas.SetTop(Artwork, 212);
+                //Set Card
+                Canvas.SetLeft(SetNumber, 68);
+                Canvas.SetRight(SetNumber, double.NaN);
+                Canvas.SetTop(SetNumber, 1083);
+                SetNumber.TextAlignment = TextAlignment.Left;
+            }
+            else
+            {
+                ArtworkBorder.Source = Database.GetImage(@"Template\Border\Artwork\Default.png");
+                LoreBorder.Visibility = Visibility.Visible;
+                PendulumBoxMiddle.Source = PendulumBoxText.Source = null;
+                PendulumLine.Source = null;
+                SpellHalf.Source = null;
+                LoreBackground.Source = null;
+                Artwork.Width = 620;
+                Artwork.Height = 620;
+                Canvas.SetLeft(Artwork, 98);
+                Canvas.SetTop(Artwork, 217);
+                //Set Card
+                //Canvas.Right = "82" Canvas.Top = "849"
+                Canvas.SetRight(SetNumber, 82);
+                Canvas.SetLeft(SetNumber, double.NaN);
+                Canvas.SetTop(SetNumber, 849);
+                SetNumber.TextAlignment = TextAlignment.Left;
+            }
         }
 
         private void HandleScale()
         {
-            if (Current.IsPendulum == false)
+            if (CurrentCard.IsPendulum == false)
             {
                 ScaleLeftBlock.Text = ScaleRightBlock.Text = "";
                 ScaleLeft.Visibility = ScaleRight.Visibility = Visibility.Hidden;
                 return;
             }
             ScaleLeft.Visibility = ScaleRight.Visibility = Visibility.Visible;
-            ScaleLeftBlock.Text = double.IsNaN(Current.ScaleLeft) ? "?" : Current.ScaleLeft.ToString();
-            ScaleRightBlock.Text = double.IsNaN(Current.ScaleRight) ? "?" : Current.ScaleRight.ToString();
+            ScaleLeftBlock.Text = double.IsNaN(CurrentCard.ScaleLeft) ? "?" : CurrentCard.ScaleLeft.ToString();
+            ScaleRightBlock.Text = double.IsNaN(CurrentCard.ScaleRight) ? "?" : CurrentCard.ScaleRight.ToString();
             
             if (Pendulum.GetLines().Count() < 4)
             {
@@ -240,11 +387,11 @@ namespace OV.Pyramid
 
 
             //ScaleLeft
-            if (!double.IsNaN(Current.ScaleLeft))
+            if (!double.IsNaN(CurrentCard.ScaleLeft))
             {
-                if (Current.ScaleLeft >= 10)
+                if (CurrentCard.ScaleLeft >= 10)
                 {
-                    if (Current.ScaleLeft == 11)
+                    if (CurrentCard.ScaleLeft == 11)
                     {
                         Canvas.SetLeft(ScaleLeftBlock, 74 - 11);
                     }
@@ -263,11 +410,11 @@ namespace OV.Pyramid
                 Canvas.SetLeft(ScaleLeftBlock, 74);
             }
             //Scale Right
-            if (!double.IsNaN(Current.ScaleRight))
+            if (!double.IsNaN(CurrentCard.ScaleRight))
             { 
-                if (Current.ScaleRight >= 10)
+                if (CurrentCard.ScaleRight >= 10)
                 {
-                    if (Current.ScaleRight == 11)
+                    if (CurrentCard.ScaleRight == 11)
                     {
                         Canvas.SetLeft(ScaleRightBlock, CardCanvas.Width - 74 - 32);
                     }
@@ -291,9 +438,9 @@ namespace OV.Pyramid
 
         private void HandleSetCard()
         {
-            if (Current.Set == null) { return; }
-            SetNumber.Text = Current.Set.ToUpper();
-            if (Current.IsFrame(FRAME.Xyz) && !Current.IsPendulum)
+            if (CurrentCard.Set == null) { return; }
+            SetNumber.Text = CurrentCard.Set.ToUpper();
+            if (CurrentCard.IsFrame(FRAME.Xyz) && !CurrentCard.IsPendulum)
             {
                 SetNumber.Foreground = Brushes.White;
             }
@@ -305,9 +452,9 @@ namespace OV.Pyramid
 
         private void HandleCartNumber()
         {
-            if (Current.Number > 0)
+            if (CurrentCard.Number > 0)
             {
-                string number = Current.Number.ToString().PadLeft(8, '0');
+                string number = CurrentCard.Number.ToString().PadLeft(8, '0');
                 CardNumber.Text = number;
                 if (CardNumber.GetFormattedText().Width > 109)
                 {
@@ -323,7 +470,7 @@ namespace OV.Pyramid
                 CardNumberViewbox.Width = double.NaN;
             }
 
-            if (Current.IsFrame(FRAME.Xyz) && !Current.IsPendulum)
+            if (CurrentCard.IsFrame(FRAME.Xyz) && !CurrentCard.IsPendulum)
             {                
                 CardNumber.Foreground = Brushes.White;
             }
@@ -335,7 +482,7 @@ namespace OV.Pyramid
 
         private void HandleEdition()
         {
-            if (Current.IsFrame(FRAME.Xyz) && !Current.IsPendulum)
+            if (CurrentCard.IsFrame(FRAME.Xyz) && !CurrentCard.IsPendulum)
             {
                 Edition.Foreground = Brushes.White;
             }
@@ -344,11 +491,11 @@ namespace OV.Pyramid
                 Edition.Foreground = Brushes.Black;
             }
             
-            if (Current.Edition == EDITION.UnlimitedEdition)
+            if (CurrentCard.Edition == EDITION.UnlimitedEdition)
             {
                 Edition.Text = null;
             }
-            else if (Current.Edition == EDITION.FirstEdition)
+            else if (CurrentCard.Edition == EDITION.FirstEdition)
             {
                 Edition.FontFamily = Fonts.PalatinoLinotype;
                 Edition.FontSize = 24;
@@ -360,17 +507,17 @@ namespace OV.Pyramid
                 Edition.Inlines.Add(new Run(" Edition"));
                 Edition.FontWeight = FontWeights.UltraBlack;
             }
-            else if (Current.Edition == EDITION.LimitedEdition)
+            else if (CurrentCard.Edition == EDITION.LimitedEdition)
             {
                 Edition.FontFamily = Fonts.PalatinoLinotype;
                 Edition.FontSize = 24;
                 Edition.FontWeight = FontWeights.SemiBold;
-                Edition.Text = Current.Edition.ToString().AddSpaceBetweenCapital().ToUpper();
+                Edition.Text = CurrentCard.Edition.ToString().AddSpaceBetweenCapital().ToUpper();
             }
-            else if (Current.Edition == EDITION.DuelTerminal)
+            else if (CurrentCard.Edition == EDITION.DuelTerminal)
             {
                 Edition.FontFamily = Fonts.BankGothicMdBT;
-                Edition.Text = Current.Edition.ToString().AddSpaceBetweenCapital().ToUpper();
+                Edition.Text = CurrentCard.Edition.ToString().AddSpaceBetweenCapital().ToUpper();
                 Edition.FontWeight = FontWeights.Normal;
                 Edition.FontSize = 30;
             }            
@@ -378,7 +525,7 @@ namespace OV.Pyramid
 
         private void HandleAD()
         {
-            if (Current.IsMonster())
+            if (CurrentCard.IsMonster())
             {
                 /*
                 if (vietnameseLang.IsChecked == true)
@@ -417,13 +564,13 @@ namespace OV.Pyramid
 
                 //if (!Double.IsNaN(Current.ATK))
                 {
-                    ATKBlock.Text += SpecialPoint(Current.ATK);
+                    ATKBlock.Text += SpecialPoint(CurrentCard.ATK);
                     //Canvas.SetLeft(ATKBlock, ATKBlock.Left() - ATKBlock.GetFormattedText(SpecialPoint(Current.ATK)).Width);
                     //MessageBox.Show(ATKBlock.Left().ToString());
                 }
                 //if (!Double.IsNaN(Current.DEF))
                 {
-                    DEFBlock.Text += SpecialPoint(Current.DEF);
+                    DEFBlock.Text += SpecialPoint(CurrentCard.DEF);
 
                     //Canvas.SetLeft(DEFBlock, DEFBlock.Left() - DEFBlock.GetFormattedText(SpecialPoint(Current.DEF)).Width);
                 }                
@@ -436,36 +583,36 @@ namespace OV.Pyramid
 
         private void HandleSticker()
         {
-            if (Current == null) { return; }
+            if (CurrentCard == null) { return; }
             
-            Sticker.Source = Database.GetImage(@"Template\Sticker\" + Current.Sticker.ToString() + ".png");
+            Sticker.Source = Database.GetImage(@"Template\Sticker\" + CurrentCard.Sticker.ToString() + ".png");
         }
 
         private void HandleCreator()
         {
-            if (Current == null) { return; }
-            if (Current.IsFrame(FRAME.Xyz) && Current.IsPendulum == false)
+            if (CurrentCard == null) { return; }
+            if (CurrentCard.IsFrame(FRAME.Xyz) && CurrentCard.IsPendulum == false)
             {
                 Creator.Foreground = Brushes.White;
             } else
             {
                 Creator.Foreground = Brushes.Black;
             }
-            Creator.Text = Current.Creator == CREATOR.KazukiTakahashi ? "© 1996 KAZUKI TAKAHASHI" : "";
+            Creator.Text = CurrentCard.Creator == CREATOR.KazukiTakahashi ? "© 1996 KAZUKI TAKAHASHI" : "";
         }
 
         public void Save()
         {
             
-            string text = JsonConvert.SerializeObject(Current, Formatting.Indented);
+            string text = JsonConvert.SerializeObject(CurrentCard, Formatting.Indented);
             //MessageBox.Show(xml);
 
 
             Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
-            if (Current.Name == null)
+            if (CurrentCard.Name == null)
                 dlg.FileName = "Card Name";
             else
-                dlg.FileName = Current.Name.Replace(":", " -"); // Default file name
+                dlg.FileName = CurrentCard.Name.Replace(":", " -"); // Default file name
             //dlg.DefaultExt = ".png"; // Default file extension
             dlg.Filter = "OV.Creation Card|*.occ"; // Filter files by extension 
 
@@ -484,14 +631,14 @@ namespace OV.Pyramid
         internal void Load(YGOCard card)
         {
             //Current.CleanUp();
-            Current = card;
-            Render(Current);
+            CurrentCard = card;
+            Render(CurrentCard);
             //Render(Current);
         }
 
         public void Export()
         {
-            if (Current == null)
+            if (CurrentCard == null)
             {
 
                 return;
@@ -499,7 +646,7 @@ namespace OV.Pyramid
             Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
             //dlg.FileName = NameEdit.Text.Replace(":", " -"); // Default file name
             if (String.IsNullOrEmpty(dlg.FileName))
-                dlg.FileName = Current.Name != null ? Current.Name.ToNonVietnamese() : "Card Name";
+                dlg.FileName = CurrentCard.Name != null ? CurrentCard.Name.ToNonVietnamese() : "Card Name";
             //dlg.DefaultExt = ".png"; // Default file extension
             dlg.Filter = "JPEG Images|*.jpg|PNG Images|*.png|BMP Images|*.bmp"; // Filter files by extension 
 
@@ -558,13 +705,13 @@ namespace OV.Pyramid
             TextOptions.SetTextFormattingMode(source, TextFormattingMode.Display);
 
             BitmapEncoder bitmapEncoder = null;
-            if (fileName.IsEndWith(".png"))
+            if (fileName.IsExtension(".png"))
                 bitmapEncoder = new PngBitmapEncoder();
-            else if (fileName.IsEndWith(".jpg"))
+            else if (fileName.IsExtension(".jpg"))
             {
                 bitmapEncoder = new JpegBitmapEncoder();
             }
-            else if (fileName.IsEndWith(".bmp"))
+            else if (fileName.IsExtension(".bmp"))
                 bitmapEncoder = new BmpBitmapEncoder();
 
 
@@ -586,15 +733,15 @@ namespace OV.Pyramid
             {
                 newBitmap.SetResolution(300, 300);
                 System.Drawing.Imaging.ImageFormat extension = null;
-                if (fileName.IsEndWith(".png"))
+                if (fileName.IsExtension(".png"))
                 {
                     extension = System.Drawing.Imaging.ImageFormat.Png;
                 }
-                else if (fileName.IsEndWith(".jpg"))
+                else if (fileName.IsExtension(".jpg"))
                 {
                     extension = System.Drawing.Imaging.ImageFormat.Jpeg;
                 }
-                else if (fileName.IsEndWith(".bmp"))
+                else if (fileName.IsExtension(".bmp"))
                 {
                     extension = System.Drawing.Imaging.ImageFormat.Bmp;
                 }
@@ -640,19 +787,19 @@ namespace OV.Pyramid
                 return renderTarget;
             }
         }
-
+        
         private void HandleDescription()
         {
-            if (Current == null) {return; }
+            if (CurrentCard == null) {return; }
 
-            string Text = Current.Description ?? "";
+            string Text = CurrentCard.Description ?? "";
             double fontDefault = 32.4;
             Description.Width = 694;
             Description.Inlines.Clear();
             richTextBox.Visibility = Visibility.Hidden;
             DescriptionBorder.Visibility = Visibility.Visible;
             Description.Visibility = Visibility.Visible;
-            if (Current.IsFrame(FRAME.Normal))
+            if (CurrentCard.IsFrame(FRAME.Normal))
             {
                 Canvas.SetTop(DescriptionBorder, 922);
                 Description.Height = 153; //153                
@@ -809,7 +956,7 @@ namespace OV.Pyramid
                 Description.LineHeight = fontDefault * 1;
 
 
-                if (Current.IsMonster())
+                if (CurrentCard.IsMonster())
                 {
                     Canvas.SetTop(DescriptionBorder, 922);
                     Description.Height = 155;//160
@@ -844,15 +991,10 @@ namespace OV.Pyramid
 
         private void HandleRarity()
         {
-            if (Current == null)
-            {
-
-                return;
-            }
-
+            if (CurrentCard == null) { return; }
             BitmapSource Source = null;
             //if (!String.IsNullOrEmpty(Current.Artwork))
-            Source = Current.ArtworkByte.GetBitmapImageFromByteArray();
+            Source = CurrentCard.ArtworkByte.GetBitmapImageFromByteArray();
             //else
             //    Source = Uti.GetImage("/Artwork/_None");//XX
             //Initialize
@@ -881,14 +1023,15 @@ namespace OV.Pyramid
                 //Frame.Source = Uti.GetImage("/Frame/" + Current.Frame );
 
             }
-            if (Current.Rarity == RARITY.Common)
+            if (CurrentCard.Rarity == RARITY.Common)
             {
+                /*
                 if (Current.IsFrame(FRAME.Xyz) || Current.IsMagic())
                     CardName.Foreground = Brushes.White;
                 else
-                    CardName.Foreground = Brushes.Black;
+                    CardName.Foreground = Brushes.Black; */
             }
-            else if (Current.Rarity == RARITY.Rare)
+            else if (CurrentCard.Rarity == RARITY.Rare)
             {
                 CardName.Foreground = new SolidColorBrush(Color.FromRgb(79, 79, 79)); //180
 
@@ -903,9 +1046,9 @@ namespace OV.Pyramid
                 CardName.Effect = shadow;
                 //new SolidColorBrush(Color.FromRgb(206, 212, 217));
             }
-            else if (Current.Rarity == RARITY.SuperRare)
+            else if (CurrentCard.Rarity == RARITY.SuperRare)
             {
-                if (Current.IsFrame(FRAME.Xyz) || Current.IsMagic())
+                if (CurrentCard.IsFrame(FRAME.Xyz) || CurrentCard.IsMagic())
                     CardName.Foreground = Brushes.White;
                 else
                     CardName.Foreground = Brushes.Black;
@@ -914,7 +1057,7 @@ namespace OV.Pyramid
 
                 ArtworkFoil.Source = Database.GetImage(@"Template\Foil\Super.png");
             }
-            else if (Current.Rarity == RARITY.UltraRare)
+            else if (CurrentCard.Rarity == RARITY.UltraRare)
             {
                 CardName.Foreground = new SolidColorBrush(Color.FromRgb(88, 76, 12));//222, 178, 29));
                 ArtworkFoil.Source = Database.GetImage(@"Template\Foil\Super.png");
@@ -928,7 +1071,7 @@ namespace OV.Pyramid
 
                 CardName.Effect = shadow;
             }
-            else if (Current.Rarity == RARITY.SecretRare)
+            else if (CurrentCard.Rarity == RARITY.SecretRare)
             {
                 CardName.Foreground = new SolidColorBrush(Color.FromRgb(211, 252, 252));//234,255,255
                 ArtworkFoil.Source = Database.GetImage(@"Template\Foil\Secret.png");
@@ -942,7 +1085,7 @@ namespace OV.Pyramid
 
                 CardName.Effect = shadow;
             }
-            else if (Current.Rarity == RARITY.ParallelRare)
+            else if (CurrentCard.Rarity == RARITY.ParallelRare)
             {
                 CardName.Foreground = new SolidColorBrush(Color.FromRgb(88, 76, 12));//234,255,255
                 CardFoil.Source = Database.GetImage(@"Template\Foil\Parallel.png");
@@ -956,9 +1099,9 @@ namespace OV.Pyramid
 
                 CardName.Effect = shadow;
             }
-            else if (Current.Rarity == RARITY.StarfoilRare)
+            else if (CurrentCard.Rarity == RARITY.StarfoilRare)
             {
-                if (Current.IsFrame(FRAME.Xyz) || Current.IsMagic())
+                if (CurrentCard.IsFrame(FRAME.Xyz) || CurrentCard.IsMagic())
                     CardName.Foreground = Brushes.White;
                 else
                     CardName.Foreground = Brushes.Black;
@@ -973,9 +1116,9 @@ namespace OV.Pyramid
 
                 CardName.Effect = shadow;
             }
-            else if (Current.Rarity == RARITY.MosaicRare)
+            else if (CurrentCard.Rarity == RARITY.MosaicRare)
             {
-                if (Current.IsFrame(FRAME.Xyz) || Current.IsMagic())
+                if (CurrentCard.IsFrame(FRAME.Xyz) || CurrentCard.IsMagic())
                     CardName.Foreground = Brushes.White;
                 else
                     CardName.Foreground = Brushes.Black;
@@ -990,7 +1133,7 @@ namespace OV.Pyramid
 
                 CardName.Effect = shadow;
             }
-            else if (Current.Rarity == RARITY.GoldRare)
+            else if (CurrentCard.Rarity == RARITY.GoldRare)
             {
 
                 CardBorder.Source = Database.GetImage(@"Template\Border\Card\Gold.png");
@@ -1006,7 +1149,7 @@ namespace OV.Pyramid
 
                 CardName.Effect = shadow;
                 
-                if (Current.IsPendulum)
+                if (CurrentCard.IsPendulum)
                 {
                     if (Pendulum.GetLines().Count() < 4)
                     {
@@ -1030,7 +1173,7 @@ namespace OV.Pyramid
                     ArtworkBorder.Source = Database.GetImage(@"Template\Border\Artwork\Gold.png");
                 }
             }
-            else if (Current.Rarity == RARITY.UltimateRare)
+            else if (CurrentCard.Rarity == RARITY.UltimateRare)
             {
                 /*
                 if (Current.Attribute != null)
@@ -1075,7 +1218,7 @@ namespace OV.Pyramid
 
             }
 
-            else if (Current.Rarity == RARITY.GhostRare)
+            else if (CurrentCard.Rarity == RARITY.GhostRare)
             {
                 if (Source != null)
                 {
@@ -1127,7 +1270,7 @@ namespace OV.Pyramid
 
 
 
-            if (Current.Edition == EDITION.DuelTerminal)
+            if (CurrentCard.Edition == EDITION.DuelTerminal)
             {
                 CardFoil.Source = Database.GetImage(@"Template\Foil\Shatter.png");
             }
@@ -1137,51 +1280,19 @@ namespace OV.Pyramid
             Artwork.Source = Source;
         }
 
+        internal YGOCard SetFrame(FRAME frame)
+        {
+            //Current.SetF
+            return CurrentCard;
+        }
+
         private void HandleFrame()
         {
-            if (Current == null)
+            if (CurrentCard == null)
             {
                 return;
             }
-            Frame.Source = Database.GetImage(@"Template\Frame\" + Current.Frame.ToString() + ".png");
-            if (Current.IsPendulum)
-            {                
-                LoreBorder.Visibility = Visibility.Hidden;
-
-                if (Pendulum.GetLines().Count() < 4)
-                {
-                    ArtworkBorder.Source = Database.GetImage(@"Template\Border\Pendulum\Small.png");
-                    PendulumBoxMiddle.Source = Database.GetImage(@"Template\Border\Pendulum\SmallBox.png");
-                    PendulumBoxText.Source = Database.GetImage(@"Template\Border\Pendulum\TextBox.png");
-                }
-                else
-                {
-                    ArtworkBorder.Source = Database.GetImage(@"Template\Border\Pendulum\Medium.png");
-                    PendulumBoxMiddle.Source = Database.GetImage(@"Template\Border\Pendulum\MediumBox.png");
-                    PendulumBoxText.Source = Database.GetImage(@"Template\Border\Pendulum\TextBox.png");
-                }
-                PendulumLine.Source = Database.GetImage(@"Template\Border\Pendulum\Line" + Current.Frame.ToString() + ".png");
-                SpellHalf.Source = Database.GetImage(@"Template\Border\Pendulum\SpellHalf.png");
-                LoreBackground.Source = Database.GetImage(@"Template\Border\Pendulum\LoreBoxMedium.png");
-                Artwork.Width = 707;
-                Artwork.Height = 663;
-                Canvas.SetLeft(Artwork, 53);
-                Canvas.SetTop(Artwork, 212);
-            }
-            else
-            {
-                ArtworkBorder.Source = null;
-                LoreBorder.Visibility = Visibility.Visible;
-                PendulumBoxMiddle.Source = PendulumBoxText.Source = null;
-                PendulumLine.Source = null;
-                SpellHalf.Source = null;
-                LoreBackground.Source = null;
-                Artwork.Width = 620;
-                Artwork.Height = 620;
-                Canvas.SetLeft(Artwork, 98);
-                Canvas.SetTop(Artwork, 217);
-            }
-            
+            Frame.Source = Database.GetImage(@"Template\Frame\" + CurrentCard.Frame.ToString() + ".png");
         }
 
         private string SpecialPoint(double value)
@@ -1205,19 +1316,19 @@ namespace OV.Pyramid
 
         private void HandleAbility()
         {
-            if (Current == null)
+            if (CurrentCard == null)
             {
                 return;
             }
             this.Ability.Inlines.Clear();
-            if (Current.IsMonster())
+            if (CurrentCard.IsMonster())
             {
                 BracketLeft.Text = "["; BracketRight.Text = "]";
                 double theWidth = 637;
                 string futureText = null;
 
                 {
-                    string type = Current.Type != TYPE.NONE ? Current.Type.ToString() : "";// TransAbility(Current.Type);  
+                    string type = CurrentCard.Type != TYPE.NONE ? CurrentCard.Type.ToString() : "";// TransAbility(Current.Type);  
 
                     
                     {
@@ -1231,25 +1342,25 @@ namespace OV.Pyramid
 
                     List<string> abilityText = new List<string>();
                     abilityText.Add(type);
-                    if (Current.Frame != FRAME.Normal && Current.Frame != FRAME.Effect)
+                    if (CurrentCard.Frame != FRAME.Normal && CurrentCard.Frame != FRAME.Effect)
                     {
-                        abilityText.Add(Current.Frame.ToString());
+                        abilityText.Add(CurrentCard.Frame.ToString());
                     }
-                    if (Current.IsPendulum)
+                    if (CurrentCard.IsPendulum)
                     {
                         abilityText.Add("Pendulum");
                     }
                     
-                    foreach(ABILITY ability in Current.Abilities.Where(o => o != ABILITY.Effect && o != ABILITY.Tuner))
+                    foreach(ABILITY ability in CurrentCard.Abilities.Where(o => o != ABILITY.Effect && o != ABILITY.Tuner))
                     {
                         abilityText.Add(ability.ToString());
                     }
-                    if (Current.Abilities.Contains(ABILITY.Tuner))
+                    if (CurrentCard.Abilities.Contains(ABILITY.Tuner))
                     {
                         abilityText.Add(ABILITY.Tuner.ToString());
                     }
 
-                    if (Current.Frame == FRAME.Effect || Current.Abilities.Contains(ABILITY.Effect))
+                    if (CurrentCard.Frame == FRAME.Effect || CurrentCard.Abilities.Contains(ABILITY.Effect))
                     {
                         abilityText.Add("Effect");
                     }
@@ -1326,26 +1437,26 @@ namespace OV.Pyramid
 
         private void HandleArtwork()
         {
-            if (Current == null) { return; }
-            if (Current.ArtworkByte == null)
+            if (CurrentCard == null) { return; }
+            if (CurrentCard.ArtworkByte == null)
             {
-                Current.ArtworkByte = NoneImageArray;
+                CurrentCard.ArtworkByte = NoneImageArray;
                 //Current.ArtworkByte = Database.GetImage(@"Template\NoneImage.png").GetImageArray();
             }
-            Artwork.Source = Current.ArtworkByte.GetBitmapImageFromByteArray();
+            Artwork.Source = CurrentCard.ArtworkByte.GetBitmapImageFromByteArray();
             
         }
 
         private void HandleMiddle()
         {
-            if (Current == null)
+            if (CurrentCard == null)
             {
                 return;
             }
             Middle.Children.Clear();
 
             //Property S/T
-            if (!Current.IsMonster())
+            if (!CurrentCard.IsMonster())
             {
                 Grid Grid = new Grid();
                 Grid.VerticalAlignment = VerticalAlignment.Center;
@@ -1382,23 +1493,23 @@ namespace OV.Pyramid
                 Grid.Children.Add(AbilityBlock);
                 AbilityBlock.FontFamily = BL.FontFamily;
 
-                string Ability = Current.Abilities.Count > 0 
-                    ? Current.Abilities[0].ToString()
+                string Ability = CurrentCard.Abilities.Count > 0 
+                    ? CurrentCard.Abilities[0].ToString()
                     : "";
 
 
                 double theWidth = 637;
-                string futureText = Current.Frame.ToString() + " Card";
+                string futureText = CurrentCard.Frame.ToString() + " Card";
                 //if (vietnameseLang.IsChecked == true)
                 //{
                 //    futureText = TransLanguage(Current.Frame.ToString());
                 //}
-                if (Current.Property != PROPERTY.NONE && Current.Property !=  PROPERTY.Normal)
+                if (CurrentCard.Property != PROPERTY.NONE && CurrentCard.Property !=  PROPERTY.Normal)
                 {
                     futureText += "    ";
                     Image property = new Image();
                     property.Source = Database.GetImage(
-                        @"Template\Middle\" + Current.Property.ToString() + ".png");
+                        @"Template\Middle\" + CurrentCard.Property.ToString() + ".png");
                     Middle.Children.Add(property);
                     //MessageBox.Show(Current.Property.ToString());
                     Canvas.SetLeft(property, 575);
@@ -1463,17 +1574,17 @@ namespace OV.Pyramid
             else
             {
 
-                if (!Double.IsNaN(Current.Level) || !Double.IsNaN(Current.Rank))
+                if (!double.IsNaN(CurrentCard.Level) || !double.IsNaN(CurrentCard.Rank))
                 {
 
-                    int number = !Double.IsNaN(Current.Level) ? (int)Current.Level : (int)Current.Rank;
+                    int number = !double.IsNaN(CurrentCard.Level) ? (int)CurrentCard.Level : (int)CurrentCard.Rank;
 
-                    string type = Current.IsFrame(FRAME.Xyz) ? "Rank" : "Level";
+                    string type = CurrentCard.IsFrame(FRAME.Xyz) ? "Rank" : "Level";
                     for (int i = 1; i <= number; i++)
                     {
                         Image Star = new Image();
                         Star.Source = Database.GetImage(@"Template\" + type + 
-                            (Current.Rarity == RARITY.UltimateRare ? "Emboss" : null) + ".png");
+                            (CurrentCard.Rarity == RARITY.UltimateRare ? "Emboss" : null) + ".png");
 
 
                         Star.Width = MiddleBorder.Height - 3;
@@ -1497,13 +1608,12 @@ namespace OV.Pyramid
 
         private void HandleName()
         {
-            if (Current == null)
+            if (CurrentCard == null)
             {
 
                 return;
             }
-            TextBlock Name = CardName;
-            Name.Text = Current.Name;
+            CardName.Text = CurrentCard.Name;
             /*
             if (Current.Name.Length > 0)
             {
@@ -1523,33 +1633,41 @@ namespace OV.Pyramid
 
             FormattedText formattedText = new FormattedText
                 (
-                    Name.Text,
+                    CardName.Text,
                     CultureInfo.GetCultureInfo("en-us"),
                     FlowDirection.LeftToRight,
-                    new Typeface(Name.FontFamily, Name.FontStyle, Name.FontWeight, Name.FontStretch, null),
-                    Name.FontSize,
+                    new Typeface(CardName.FontFamily, CardName.FontStyle, CardName.FontWeight, CardName.FontStretch, null),
+                    CardName.FontSize,
                     Brushes.Black
                 );
 
             if (formattedText.Width > NameViewbox.Width)
-                Name.Width = double.NaN;
+                CardName.Width = double.NaN;
             else
-                Name.Width = NameViewbox.Width;
+                CardName.Width = NameViewbox.Width;
+
+            if (CurrentCard.IsFrame(FRAME.Xyz) || CurrentCard.IsMagic())
+            {
+                this.CardName.Foreground = Brushes.White;
+            } else
+            {
+                this.CardName.Foreground = Brushes.Black;
+            }
         }
 
         private void HandleAttribute()
         {
-            if (Current == null)
+            if (CurrentCard == null)
             {
                 return;
             }
-            Attribute.Source = Database.GetImage(@"Template\Attribute\" + Current.Attribute.ToString() + ".png");
+            Attribute.Source = Database.GetImage(@"Template\Attribute\" + CurrentCard.Attribute.ToString() + ".png");
             
-            if (Current.Attribute !=ATTRIBUTE.UNKNOWN)
+            if (CurrentCard.Attribute !=ATTRIBUTE.UNKNOWN)
             {
                 //AttributeText.Text = vietnameseLang.IsChecked == true ?
                 //    TransLanguage(Current.Attribute.ToString()) : Current.Attribute.ToString();
-                AttributeText.Text = Current.Attribute.ToString();
+                AttributeText.Text = CurrentCard.Attribute.ToString();
             }
             else
             {
@@ -1560,7 +1678,7 @@ namespace OV.Pyramid
         public int RecommendedHeight
         {
             get {
-                if (Current.IsPendulum)
+                if (CurrentCard.IsPendulum)
                 {
                     if (Pendulum.GetLines().Count() < 4)
                     {
@@ -1581,19 +1699,34 @@ namespace OV.Pyramid
 
         internal ImageSource ResizeArtwork(int padding, bool isAplly)
         {           
-            System.Drawing.Bitmap bitmap = Current.ArtworkByte.GetBitmapImageFromByteArray().ToBitmap();
+            System.Drawing.Bitmap bitmap = CurrentCard.ArtworkByte.GetBitmapImageFromByteArray().ToBitmap();
             ImageSource Source = bitmap.ReduceHeightThenPadding(padding).ToBitmapSource();
             if (isAplly)
             {
-                Current.ArtworkByte = (Source as BitmapSource).GetImageArray();
-                Render(Current);
+                CurrentCard.ArtworkByte = (Source as BitmapSource).GetImageArray();
+                Render(CurrentCard);
             }
             else
             {
-                Render(Current);
+                Render(CurrentCard);
                 Artwork.Source = Source;
             }            
             return Source;
+        }
+
+        private void Attribute_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            AttributeClick.Invoke(sender, e);
+        }
+
+        private void AttributeBorder_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            (sender as Border).BorderBrush = Brushes.Black;
+        }
+
+        private void AttributeBorder_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            (sender as Border).BorderBrush = Brushes.Transparent;
         }
     }
 }

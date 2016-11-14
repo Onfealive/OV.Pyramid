@@ -5,9 +5,11 @@ using System.Linq;
 using System.Windows.Media.Imaging;
 using System.Runtime.Serialization;
 using System.Windows;
+using Newtonsoft.Json;
 
 namespace OV.Core
 {
+    [Serializable]
     class YGOCard
     {
         private FRAME DefaultFrame;
@@ -24,15 +26,7 @@ namespace OV.Core
             this.Abilities = new List<ABILITY>();
             this.Version = new Version("0.1");
         }
-
-        #region ICloneable Members
-
-        public object Clone()
-        {
-            return this.MemberwiseClone();
-        }
-
-        #endregion
+         
 
         public List<ABILITY> Abilities { get; private set; }
         public byte[] ArtworkByte { get; set; }
@@ -82,8 +76,7 @@ namespace OV.Core
         internal static YGOCard Default
         {
             get
-            {
-                
+            {                
                 YGOCard defaultCard = new YGOCard();
                 
                 defaultCard.Name = "Card Name";
@@ -111,6 +104,37 @@ namespace OV.Core
         }
 
 
+        public YGOCard Clone()
+        {
+            YGOCard clone = new YGOCard();
+
+            clone.Name = this.Name;
+            clone.ATK = this.ATK;
+            clone.DEF = this.DEF;
+            clone.Frame = this.Frame;
+            clone.Attribute = this.Attribute;
+            clone.Level = this.Level;
+            clone.Creator = this.Creator;
+            clone.Rarity = this.Rarity;
+            clone.Type = this.Type;
+            clone.Sticker = this.Sticker;
+            clone.ArtworkByte = this.ArtworkByte;
+            clone.Set = this.Set;
+            clone.ScaleLeft = this.ScaleLeft;
+            clone.ScaleRight = this.ScaleRight;
+            clone.Description = this.Description;
+            clone.Edition = this.Edition;
+            clone.IsPendulum = this.IsPendulum;
+            clone.Number = this.Number;
+            clone.PendulumEffect = this.PendulumEffect;
+            clone.Property = this.Property;
+            clone.Rank = this.Rank;
+            foreach(ABILITY ability in this.Abilities)
+            {
+                clone.Abilities.Add(ability);
+            }
+            return clone;
+        }
 
         [OnDeserialized]
         private void OnDeserialized(StreamingContext context)
@@ -316,9 +340,9 @@ namespace OV.Core
                 if (this.IsMonster() && this.IsFrame(FRAME.Normal) == false)
                 {
                     //Another Logic
-                    if (ability.IsSingleAbility())
+                    if (ability.IsEffectAbility())
                     {
-                        this.Abilities.RemoveAll(o => o.IsSingleAbility());
+                        this.Abilities.RemoveAll(o => o.IsEffectAbility());
                     }
                 }
                 else
@@ -332,6 +356,10 @@ namespace OV.Core
             }
             if (isAdd && Abilities.Contains(ability) == false)
             {
+                if (ability.IsEffectAbility() && Frame != FRAME.Effect)
+                {
+                    Abilities.Add(ABILITY.Effect);
+                }
                 Abilities.Add(ability);
             }
             else if (isAdd == false && Abilities.Contains(ability))
@@ -661,11 +689,22 @@ internal void CleanUp()
 
     static class Static
     {
+        /// <summary>
+        /// Check the card whether it is this Frame or not
+        /// </summary>
+        /// <param name="card"></param>
+        /// <param name="frame"></param>
+        /// <returns></returns>
         public static bool IsFrame(this YGOCard card, FRAME frame)
         {
             return frame == card.Frame;
         }
 
+        /// <summary>
+        /// Check the card whether it is Spell/Trap, or not
+        /// </summary>
+        /// <param name="card"></param>
+        /// <returns></returns>
         public static bool IsMagic(this YGOCard card)
         {
             if (card != null)
@@ -677,11 +716,21 @@ internal void CleanUp()
             return false;
         }
 
+        /// <summary>
+        /// Check the card whether it is Monster or not
+        /// </summary>
+        /// <param name="card"></param>
+        /// <returns></returns>
         public static bool IsMonster(this YGOCard card)
         {
             return card != null && !card.IsMagic();
         }
 
+        /// <summary>
+        /// Check the Property whether it is Property can only go with Spell Card
+        /// </summary>
+        /// <param name="property"></param>
+        /// <returns></returns>
         public static bool IsSpellPropertyOnly(this PROPERTY property)
         {
             if (property == PROPERTY.Equip) return true;
@@ -691,13 +740,23 @@ internal void CleanUp()
             return false;
         }
 
+        /// <summary>
+        /// Check the Property whether it is Property can only go with Trap Card
+        /// </summary>
+        /// <param name="property"></param>
+        /// <returns></returns>
         public static bool IsTrapPropertyOnly(this PROPERTY property)
         {
             if (property == PROPERTY.Counter) return true;
             return false;
         }
 
-        public static bool IsSingleAbility(this ABILITY ability)
+        /// <summary>
+        /// Check if Ability that must go with "Effect" Ability 
+        /// </summary>
+        /// <param name="ability"></param>
+        /// <returns></returns>
+        public static bool IsEffectAbility(this ABILITY ability)
         {
             if (ability != ABILITY.Effect && ability != ABILITY.Tuner) { return true; }
             return false;

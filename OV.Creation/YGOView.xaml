@@ -4,19 +4,22 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:OV.Pyramid"
-             mc:Ignorable="d" 
-             d:DesignWidth="421" d:DesignHeight="614"  Background="White">
-    <Viewbox Name="CardView" Width="421" Height="614">
+             mc:Ignorable="d"  Width="421" Height="614"  Background="White">
+    <Viewbox Name="CardView">
+        
         <Canvas x:Name="CardCanvas" Width="813" Height="1185" Canvas.Top="0" Canvas.Left="0">
             <Image x:Name="Frame" Width="{Binding Width, ElementName=CardCanvas}"
                     Height="{Binding Height, ElementName=CardCanvas}" Stretch="Fill">
             </Image>
-            <Border Name="NameBorder" Background="Transparent" Canvas.Top="40" Canvas.Left="61">
-                <Viewbox Name="NameViewbox" Stretch="Fill" Height="95"  Width="606">
-                    <TextBlock Name="CardName" FontSize="{Binding Height, ElementName=NameViewbox}" ></TextBlock>
-                </Viewbox>
-            </Border>
-            <Image Name="Attribute" Width="79" Height="79" Stretch="Fill" Canvas.Top="53" Canvas.Left="678"></Image>
+
+            <Viewbox Name="NameViewbox" Stretch="Fill" Height="95"  Width="606" Canvas.Top="40" Canvas.Left="61">
+                <TextBlock Name="CardName" FontSize="{Binding Height, ElementName=NameViewbox}" ></TextBlock>
+            </Viewbox>
+
+
+            <Image Name="Attribute" Width="79" Height="79" Stretch="Fill" Canvas.Top="53" Canvas.Left="678"
+                PreviewMouseLeftButtonDown="Attribute_PreviewMouseLeftButtonDown"></Image>
+
             <Viewbox Width="80" Height="35" Stretch="Fill" Canvas.Left="677.5" Canvas.Top="54.5" >
                 <TextBlock Width="100" Height="35" Name="AttributeText" TextAlignment="Center" Foreground="White" FontSize="17" FontWeight="Bold"></TextBlock>
             </Viewbox>
@@ -62,7 +65,7 @@
             </Viewbox>
             <TextBlock Name="Edition" Canvas.Left="155" Canvas.Top="1127"></TextBlock>
             <TextBlock Name="SetNumber" Panel.ZIndex="10" Canvas.Right="82" Canvas.Top="849" FontSize="23" TextAlignment="Right"></TextBlock>
-            <TextBlock Name="Creator" Panel.ZIndex="10" FontSize="21" Canvas.Right="70" HorizontalAlignment="Right" Canvas.Top="1130" ></TextBlock>
+            <TextBlock Name="Creator" Panel.ZIndex="10" FontSize="23" Canvas.Right="70" HorizontalAlignment="Right" Canvas.Top="1128" ></TextBlock>
             <Image Name="Artwork" Stretch="Fill" Width="620" Height="620" Canvas.Left="98" Canvas.Top="217"></Image>
             <Image Name="ArtworkFoil" Stretch="Fill" Width="{Binding ElementName=Artwork, Path=Width}"
                        Height="{Binding ElementName=Artwork, Path=Height}"
