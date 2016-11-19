@@ -7,10 +7,8 @@
         xmlns:converters="clr-namespace:OV.Pyramid"
         mc:Ignorable="d"
         Title="OV.Land.Pyramid.Creation 1.0 Alpha" SizeToContent="WidthAndHeight"
-        WindowStartupLocation="CenterScreen" ResizeMode="CanMinimize">
+        WindowStartupLocation="CenterScreen" MinWidth="974" MinHeight="710">
     <Window.Resources>
-        
-
         <Style x:Key="RotatedTab" TargetType="{x:Type TabItem}">
             <Setter Property="HeaderTemplate">
                 <Setter.Value>
@@ -266,6 +264,5 @@
     </Window.Resources>
     <Canvas Name="mainCanvas"  Width="974" Height="670" >
         <Frame x:Name="_mainFrame" Width="974" Height="670" NavigationUIVisibility="Hidden" />
-
     </Canvas>
 </Window>

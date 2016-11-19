@@ -612,6 +612,11 @@ internal void CleanUp()
         {
             return base.GetHashCode();
         }
+
+        internal void ResetAbility()
+        {
+            this.Abilities.Clear();
+        }
     }
 
     public enum ABILITY

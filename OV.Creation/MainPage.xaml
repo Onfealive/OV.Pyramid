@@ -7,6 +7,7 @@
       mc:Ignorable="d"       
       Title="MainPage" Background="White">
     <Page.Resources>
+        
         <local:ImageConverter x:Key="imageConverter"/>
         <SolidColorBrush x:Key="TabControlNormalBorderBrush" Color="#8C8E94"/>
         <Style x:Key="DockTabControl" TargetType="{x:Type TabControl}">
@@ -75,7 +76,7 @@
     </Page.Resources>
     <Canvas Name="mainCanvas" Width="974" Height="670">
 
-        <local:YGOView x:Name="RenderCard" Canvas.Left="15" Canvas.Top="44" ></local:YGOView >
+        <local:YgoView x:Name="RenderCard" Canvas.Left="15" Canvas.Top="44" ></local:YgoView >
         <Image Canvas.Left="15" Canvas.Top="44" Width="{Binding ElementName=RenderCard, Path=Width}"
                Height="{Binding ElementName=RenderCard, Path=Height}"></Image>
         <TextBlock Canvas.Left="15" TextWrapping="Wrap" Text="CARD LAYOUT" Canvas.Top="20"/>
@@ -93,7 +94,9 @@
                     Style="{DynamicResource DockTabControl}" >
             
             <TabItem Header="Card Details">
-                <ScrollViewer Name="cardDetailsScroll" MaxHeight="600" Width="Auto" VerticalScrollBarVisibility="Auto" Padding="10">
+                <ScrollViewer Loaded="cardDetailsScroll_Loaded"
+                              Unloaded="cardDetailsScroll_Unloaded"
+                              Name="cardDetailsScroll" MaxHeight="600" Width="Auto" Padding="10">
                     <StackPanel>
                         <Canvas Height="50">
                             <TextBox Name="NameEdit" FontSize="15" Canvas.Left="80" Canvas.Top="10" Width="330"

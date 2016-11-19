@@ -7,10 +7,8 @@ using OV.Tools;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -22,7 +20,7 @@ using static OV.Tools.Utilities;
 
 namespace OV.Pyramid
 {
-    
+
     /// <summary>
     /// Interaction logic for MainPage.xaml
     /// </summary>
@@ -60,6 +58,8 @@ namespace OV.Pyramid
             Database = new ByteDatabase(DatabasePath);
             InitializeComponent();
             FirstLoad();
+
+            
         }
 
         private void FirstLoad()
@@ -88,14 +88,19 @@ namespace OV.Pyramid
             RenderCard.AttributeClick += RenderCard_AttributeClick;
         }
 
-        private void RenderCard_AttributeClick(object sender, EventArgs e)
+        private void ScrollToControlCanvas(Canvas canvas)
         {
             tabControl.SelectedIndex = 0;
-            var control = AttributeCanvas;
-            UIElement container = AttributeCanvas.Parent as StackPanel;
+            var control = canvas;
+            UIElement container = canvas.Parent as StackPanel;
             Point relativeLocation = control.TranslatePoint(new Point(0, 0), container);
             var offset = relativeLocation.Y;
             cardDetailsScroll.ScrollToVerticalOffset(offset);
+        }
+
+        private void RenderCard_AttributeClick(object sender, EventArgs e)
+        {
+            ScrollToControlCanvas(AttributeCanvas);
         }
 
         private void SaveDatabase()
@@ -275,7 +280,13 @@ namespace OV.Pyramid
         private void RefreshAbilityControl()
         {
             foreach (Button button in AbilityCanvas.FindChildrens<Button>())
-            {                
+            {
+                if (button.Name.ToString() == "Ability_Reset")
+                {
+                    button.IsEnabled = Current.Abilities.Count() != 0;
+                    continue;
+                }
+                
                 if (button.IsEnabled == false)
                 {
                     button.IsEnabled = true;                    
@@ -286,6 +297,7 @@ namespace OV.Pyramid
                     {
                         button.IsEnabled = false;
                     }
+                    
 
                     TextBlock content = button.FindChildrens<TextBlock>().ToList()[0] as TextBlock;
                     Image icon = button.FindChildrens<Image>().ToList()[0] as Image;
@@ -585,7 +597,7 @@ namespace OV.Pyramid
                 AbilityCanvas.Children.Add(Button);
 
                 Canvas.SetTop(Button, 36 + ((i - 1) / 4) * 33);
-                Canvas.SetLeft(Button, 22 + ((i - 1) % 4) * (Button.Width + 4) - 32);
+                Canvas.SetLeft(Button, 36 + ((i - 1) % 4) * (Button.Width + 4) - 32);
                 StackPanel Zone = new StackPanel();
 
                 Zone.Orientation = Orientation.Horizontal;
@@ -610,9 +622,9 @@ namespace OV.Pyramid
             Reset.Width = 90;
             Reset.Name = "Ability_Reset";
             Canvas.SetTop(Reset, 108);
-            Canvas.SetLeft(Reset, 272);
+            Canvas.SetLeft(Reset, 286);
             AbilityCanvas.Children.Add(Reset);
-            //Reset.Click += Button_Reset;
+            Reset.Click += Button_ResetAbility;
             {
                 StackPanel Zone = new StackPanel();
                 Zone.Orientation = Orientation.Horizontal;
@@ -628,6 +640,14 @@ namespace OV.Pyramid
 
                 Reset.Content = Zone;
             }
+        }
+
+        private void Button_ResetAbility(object sender, RoutedEventArgs e)
+        {
+            Current.ResetAbility();
+            RenderCard.Render(Current);
+            //RefreshAbilityControl();
+            RefreshControl();
         }
 
         private void Button_Ability(object sender, RoutedEventArgs e)
@@ -1564,5 +1584,19 @@ namespace OV.Pyramid
             Window.GetWindow(this).Close();
         }
         
+        private void cardDetailsScroll_Loaded(object sender, RoutedEventArgs e)
+        {
+            double offset;
+            if (cardDetailsScroll.Tag != null && double.TryParse(cardDetailsScroll.Tag.ToString(), out offset))
+            {
+                cardDetailsScroll.ScrollToVerticalOffset(offset);                
+            }
+        }
+
+        private void cardDetailsScroll_Unloaded(object sender, RoutedEventArgs e)
+        {
+            cardDetailsScroll.Tag = cardDetailsScroll.VerticalOffset;
+        }
     }
+        
 }

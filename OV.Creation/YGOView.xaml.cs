@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
@@ -21,7 +22,7 @@ namespace OV.Pyramid
     /// <summary>
     /// Interaction logic for YGOView.xaml
     /// </summary>
-    public partial class YGOView : UserControl, INotifyPropertyChanged
+    public partial class YgoView : UserControl, INotifyPropertyChanged
     {        
         private YGOCard CurrentCard;
         private static string DatabasePath;
@@ -30,13 +31,32 @@ namespace OV.Pyramid
         private byte[] NoneImageArray;
         private bool isInitialize;
 
-        public YGOView()
+        public YgoView()
         {     
             InitializeComponent();
             DatabasePath = GetLocationPath() + @"\Resources\Datas.ld";
             Database = new ByteDatabase(DatabasePath);
             isInitialize = false;
-        }        
+            
+            foreach(Border border in ControlZone.FindChildrens<Border>())
+            {
+                border.MouseEnter += ControlZone_MouseEnter;
+                border.MouseLeave += ControlZone_MouseLeave;
+            }
+        }
+
+        public event EventHandler AttributeClick;
+        public event EventHandler FrameClick;
+        public event EventHandler MiddleClick;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        private void OnPropertyChanged(object sender, string propertyName)
+        {
+            if (this.PropertyChanged != null)
+            {
+                PropertyChanged(sender, new PropertyChangedEventArgs(propertyName));
+            }
+        }
 
         public class Fonts
         {  
@@ -47,35 +67,24 @@ namespace OV.Pyramid
                     return new FontFamily(new Uri("pack://application:,,,/"), "./resources/#StoneSerif LT Bold");
                 }
             }
-
             public static FontFamily StoneSerifRegular
             {
                 get
                 {
-                    //return new FontFamily(
-                    //    new Uri(TempFolder), "./#Stone Serif");
                     return new FontFamily(new Uri("pack://application:,,,/"), "./resources/#Stone Serif");
                 }
             }
-
             public static FontFamily MatrixBook
             {
                 get
                 {
-                    //return new FontFamily(new Uri(GetLocationPath() + @"\Resources\Fonts\"), "./#Matrix-Book");
-
                     return new FontFamily(new Uri("pack://application:,,,/"), "./resources/#Matrix-Book");
-
                 }
             }
-
-
             public static FontFamily YGOMatrixSmallCap2
             {
                 get
                 {
-                    //return new FontFamily(
-                    //    new Uri(TempFolder), "./#Yu-Gi-Oh! Matrix Small Caps 2");
                     return new FontFamily(new Uri("pack://application:,,,/"), "./resources/#Yu-Gi-Oh! Matrix Small Caps 2");
                 }
             }
@@ -87,16 +96,6 @@ namespace OV.Pyramid
                     return new FontFamily(new Uri("pack://application:,,,/"), "./resources/#Stone Serif");
                 }
             }
-            /*
-            public static FontFamily MatrixBoldFractions
-            {
-                get
-                {
-                    return new FontFamily(
-                        new Uri(GetLocationPath() + @"\Resources\Fonts\"), "./#MatrixBoldFractions");
-                }
-            }  */
-
             public static FontFamily PalatinoLinotype
             {
                 get
@@ -104,7 +103,6 @@ namespace OV.Pyramid
                     return new FontFamily(new Uri("pack://application:,,,/"), "./resources/#Palatino Linotype");
                 }
             }
-
             public static FontFamily BankGothicMdBT
             {
                 get
@@ -112,16 +110,9 @@ namespace OV.Pyramid
                     return new FontFamily(new Uri("pack://application:,,,/"), "./resources/#BankGothic Md BT");
                 }
             }
-        };
-
-        public event PropertyChangedEventHandler PropertyChanged;
-        private void OnPropertyChanged(object sender, string propertyName)
-        {
-            if (this.PropertyChanged != null)
-            {
-                PropertyChanged(sender, new PropertyChangedEventArgs(propertyName));
-            }
         }
+
+        
 
         private void SetDefaultValue()
         {
@@ -159,8 +150,8 @@ namespace OV.Pyramid
             SetDefaultValue();
             YGOCard preCard = this.CurrentCard != null ? (YGOCard)this.CurrentCard.Clone() : null;
             this.CurrentCard = (YGOCard)card.Clone();
-            
-            if (preCard == null)            
+
+            if (preCard == null)
             {
                 HandleName();
                 HandleAttribute();
@@ -177,10 +168,10 @@ namespace OV.Pyramid
                 HandleSticker();
                 HandleEdition();
                 HandleCartNumber();
-                HandleSetCard();                
+                HandleSetCard();
             }
             else
-            {                
+            {
                 if (preCard.Name != CurrentCard.Name
                     || preCard.Frame != CurrentCard.Frame) { HandleName(); }
                 if (preCard.Attribute != CurrentCard.Attribute) { HandleAttribute(); }
@@ -190,7 +181,7 @@ namespace OV.Pyramid
                 {
                     HandleMiddle();
                 }
-                
+
                 if (preCard.ArtworkByte.SequenceEqual(CurrentCard.ArtworkByte) == false)
                     HandleArtwork();
 
@@ -209,7 +200,9 @@ namespace OV.Pyramid
 
                 if (CurrentCard.Description != preCard.Description
                     || (CurrentCard.IsMagic() && preCard.IsMonster())
-                    || (CurrentCard.IsMonster() && preCard.IsMagic()))
+                    || (CurrentCard.IsMonster() && preCard.IsMagic())
+                    || (CurrentCard.IsFrame(FRAME.Normal) != preCard.IsFrame(FRAME.Normal))
+                    )
                 {
                     HandleDescription();
                 }
@@ -266,15 +259,13 @@ namespace OV.Pyramid
                 {
                     HandleSetCard();
                 }
-
-                
             }
             //this.OnPropertyChanged(this, "RenderedImageSource");
             //return RenderedImageSource;
            
         }
 
-        public event EventHandler AttributeClick;
+        
 
         private void HandlePendulum()
         {
@@ -305,11 +296,11 @@ namespace OV.Pyramid
 
             if (Pendulum.GetLines().Count() < 4)
             {
-                Canvas.SetTop(PendulumBorder, 785);
+                Canvas.SetTop(Pendulum, 785);
             }
             else
             {
-                Canvas.SetTop(PendulumBorder, 746);
+                Canvas.SetTop(Pendulum, 746);
             }
 
             //Is Pendulum?
@@ -797,19 +788,17 @@ namespace OV.Pyramid
             Description.Width = 694;
             Description.Inlines.Clear();
             richTextBox.Visibility = Visibility.Hidden;
-            DescriptionBorder.Visibility = Visibility.Visible;
+            Description.Visibility = Visibility.Visible;
             Description.Visibility = Visibility.Visible;
             if (CurrentCard.IsFrame(FRAME.Normal))
             {
-                Canvas.SetTop(DescriptionBorder, 922);
-                Description.Height = 153; //153                
-                
+                Canvas.SetTop(Description, 922);
+                Description.Height = 153; //153  
 
-                if (Regex.IsMatch(Text, @"(\(.+?\.\))"))
-                {
-                    
+                if (Regex.IsMatch(Text, @"(\(.+?\.\))"))                
+                {                    
                     richTextBox.Visibility = Visibility.Visible;
-                    DescriptionBorder.Visibility = Visibility.Hidden;
+                    Description.Visibility = Visibility.Hidden;
                     Description.Visibility = Visibility.Hidden;
                     /* test */
                     Paragraph Para = new Paragraph();
@@ -926,22 +915,28 @@ namespace OV.Pyramid
                     Description.FontStyle = FontStyles.Italic;
                     Description.FontSize = 27;                    
 
-                    double lineScale = 1 / 1.2;
+                    //double lineScale = 1 / 1.2;
                     //Description.LineHeight = lineScale * Description.FontSize;
                     //while (Description.FontSize * 1 * Description.GetLines().Count() > Description.Height)
-                    
-                    while (Description.FontSize * 1 * Description.GetLines().Count() > Description.Height)
+
+                    /*
+                    while (Description.FontSize * (1 / 1.2) * Description.GetLines().Count() > Description.Height)
                     {
-                        //MessageBox.Show(Description.GetFormattedText().Height.ToString());
+                        
                         Description.FontSize *= 0.9; //0.1
-                        /*
-                        lineScale = 0.95;
+                        
+                        Description.LineHeight = lineScale * Description.FontSize;
+                    } */
+                    double lineScale =  1 / 1.2;
+                    while (Description.FontSize * (Text.IsVietnamese()
+                        ? 1.1 * 1 / 1.2 / 0.95 : 1 * 1/ 1.2 / 0.95 ) * Description.GetLines().Count() > Description.Height)
+                    {
+                        Description.FontSize -= 0.05 * 1 / 1.2 / 0.95; //0.1
+
                         if (Description.GetLines().Count() > 6)
                         {
-                            lineScale = 0.94;
+                            lineScale = 0.94 * 1 / 1.2 / 0.95;
                         }
-                        
-                        */
                         Description.LineHeight = lineScale * Description.FontSize;
                     }
                 }
@@ -958,35 +953,30 @@ namespace OV.Pyramid
 
                 if (CurrentCard.IsMonster())
                 {
-                    Canvas.SetTop(DescriptionBorder, 922);
-                    Description.Height = 155;//160
+                    Canvas.SetTop(Description, 922);
+                   Description.Height = 155;//160
 
                 }
                 else
                 {
-                    Canvas.SetTop(DescriptionBorder, 891);
+                    Canvas.SetTop(Description, 891);
                     Description.Height = 226;//226
                 }
 
-                
-                
-
-
+                double lineScale = 0.95;
                 while (Description.FontSize * (Text.IsVietnamese()
                     ? 1.1 : 1) * Description.GetLines().Count() > Description.Height)
                 {
                     Description.FontSize -= 0.05; //0.1
-                    double lineScale = 0.95;
+                    
                     if (Description.GetLines().Count() > 6)
                     {
                         lineScale = 0.94;
                     }
                     Description.LineHeight = lineScale * Description.FontSize;
-                }
+                }                 
             }           
-        }
-
-
+        }        
         
 
         private void HandleRarity()
@@ -1587,17 +1577,17 @@ namespace OV.Pyramid
                             (CurrentCard.Rarity == RARITY.UltimateRare ? "Emboss" : null) + ".png");
 
 
-                        Star.Width = MiddleBorder.Height - 3;
+                        Star.Width = Middle.Height - 3;
                         Star.Height = Star.Width;
                         Canvas.SetTop(Star, 2);
                         Middle.Children.Add(Star);
 
                         if (type == "Level")
-                            Canvas.SetLeft(Star, Canvas.GetLeft(MiddleBorder)
-                                + MiddleBorder.Width - (Star.Width + 0.6) * (i + 1.5));
+                            Canvas.SetLeft(Star, Canvas.GetLeft(Middle)
+                                + Middle.Width - (Star.Width + 0.6) * (i + 1.5));
                         else
-                            Canvas.SetRight(Star, Canvas.GetLeft(MiddleBorder)
-                                 + MiddleBorder.Width - (Star.Width + 0.6) * (i + 1.5));
+                            Canvas.SetRight(Star, Canvas.GetLeft(Middle)
+                                 + Middle.Width - (Star.Width + 0.6) * (i + 1.5));
 
                     }
                 }
@@ -1718,13 +1708,21 @@ namespace OV.Pyramid
         {
             AttributeClick.Invoke(sender, e);
         }
-
-        private void AttributeBorder_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+        private void Frame_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
-            (sender as Border).BorderBrush = Brushes.Black;
+            FrameClick.Invoke(sender, e);
+        }
+        private void Middle_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            MiddleClick.Invoke(sender, e);
         }
 
-        private void AttributeBorder_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+        private void ControlZone_MouseEnter(object sender, MouseEventArgs e)
+        {
+            (sender as Border).BorderBrush = Brushes.Red;
+        }
+
+        private void ControlZone_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
         {
             (sender as Border).BorderBrush = Brushes.Transparent;
         }
