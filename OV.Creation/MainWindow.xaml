@@ -7,7 +7,7 @@
         xmlns:converters="clr-namespace:OV.Pyramid"
         mc:Ignorable="d"
         Title="OV.Land.Pyramid.Creation 1.0 Alpha" SizeToContent="WidthAndHeight"
-        WindowStartupLocation="CenterScreen" MinWidth="974" MinHeight="710">
+        WindowStartupLocation="CenterScreen" MinWidth="974" MinHeight="710" ResizeMode="CanMinimize">
     <Window.Resources>
         <Style x:Key="RotatedTab" TargetType="{x:Type TabItem}">
             <Setter Property="HeaderTemplate">

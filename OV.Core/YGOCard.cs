@@ -10,7 +10,7 @@ using Newtonsoft.Json;
 namespace OV.Core
 {
     [Serializable]
-    class YGOCard
+    class YgoCard
     {
         private FRAME DefaultFrame;
         private static string DatabasePath;
@@ -18,7 +18,7 @@ namespace OV.Core
         private static ByteDatabase Database;
         public Version Version { get; private set; }
 
-        private YGOCard()
+        private YgoCard()
         {
             DefaultFrame = FRAME.Effect;
             DatabasePath = DatabasePath = Utilities.GetLocationPath() + @"\Resources\Datas.ld";
@@ -73,11 +73,11 @@ namespace OV.Core
         public string Set { get; private set; }
         public STICKER Sticker { get; private set; }
         public TYPE Type { get; private set; }
-        internal static YGOCard Default
+        internal static YgoCard Default
         {
             get
             {                
-                YGOCard defaultCard = new YGOCard();
+                YgoCard defaultCard = new YgoCard();
                 
                 defaultCard.Name = "Card Name";
                 defaultCard.ATK = 1200;
@@ -104,9 +104,9 @@ namespace OV.Core
         }
 
 
-        public YGOCard Clone()
+        public YgoCard Clone()
         {
-            YGOCard clone = new YGOCard();
+            YgoCard clone = new YgoCard();
 
             clone.Name = this.Name;
             clone.ATK = this.ATK;
@@ -230,11 +230,15 @@ namespace OV.Core
                         Level = double.NaN;
                         Rank = 4;
                     }
-
+                    //To Non-Xyz
                     if (frame != FRAME.Xyz && Frame == FRAME.Xyz)
                     {
                         Rank = double.NaN;
                         Level = 4;
+                    }
+                    if (frame == FRAME.Normal)
+                    {
+                        Abilities.Clear();
                     }
                 }
                 //Card is Spell/Trap
@@ -583,7 +587,7 @@ internal void CleanUp()
         public override bool Equals(Object obj)
         {
             if (obj == null) return false;
-            var other = obj as YGOCard;
+            var other = obj as YgoCard;
             if (other == null) return false;
 
             if (other.Name == this.Name
@@ -700,7 +704,7 @@ internal void CleanUp()
         /// <param name="card"></param>
         /// <param name="frame"></param>
         /// <returns></returns>
-        public static bool IsFrame(this YGOCard card, FRAME frame)
+        public static bool IsFrame(this YgoCard card, FRAME frame)
         {
             return frame == card.Frame;
         }
@@ -710,7 +714,7 @@ internal void CleanUp()
         /// </summary>
         /// <param name="card"></param>
         /// <returns></returns>
-        public static bool IsMagic(this YGOCard card)
+        public static bool IsMagic(this YgoCard card)
         {
             if (card != null)
             {
@@ -726,7 +730,7 @@ internal void CleanUp()
         /// </summary>
         /// <param name="card"></param>
         /// <returns></returns>
-        public static bool IsMonster(this YGOCard card)
+        public static bool IsMonster(this YgoCard card)
         {
             return card != null && !card.IsMagic();
         }

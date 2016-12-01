@@ -36,7 +36,7 @@ namespace OV.Pyramid
 
         private ByteDatabase Database;
 
-        private YGOCard Current
+        private YgoCard Current
         {
             get
             {
@@ -71,7 +71,7 @@ namespace OV.Pyramid
             style.Setters.Add(new Setter(Paragraph.MarginProperty, new Thickness(0)));
             Resources.Add(typeof(Paragraph), style);
 
-            Set.Cards.Add(YGOCard.Default);
+            Set.Cards.Add(YgoCard.Default);
             
             RenderCard.SetDefaultArtwork(Database.GetData(@"Template\NoneImage.png").Bytes);
             //RenderCard.Render(YGOCard.Default);
@@ -84,23 +84,7 @@ namespace OV.Pyramid
 
             cardList.ItemsSource = Set.Cards;
             cardList.SelectedIndex = 0;
-
-            RenderCard.AttributeClick += RenderCard_AttributeClick;
-        }
-
-        private void ScrollToControlCanvas(Canvas canvas)
-        {
-            tabControl.SelectedIndex = 0;
-            var control = canvas;
-            UIElement container = canvas.Parent as StackPanel;
-            Point relativeLocation = control.TranslatePoint(new Point(0, 0), container);
-            var offset = relativeLocation.Y;
-            cardDetailsScroll.ScrollToVerticalOffset(offset);
-        }
-
-        private void RenderCard_AttributeClick(object sender, EventArgs e)
-        {
-            ScrollToControlCanvas(AttributeCanvas);
+            
         }
 
         private void SaveDatabase()
@@ -198,13 +182,13 @@ namespace OV.Pyramid
         private void RefreshPendulumControl()
         {
             PendulumBox.Document.Blocks.Clear();
-            PendulumBox.AppendText(Current.PendulumEffect);
+            PendulumBox.Document.Blocks.Add(new Paragraph(new Run(Current.PendulumEffect)));
         }
 
         private void RefreshDescriptionControl()
         {
             DescriptionBox.Document.Blocks.Clear();
-            DescriptionBox.AppendText(Current.Description);
+            DescriptionBox.Document.Blocks.Add(new Paragraph(new Run(Current.Description)));
         }
 
         private void RefreshScaleControl()
@@ -496,7 +480,7 @@ namespace OV.Pyramid
             {
                 Set.Cards.Clear();
                 
-                Set.Cards.Add(JsonConvert.DeserializeObject<YGOCard>(File.ReadAllText(path), settings));
+                Set.Cards.Add(JsonConvert.DeserializeObject<YgoCard>(File.ReadAllText(path), settings));
                 currentIndex = 0;
             }
             
@@ -596,7 +580,7 @@ namespace OV.Pyramid
 
                 AbilityCanvas.Children.Add(Button);
 
-                Canvas.SetTop(Button, 36 + ((i - 1) / 4) * 33);
+                Canvas.SetTop(Button, 8 + ((i - 1) / 4) * 33);
                 Canvas.SetLeft(Button, 36 + ((i - 1) % 4) * (Button.Width + 4) - 32);
                 StackPanel Zone = new StackPanel();
 
@@ -621,7 +605,7 @@ namespace OV.Pyramid
             Reset.IsEnabled = false;
             Reset.Width = 90;
             Reset.Name = "Ability_Reset";
-            Canvas.SetTop(Reset, 108);
+            Canvas.SetTop(Reset, 80);
             Canvas.SetLeft(Reset, 286);
             AbilityCanvas.Children.Add(Reset);
             Reset.Click += Button_ResetAbility;
@@ -698,8 +682,8 @@ namespace OV.Pyramid
             InLeft.Source = Database.GetImage(@"Template\Middle\ScaleLeft.png");
             InLeft.Width = 32;
             InLeft.Height = 32;
-            Canvas.SetLeft(InLeft, 178);
-            Canvas.SetTop(InLeft, 84);
+            Canvas.SetLeft(InLeft, 188);
+            Canvas.SetTop(InLeft, 64);
 
             Canvas.SetTop(ScaleLeftBox, Canvas.GetTop(InLeft) + 40);
             Canvas.SetLeft(ScaleLeftBox, Canvas.GetLeft(InLeft) + 20);
@@ -730,10 +714,10 @@ namespace OV.Pyramid
             Button.Tag = "?";
             //Button.Style = (Style)FindResource("Windows8Button");
             ScaleCanvas.Children.Add(Button);
-            Canvas.SetTop(Button, 78);
-            Canvas.SetLeft(Button, 216);
+            Canvas.SetTop(Button, 58);
+            Canvas.SetLeft(Button, 221);
 
-            int left = 20, top = 30; //110-36
+            int left = 30, top = 10; //110-36
             for (int i = 1; i <= 12; i++)
             {
                 Button ButtonX = new Button();
@@ -782,7 +766,7 @@ namespace OV.Pyramid
             //Tab.TabStripPlacement = Dock.Right;
 
             Tab.Width = 380;
-            Tab.Height = 195;
+            Tab.Height = 185;
 
             MiddleCanvas.Children.Add(Tab);
             Canvas.SetTop(Tab, 8);
@@ -997,22 +981,22 @@ namespace OV.Pyramid
                 {
                     if (i <= 2)
                     {
-                        Canvas.SetTop(Button, 38);
+                        Canvas.SetTop(Button, 10);
                         Canvas.SetLeft(Button, left + ((i - 1) % 3) * (Button.Width + 4) - 14);
                     }
                     else if (i == 7)
                     {
-                        Canvas.SetTop(Button, 38);
+                        Canvas.SetTop(Button, 10);
                         Canvas.SetLeft(Button, left + 3 * (Button.Width + 4) - 14);
                     }
                     else if (i >= 8)
                     {
-                        Canvas.SetTop(Button, 120);
+                        Canvas.SetTop(Button, 92);
                         Canvas.SetLeft(Button, left + 68 + (i - 8) * (Button.Width + 16) - 14);
                     }
                     else
                     {
-                        Canvas.SetTop(Button, 74);
+                        Canvas.SetTop(Button, 46);
                         Canvas.SetLeft(Button, left + ((i - 3) % 4) * (Button.Width + 4) - 14);
                     }
                 }
@@ -1052,7 +1036,7 @@ namespace OV.Pyramid
             frameList.Insert(frameList.IndexOf("Spell"), "Pendulum");
             string[] Frame_String = frameList.ToArray();
 
-            double sub = 25;
+            double left = 25;
 
             for (int i = 1; i <= Frame_String.Length; i++)
             {
@@ -1062,29 +1046,29 @@ namespace OV.Pyramid
                 {
                     if (i <= 2)
                     {
-                        Canvas.SetTop(Button, 38);
-                        Canvas.SetLeft(Button, ((i - 1) % 3) * (Button.Width + 4) + sub);
+                        Canvas.SetTop(Button, 10);
+                        Canvas.SetLeft(Button, ((i - 1) % 3) * (Button.Width + 4) + left);
                     }
                     else if (i == 7)
                     {
-                        Canvas.SetTop(Button, 38);
-                        Canvas.SetLeft(Button, 3 * (Button.Width + 4) + sub);
+                        Canvas.SetTop(Button, 10);
+                        Canvas.SetLeft(Button, 3 * (Button.Width + 4) + left);
                     }
                     else if (i == 8) //Pendulum
                     {
                         Button.Width += 32;
-                        Canvas.SetTop(Button, 120);
-                        Canvas.SetLeft(Button, (i - 8) * (Button.Width + 16) + sub);
+                        Canvas.SetTop(Button, 92);
+                        Canvas.SetLeft(Button, (i - 8) * (Button.Width + 16) + left);
                     }
                     else if (i >= 9)
                     {
-                        Canvas.SetTop(Button, 120);
-                        Canvas.SetLeft(Button, 82 + (i - 8) * (Button.Width + 4) + sub);
+                        Canvas.SetTop(Button, 92);
+                        Canvas.SetLeft(Button, 82 + (i - 8) * (Button.Width + 4) + left);
                     }
                     else
                     {
-                        Canvas.SetTop(Button, 74);
-                        Canvas.SetLeft(Button, ((i - 3) % 4) * (Button.Width + 4) + sub);
+                        Canvas.SetTop(Button, 46);
+                        Canvas.SetLeft(Button, ((i - 3) % 4) * (Button.Width + 4) + left);
                     }
                 }
                 StackPanel Zone = new StackPanel();
@@ -1130,8 +1114,6 @@ namespace OV.Pyramid
 
         private void LoadTypeControl()
         {
-
-
             string[] Type_String = typeof(TYPE).GetList().Where(o => o != TYPE.NONE.ToString()).ToArray();
 
             for (int i = 1; i <= Type_String.Length; i++)
@@ -1146,22 +1128,21 @@ namespace OV.Pyramid
                         Button.Width += 18;
                         if (i >= Type_String.Length - 1)
                         {
-                            Canvas.SetTop(Button, 252 + ((i - (Type_String.Length - 1)) / 2) * 33);
+                            Canvas.SetTop(Button, 224 + ((i - (Type_String.Length - 1)) / 2) * 33);
                             Canvas.SetLeft(Button, 35 + ((i - (Type_String.Length - 1)) % 2) * (Button.Width + 4) + 44);
                         }
                         else
                         {
-                            Canvas.SetTop(Button, 216 + ((i - (Type_String.Length - 4)) / 3) * 33);
+                            Canvas.SetTop(Button, 188 + ((i - (Type_String.Length - 4)) / 3) * 33);
                             Canvas.SetLeft(Button, 35 + ((i - (Type_String.Length - 4)) % 3) * (Button.Width + 4) - 10);
                         }
                     }
                     else
                     {
-                        Canvas.SetTop(Button, 34 + ((i - 1) / 4) * 33);
+                        Canvas.SetTop(Button, 6 + ((i - 1) / 4) * 33);
                         Canvas.SetLeft(Button, 35 + ((i - 1) % 4) * (Button.Width + 4) - 32);
                         if (i >= Type_String.Length - 7)
                         {
-
                             Canvas.SetTop(Button, Canvas.GetTop(Button) + 2);
                             Canvas.SetLeft(Button, Canvas.GetLeft(Button) + 44);
                         }
@@ -1218,15 +1199,17 @@ namespace OV.Pyramid
                 Button.Content = Rarity[i].AddSpaceBetweenCapital();
                 Button.Width = 85;
                 if (i >= 8)
+                {
                     Button.Width += 14;
+                }
                 Button.Height = 30;
-                Canvas.SetTop(Button, 36 + (i / 4) * (Button.Height + 10));
+                Canvas.SetTop(Button, 8 + (i / 4) * (Button.Height + 10));
 
-                int Left = 0;
+                int Left = 5;
                 if (i >= 8)
                     Left = 32;
                 else if (i >= 4)
-                    Left = 0;
+                    Left = 5;
                 Canvas.SetLeft(Button, Left + (i % 4) * (Button.Width + 10));
                 Button.Click += Button_Rarity;
                 Button.Tag = Rarity[i];
@@ -1325,17 +1308,7 @@ namespace OV.Pyramid
             RefreshRarityControl();
         }
 
-        private void Border_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            Expander Ex = (sender as Border).Child as Expander;
-            if (Ex == null)
-                return;
-            if (Ex.IsExpanded)
-                Ex.IsExpanded = false;
-            else
-                Ex.IsExpanded = true;
-        }
-
+        
 
         private void ScaleLeft_TextChanged(object sender, TextChangedEventArgs e)
         {
@@ -1359,12 +1332,34 @@ namespace OV.Pyramid
             RefreshControl();
         }
 
+        public string TestGetText(RichTextBox box)
+        {
+            /*
+            TextRange textRange = new TextRange(box.Document.ContentStart, box.Document.ContentEnd);
+            string Text = textRange.Text;            
+            Text = Text.ReplaceLastOccurrence(Environment.NewLine, "");
+            */
+            var flow = box.Document.Blocks;
+            string Text = "";
+            foreach (var block in flow)
+            {
+                TextRange r = new TextRange(block.ContentStart, block.ContentEnd);
+                Text += r.Text;
+                if (block != flow.Last())
+                {
+                    Text += Environment.NewLine;
+                }
+            }
+
+            return Text;
+        }
 
         private void ApplyDocument_Click(object sender, RoutedEventArgs e)
         {
             if (inRefreshControl) { return; }
-            Current.SetDescription(RenderText(DescriptionBox.GetText()));
-            Current.SetPendulumEffect(RenderText(PendulumBox.GetText()));
+            //Current.SetDescription(RenderText(DescriptionBox.GetText()));
+            Current.SetDescription(RenderText(TestGetText(DescriptionBox)));
+            //Current.SetPendulumEffect(RenderText(PendulumBox.GetText()));
             RefreshControl();
             RenderCard.Render(Current);
         }
@@ -1394,7 +1389,7 @@ namespace OV.Pyramid
                     return;
                 }
                 int previewIndex = currentIndex;
-                Set.Cards.Remove(cardList.SelectedItem as YGOCard);
+                Set.Cards.Remove(cardList.SelectedItem as YgoCard);
                 cardList.ItemsSource = Set.Cards;
 
                 currentIndex = previewIndex - 1;
@@ -1417,14 +1412,14 @@ namespace OV.Pyramid
             if (inChangeSetCard) { return; }
 
             //MessageBox.Show(Set.Cards[0].GetHashCode().ToString());
-            if (Set.Cards.Where(o => o.Equals(YGOCard.Default)).Count() >= 3)
+            if (Set.Cards.Where(o => o.Equals(YgoCard.Default)).Count() >= 3)
             {
 
             }
             else
             {
 
-                Set.Cards.Add(YGOCard.Default);
+                Set.Cards.Add(YgoCard.Default);
                 cardList.ItemsSource = Set.Cards;
 
                 //currentIndex = cardList;
@@ -1586,6 +1581,7 @@ namespace OV.Pyramid
         
         private void cardDetailsScroll_Loaded(object sender, RoutedEventArgs e)
         {
+            var cardDetailsScroll = sender as ScrollViewer;
             double offset;
             if (cardDetailsScroll.Tag != null && double.TryParse(cardDetailsScroll.Tag.ToString(), out offset))
             {
@@ -1595,8 +1591,104 @@ namespace OV.Pyramid
 
         private void cardDetailsScroll_Unloaded(object sender, RoutedEventArgs e)
         {
+            var cardDetailsScroll = sender as ScrollViewer;
             cardDetailsScroll.Tag = cardDetailsScroll.VerticalOffset;
+        } 
+
+        #region ScrollToCanvas
+        private void ScrollToControlCanvas(Border border)
+        {
+            tabControl.SelectedIndex = 0;
+            var control = border;
+            UIElement container = border.Parent as StackPanel;
+            
+            Point relativeLocation = control.TranslatePoint(new Point(0, 0), container);
+            var offset = relativeLocation.Y;
+            if ((border.Child as Expander) != null)
+            {
+                var Ex = (border.Child as Expander);
+                if (offset == Scroll.VerticalOffset)
+                {
+                    Ex.IsExpanded = !Ex.IsExpanded;
+                }
+                else
+                {
+                    Ex.IsExpanded = true;
+                }
+            }
+            Scroll.ScrollToVerticalOffset(offset);
+        }
+
+        private void RenderCard_AttributeClick(object sender, EventArgs e)
+        {
+            ScrollToControlCanvas(AttributeBorder);
+        }
+        private void RenderCard_NameClick(object sender, EventArgs e)
+        {
+            ScrollToControlCanvas(NameBorder);
+        }
+        private void RenderCard_AbilityClick(object sender, EventArgs e)
+        {
+            ScrollToControlCanvas(AbilityBorder);
+        }
+        private void RenderCard_CirculationClick(object sender, EventArgs e)
+        {
+            ScrollToControlCanvas(CirculationBorder);
+        }
+
+        private void RenderCard_ValueClick(object sender, EventArgs e)
+        {
+            ScrollToControlCanvas(ValueBorder);
+        }
+        private void RenderCard_ArtworkClick(object sender, EventArgs e)
+        {
+            tabControl.SelectedIndex = 1;
+        }
+        private void RenderCard_DescriptionClick(object sender, EventArgs e)
+        {
+            ScrollToControlCanvas(DocumentBorder);
+        }
+        private void RenderCard_FrameClick(object sender, EventArgs e)
+        {
+            ScrollToControlCanvas(FrameBorder);
+        }
+        private void RenderCard_MiddleClick(object sender, EventArgs e)
+        {
+            ScrollToControlCanvas(MiddleBorder);
+        }
+        #endregion ScrollToCanvas
+        
+        private void InsideBorderExpander_Expanded(object sender, RoutedEventArgs e)
+        {
+            var expander = sender as Expander;
+            var canvas = expander.Content as Canvas;
+            var border = expander.Parent as Border;
+            if (canvas != null)
+            {
+                Grid.Height += canvas.Height - border.MinHeight;
+                Animations.SynchroAnimation(border, canvas.Height, Border.HeightProperty);
+            }
+        }
+
+        private void InsideBorderExpander_Collapsed(object sender, RoutedEventArgs e)
+        {
+            var expander = sender as Expander;
+            var canvas = expander.Content as Canvas;
+            var border = expander.Parent as Border;
+            if (canvas != null)
+            {
+                Grid.Height -= canvas.Height - border.MinHeight;
+                Animations.SynchroAnimation(border, 
+                    border.MinHeight, Border.HeightProperty);
+            }
+        }
+
+        private void InsideBorderExpander_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            TextBlock TxtBlock = sender as TextBlock;
+            Expander Ex = TxtBlock.Parent as Expander;
+            Ex.IsExpanded = !Ex.IsExpanded;
         }
     }
-        
+
 }

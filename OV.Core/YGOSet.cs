@@ -8,7 +8,7 @@ namespace OV.Core
     {
         public Version Version { get; private set; }
         public string Name { get; private set; }
-        public List<YGOCard> Cards { get; private set; }
+        public List<YgoCard> Cards { get; private set; }
         public string Prefix { get; private set; }
         public SETTYPE Type { get; private set; }
 
@@ -16,7 +16,7 @@ namespace OV.Core
         {
             Version = new Version("0.1");
             Name = "Set Name";
-            Cards = new List<YGOCard>();
+            Cards = new List<YgoCard>();
             Prefix = "";
             Type = SETTYPE.BoosterPack;
         }

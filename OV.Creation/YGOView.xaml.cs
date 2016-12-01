@@ -7,9 +7,11 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
@@ -23,8 +25,8 @@ namespace OV.Pyramid
     /// Interaction logic for YGOView.xaml
     /// </summary>
     public partial class YgoView : UserControl, INotifyPropertyChanged
-    {        
-        private YGOCard CurrentCard;
+    {
+        private YgoCard CurrentCard;
         private static string DatabasePath;
 
         private ByteDatabase Database;
@@ -32,22 +34,28 @@ namespace OV.Pyramid
         private bool isInitialize;
 
         public YgoView()
-        {     
+        {
             InitializeComponent();
             DatabasePath = GetLocationPath() + @"\Resources\Datas.ld";
             Database = new ByteDatabase(DatabasePath);
             isInitialize = false;
-            
-            foreach(Border border in ControlZone.FindChildrens<Border>())
+
+            foreach (Border border in ControlZone.FindChildrens<Border>())
             {
                 border.MouseEnter += ControlZone_MouseEnter;
                 border.MouseLeave += ControlZone_MouseLeave;
             }
         }
 
+        public event EventHandler ValueClick;        
+        public event EventHandler AbilityClick;
+        public event EventHandler ArtworkClick;
         public event EventHandler AttributeClick;
+        public event EventHandler CirculationClick;
+        public event EventHandler DescriptionClick;
         public event EventHandler FrameClick;
         public event EventHandler MiddleClick;
+        public event EventHandler NameClick;
 
         public event PropertyChangedEventHandler PropertyChanged;
         private void OnPropertyChanged(object sender, string propertyName)
@@ -59,7 +67,7 @@ namespace OV.Pyramid
         }
 
         public class Fonts
-        {  
+        {
             public static FontFamily StoneSerifLTBold
             {
                 get
@@ -112,8 +120,6 @@ namespace OV.Pyramid
             }
         }
 
-        
-
         private void SetDefaultValue()
         {
             if (isInitialize) { return; }
@@ -126,6 +132,8 @@ namespace OV.Pyramid
             SetNumber.FontFamily = Fonts.StoneSerifRegular;
             AttributeText.FontFamily = Fonts.PalatinoLinotype;
             ScaleLeftBlock.FontFamily = ScaleRightBlock.FontFamily = Fonts.YGOMatrixSmallCap2;
+            Pendulum.FontFamily = Fonts.MatrixBook;
+            //Pendulum.FontStyle = FontStyles.Normal;
 
             CardBorder.Source = Database.GetImage(@"Template\Border\Card\Default.png");
             ArtworkBorder.Source = Database.GetImage(@"Template\Border\Artwork\Default.png");
@@ -143,13 +151,11 @@ namespace OV.Pyramid
             }
         }
 
-        
-
-        internal void Render(YGOCard card)
+        internal void Render(YgoCard card)
         {
             SetDefaultValue();
-            YGOCard preCard = this.CurrentCard != null ? (YGOCard)this.CurrentCard.Clone() : null;
-            this.CurrentCard = (YGOCard)card.Clone();
+            YgoCard preCard = this.CurrentCard != null ? (YgoCard)this.CurrentCard.Clone() : null;
+            this.CurrentCard = (YgoCard)card.Clone();
 
             if (preCard == null)
             {
@@ -193,7 +199,8 @@ namespace OV.Pyramid
                 if (preCard.Abilities.ListEquals(CurrentCard.Abilities) == false
                     || preCard.Type != CurrentCard.Type
                     || (CurrentCard.IsMagic() && preCard.IsMonster())
-                    || (CurrentCard.IsMonster() && preCard.IsMagic()))
+                    || (CurrentCard.IsMonster() && preCard.IsMagic())
+                    || (CurrentCard.IsFrame(FRAME.Normal) != preCard.IsFrame(FRAME.Normal)))
                 {
                     HandleAbility();
                 }
@@ -205,17 +212,18 @@ namespace OV.Pyramid
                     )
                 {
                     HandleDescription();
+
                 }
-                
+
                 if (preCard.IsPendulum != CurrentCard.IsPendulum
                     || preCard.PendulumEffect != CurrentCard.PendulumEffect
                     || (preCard.IsPendulum && preCard.Frame != CurrentCard.Frame))
                 {
                     HandlePendulum();
                 }
-                
+
                 if (preCard.Frame != CurrentCard.Frame
-                    || preCard.Equals(YGOCard.Default))
+                    || preCard.Equals(YgoCard.Default))
                 {
                     HandleFrame();
                 }
@@ -225,7 +233,7 @@ namespace OV.Pyramid
                 {
                     HandleScale();
                 }
-                
+
                 if (preCard.Rarity != CurrentCard.Rarity)
                 {
                     HandleRarity();
@@ -262,10 +270,13 @@ namespace OV.Pyramid
             }
             //this.OnPropertyChanged(this, "RenderedImageSource");
             //return RenderedImageSource;
-           
+            RefreshZone();
         }
 
-        
+        private void RefreshZone()
+        {
+            AbilityZone.Visibility = CurrentCard.IsMonster() ? Visibility.Visible : Visibility.Hidden;
+        }
 
         private void HandlePendulum()
         {
@@ -273,11 +284,13 @@ namespace OV.Pyramid
 
             string Text = CurrentCard.PendulumEffect ?? "";
             double fontDefault = 31;
+
             Pendulum.Inlines.Clear();
             Pendulum.Text = Text;
-            Pendulum.FontFamily = Fonts.MatrixBook;
-            Pendulum.FontStyle = FontStyles.Normal;
             Pendulum.FontSize = fontDefault;
+
+            /*
+            
             Pendulum.LineHeight = fontDefault * 1;
             
             while (Pendulum.FontSize * Pendulum.GetLines().Count() > Pendulum.MaxHeight)
@@ -292,16 +305,26 @@ namespace OV.Pyramid
             else
             {
                 Pendulum.LineHeight = 1.04 * Pendulum.FontSize;
-            }
+            } */
+
+            Pendulum.MaxFontSize = fontDefault;
+            Pendulum.ScaledLineHeight = 1;
 
             if (Pendulum.GetLines().Count() < 4)
             {
                 Canvas.SetTop(Pendulum, 785);
+                Pendulum.Height = 97;
             }
             else
             {
                 Canvas.SetTop(Pendulum, 746);
+                Pendulum.Height = 133;
             }
+
+            Pendulum.MaxHeight = Pendulum.Height;
+            Pendulum.MaxWidth = Pendulum.Width;
+
+
 
             //Is Pendulum?
             if (CurrentCard.IsPendulum)
@@ -364,7 +387,7 @@ namespace OV.Pyramid
             ScaleLeft.Visibility = ScaleRight.Visibility = Visibility.Visible;
             ScaleLeftBlock.Text = double.IsNaN(CurrentCard.ScaleLeft) ? "?" : CurrentCard.ScaleLeft.ToString();
             ScaleRightBlock.Text = double.IsNaN(CurrentCard.ScaleRight) ? "?" : CurrentCard.ScaleRight.ToString();
-            
+
             if (Pendulum.GetLines().Count() < 4)
             {
                 Canvas.SetTop(ScaleLeftBlock, 824);
@@ -397,12 +420,12 @@ namespace OV.Pyramid
                 }
             }
             else
-            {                
+            {
                 Canvas.SetLeft(ScaleLeftBlock, 74);
             }
             //Scale Right
             if (!double.IsNaN(CurrentCard.ScaleRight))
-            { 
+            {
                 if (CurrentCard.ScaleRight >= 10)
                 {
                     if (CurrentCard.ScaleRight == 11)
@@ -420,7 +443,7 @@ namespace OV.Pyramid
                 }
             }
             else
-            {                
+            {
                 Canvas.SetLeft(ScaleRightBlock, CardCanvas.Width - 74 - 22);
             }
             Canvas.SetTop(ScaleLeft, ScaleLeftBlock.Top() - 30);
@@ -455,18 +478,19 @@ namespace OV.Pyramid
                 {
                     CardNumberViewbox.Width = double.NaN;
                 }
-            } else
+            }
+            else
             {
                 CardNumber.Text = null;
                 CardNumberViewbox.Width = double.NaN;
             }
 
             if (CurrentCard.IsFrame(FRAME.Xyz) && !CurrentCard.IsPendulum)
-            {                
+            {
                 CardNumber.Foreground = Brushes.White;
             }
             else
-            {                
+            {
                 CardNumber.Foreground = Brushes.Black;
             }
         }
@@ -481,7 +505,7 @@ namespace OV.Pyramid
             {
                 Edition.Foreground = Brushes.Black;
             }
-            
+
             if (CurrentCard.Edition == EDITION.UnlimitedEdition)
             {
                 Edition.Text = null;
@@ -511,7 +535,7 @@ namespace OV.Pyramid
                 Edition.Text = CurrentCard.Edition.ToString().AddSpaceBetweenCapital().ToUpper();
                 Edition.FontWeight = FontWeights.Normal;
                 Edition.FontSize = 30;
-            }            
+            }
         }
 
         private void HandleAD()
@@ -564,7 +588,7 @@ namespace OV.Pyramid
                     DEFBlock.Text += SpecialPoint(CurrentCard.DEF);
 
                     //Canvas.SetLeft(DEFBlock, DEFBlock.Left() - DEFBlock.GetFormattedText(SpecialPoint(Current.DEF)).Width);
-                }                
+                }
             }
             else
             {
@@ -575,7 +599,7 @@ namespace OV.Pyramid
         private void HandleSticker()
         {
             if (CurrentCard == null) { return; }
-            
+
             Sticker.Source = Database.GetImage(@"Template\Sticker\" + CurrentCard.Sticker.ToString() + ".png");
         }
 
@@ -585,7 +609,8 @@ namespace OV.Pyramid
             if (CurrentCard.IsFrame(FRAME.Xyz) && CurrentCard.IsPendulum == false)
             {
                 Creator.Foreground = Brushes.White;
-            } else
+            }
+            else
             {
                 Creator.Foreground = Brushes.Black;
             }
@@ -594,7 +619,7 @@ namespace OV.Pyramid
 
         public void Save()
         {
-            
+
             string text = JsonConvert.SerializeObject(CurrentCard, Formatting.Indented);
             //MessageBox.Show(xml);
 
@@ -608,7 +633,7 @@ namespace OV.Pyramid
             dlg.Filter = "OV.Creation Card|*.occ"; // Filter files by extension 
 
             // Show save file dialog box
-            
+
 
             // Process save file dialog box results 
             if (dlg.ShowDialog() == true)
@@ -619,7 +644,7 @@ namespace OV.Pyramid
             }
         }
 
-        internal void Load(YGOCard card)
+        internal void Load(YgoCard card)
         {
             //Current.CleanUp();
             CurrentCard = card;
@@ -745,7 +770,7 @@ namespace OV.Pyramid
         {
             get
             {
-                
+
                 CardCanvas.Measure(new Size(CardCanvas.Width, CardCanvas.Height));
                 CardCanvas.Arrange(new Rect(new Size(CardCanvas.Width, CardCanvas.Height)));
                 CardCanvas.UpdateLayout();
@@ -778,38 +803,40 @@ namespace OV.Pyramid
                 return renderTarget;
             }
         }
-        
+
         private void HandleDescription()
         {
-            if (CurrentCard == null) {return; }
+            if (CurrentCard == null) { return; }
 
             string Text = CurrentCard.Description ?? "";
-            double fontDefault = 32.4;
-            Description.Width = 694;
-            Description.Inlines.Clear();
-            richTextBox.Visibility = Visibility.Hidden;
-            Description.Visibility = Visibility.Visible;
-            Description.Visibility = Visibility.Visible;
+            
+            const double fontDefault = 32.4;            
+            TextBlockDescription.Width = 694;
+            TextBlockDescription.Inlines.Clear();
+            RichTextBoxDescription.Visibility = Visibility.Hidden;
+            TextBlockDescription.Visibility = Visibility.Visible;
+
+            TextBlockDescription.FontSize = fontDefault;
             if (CurrentCard.IsFrame(FRAME.Normal))
             {
-                Canvas.SetTop(Description, 922);
-                Description.Height = 153; //153  
+                Canvas.SetTop(TextBlockDescription, 923); //922 - 153
+                TextBlockDescription.Height = 152;
 
-                if (Regex.IsMatch(Text, @"(\(.+?\.\))"))                
-                {                    
-                    richTextBox.Visibility = Visibility.Visible;
-                    Description.Visibility = Visibility.Hidden;
-                    Description.Visibility = Visibility.Hidden;
+                if (Regex.IsMatch(Text, @"(\(.+?\.\))"))
+                {
+                    RichTextBoxDescription.Visibility = Visibility.Visible;
+                    TextBlockDescription.Visibility = Visibility.Hidden;
+                    TextBlockDescription.Visibility = Visibility.Hidden;
                     /* test */
                     Paragraph Para = new Paragraph();
 
                     Para.TextAlignment = TextAlignment.Justify;
                     Para.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
-                    
+
                     //if (Text != null)
                     //Text = Text.Replace("\r\n", Environment.NewLine);
-                    richTextBox.Document.Blocks.Clear();
-                    richTextBox.Document.Blocks.Add(Para);
+                    RichTextBoxDescription.Document.Blocks.Clear();
+                    RichTextBoxDescription.Document.Blocks.Add(Para);
 
                     string First = Text != null ? (Text.Split('(') != null ? Text.Split('(')[0] : null) : null;
                     //MessageBox.Show(Text.Split('(')[0]);
@@ -830,20 +857,21 @@ namespace OV.Pyramid
                     Para.Inlines.ElementAt(1).FontFamily = Fonts.MatrixBook;
                     double Default = 27; //29.8-32.4 -- 33.1
                     Para.FontSize = Default;
-                    while (Para.FontSize * 1.1 * richTextBox.CountLine() > richTextBox.Height)
+                    while (Para.FontSize * 1.1 * RichTextBoxDescription.CountLine() > RichTextBoxDescription.Height)
                     {
                         Para.FontSize -= 0.07; //0.1
-                        richTextBox.Document.Blocks.Clear();
-                        richTextBox.Document.Blocks.Add(Para);
+                        RichTextBoxDescription.Document.Blocks.Clear();
+                        RichTextBoxDescription.Document.Blocks.Add(Para);
                     }
 
-                    int Line = richTextBox.CountLine();
+                    int Line = RichTextBoxDescription.CountLine();
                     if (Line > 6)
                     {
-                        richTextBox.Height = 150;    
-                    } else
+                        RichTextBoxDescription.Height = 150;
+                    }
+                    else
                     {
-                       richTextBox.Height = 153;  
+                        RichTextBoxDescription.Height = 153;
                     }
                     double param = 1.1;
                     if (Text != null)
@@ -864,120 +892,146 @@ namespace OV.Pyramid
                     {
                         Para.Inlines.ElementAt(1).FontSize = Para.Inlines.ElementAt(0).FontSize * 1.15; //29.8-32.4
                     }
-                    /*
-                     * double scaleFont = 1;
-                double height = 0;
-
-
-                     string[] parts = Regex.Split(Text, @"(\(.+?\.\))");
-
-                foreach (string part in parts.Where(o => string.IsNullOrWhiteSpace(o) == false))
-                {
-                    string p = part;
-                    if (Regex.IsMatch(part, @"(\(.+?\.\))")) //Condition
-                    {
-                        Description.Inlines.Add(new Run
-                        {
-                            Text = p,
-                            FontFamily = Fonts.MatrixBook,
-                            FontSize = fontDefault * scaleFont
-                        });
-
-
-                        TextBlock t = new TextBlock();
-                        t.Text
-                        height += fontDefault * scaleFont;
-                    }
-                    else
-                    {
-                        Description.Inlines.Add(new Run
-                        {
-                            Text = p,
-                            FontStyle = FontStyles.Italic,
-                            FontFamily = Fonts.StoneSerifItalic,
-                            FontSize = 27 * scaleFont,
-                        });
-                        height += 27 * scaleFont;
-                    }
-                }
-                scaleFont *= 0.9;
-                //Description.LineHeight = scaleFont * fontDefault;
-
-                if (scaleFont < 0.004)
-                {
-
-                }  */
                 }
                 else
                 {
-                    Description.Text = Text;
-                    Description.FontFamily = Fonts.StoneSerifItalic;
-                    Description.FontStyle = FontStyles.Italic;
-                    Description.FontSize = 27;                    
 
-                    //double lineScale = 1 / 1.2;
-                    //Description.LineHeight = lineScale * Description.FontSize;
-                    //while (Description.FontSize * 1 * Description.GetLines().Count() > Description.Height)
-
-                    /*
-                    while (Description.FontSize * (1 / 1.2) * Description.GetLines().Count() > Description.Height)
-                    {
-                        
-                        Description.FontSize *= 0.9; //0.1
-                        
-                        Description.LineHeight = lineScale * Description.FontSize;
-                    } */
-                    double lineScale =  1 / 1.2;
-                    while (Description.FontSize * (Text.IsVietnamese()
-                        ? 1.1 * 1 / 1.2 / 0.95 : 1 * 1/ 1.2 / 0.95 ) * Description.GetLines().Count() > Description.Height)
-                    {
-                        Description.FontSize -= 0.05 * 1 / 1.2 / 0.95; //0.1
-
-                        if (Description.GetLines().Count() > 6)
-                        {
-                            lineScale = 0.94 * 1 / 1.2 / 0.95;
-                        }
-                        Description.LineHeight = lineScale * Description.FontSize;
-                    }
+                    TextBlockDescription.FontFamily = Fonts.StoneSerifItalic;
+                    TextBlockDescription.FontStyle = FontStyles.Italic;
+                    //Description.MaxFontSize = 25.57;
+                    //Description.ScaledLineHeight = 1.25;
+                    TextBlockDescription.MaxHeight = TextBlockDescription.Height;
+                    TextBlockDescription.MaxWidth = TextBlockDescription.Width;
+                    TextBlockDescription.Text = Text;
                 }
             }
             else
+            {                
+                DescriptionByRichTextBox(Text);
+            }            
+        }
+
+        private void DescriptionByTextBlock(string Text)
+        {
+            double fontDefault = 32.4;
+            TextBlockDescription.FontFamily = Fonts.MatrixBook;
+            TextBlockDescription.FontStyle = FontStyles.Normal;
+            //Description.FontSize = fontDefault;
+
+            //Description.LineHeight = fontDefault * 1;
+
+
+            
+
+            TextBlockDescription.MaxFontSize = fontDefault;
+            TextBlockDescription.ScaledLineHeight = 1.02;
+
+            TextBlockDescription.Text = Text;
+
+
+            /*
+            double lineScale = 0.95;
+            if (Description.GetLines().Count() > 6)
             {
-                Description.Text = Text;
-                Description.FontFamily = Fonts.MatrixBook;
-                Description.FontStyle = FontStyles.Normal;
-                Description.FontSize = fontDefault;
+                lineScale = 0.94;
+            }
+            Description.LineHeight = lineScale * Description.FontSize;
+            */
+            TextBlockDescription.FontSize = TextBlockDescription.MaxFontSize;
 
-                Description.LineHeight = fontDefault * 1;
+            /*
+            Description.UpdateLayout();
+            while (Description.FontSize * Description.GetLines().Count() > Description.Height)
+            {
+                Description.FontSize -= 0.1;
+                Description.UpdateLayout();
+            } */
+            double lineScale = 0.95;
+            while (TextBlockDescription.FontSize * (Text.IsVietnamese()
+                ? 1.1 : 1) * TextBlockDescription.GetLines().Count() > TextBlockDescription.Height)
+            {
+                TextBlockDescription.FontSize -= 0.05; //0.1
 
-
-                if (CurrentCard.IsMonster())
+                if (TextBlockDescription.GetLines().Count() > 6)
                 {
-                    Canvas.SetTop(Description, 922);
-                   Description.Height = 155;//160
-
+                    lineScale = 0.94;
                 }
+                TextBlockDescription.LineHeight = lineScale * TextBlockDescription.FontSize;
+            }
+        }
+
+        private void DescriptionByRichTextBox(string Text)
+        {
+            if (CurrentCard.IsMonster())
+            {
+                Canvas.SetTop(TextBlockDescription, 922);
+                //RichTextBoxDescription.Height = 155;//160
+                RichTextBoxDescription.Height = 158;
+            }
+            else
+            {
+                Canvas.SetTop(TextBlockDescription, 891);
+                RichTextBoxDescription.Height = 226;//226
+                                                    //MessageBox.Show(RichTextBoxDescription.Height.ToString());
+                RichTextBoxDescription.Background = Brushes.Azure;
+            }
+
+
+            //Text.ReplaceLastOccurrence("\n", "");
+            this.RichTextBoxDescription.Visibility = Visibility.Visible;
+            TextBlockDescription.Visibility = Visibility.Hidden;
+            Paragraph Para = new Paragraph();
+
+            Para.TextAlignment = TextAlignment.Justify;
+            Para.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
+            double Default = 32.4;
+
+
+
+            {
+
+                RichTextBoxDescription.Document.Blocks.Clear();
+                RichTextBoxDescription.Document.Blocks.Add(Para);
+                Para.Inlines.Add(new Run(Text));
+
+                Para.FontFamily = Fonts.MatrixBook;
+
+
+            }
+
+            Para.FontSize = Default;
+            // 6-26.5
+            while (Default * (CurrentCard.IsFrame(FRAME.Normal) && (Text != "" && Text.IsVietnamese()) ? 1.1 : 1)
+                * RichTextBoxDescription.CountLine() > RichTextBoxDescription.Height)
+            {
+                Default -= 0.1;
+                Para = new Paragraph(new Run(Text));
+                Para.TextAlignment = TextAlignment.Justify;
+                Para.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
+                Para.FontFamily = Fonts.MatrixBook;
+                Para.FontSize = Default;
+                RichTextBoxDescription.Document.Blocks.Clear();
+                RichTextBoxDescription.Document.Blocks.Add(Para);
+            }
+
+
+            int Line = RichTextBoxDescription.CountLine();
+            Para.LineHeight = (CurrentCard.IsFrame(FRAME.Normal) ? 1.1 : 1) * Para.FontSize;
+            if (CurrentCard.IsFrame(FRAME.Normal))
+                Para.LineHeight = ((Text != null && Text.IsVietnamese()) ? 1.1 : 1.0) * Para.FontSize;
+            else
+            {
+                if (Line <= (CurrentCard.IsMagic() ? 7 : 4))
+                    Para.LineHeight = 0.95 * Para.FontSize;
                 else
-                {
-                    Canvas.SetTop(Description, 891);
-                    Description.Height = 226;//226
-                }
+                    Para.LineHeight = RichTextBoxDescription.Height / (Line * 1.05);
+            }
 
-                double lineScale = 0.95;
-                while (Description.FontSize * (Text.IsVietnamese()
-                    ? 1.1 : 1) * Description.GetLines().Count() > Description.Height)
-                {
-                    Description.FontSize -= 0.05; //0.1
-                    
-                    if (Description.GetLines().Count() > 6)
-                    {
-                        lineScale = 0.94;
-                    }
-                    Description.LineHeight = lineScale * Description.FontSize;
-                }                 
-            }           
-        }        
-        
+            if (Para.Inlines.Count > 1)
+            {
+                Para.Inlines.ElementAt(1).FontSize = Para.Inlines.ElementAt(0).FontSize * 1.15; //29.8-32.4
+            }
+        }
 
         private void HandleRarity()
         {
@@ -991,7 +1045,7 @@ namespace OV.Pyramid
             {
                 ArtworkFoil.Opacity = 1;
                 ArtworkFoil.Source = null;
-                CardFoil.Source = null; 
+                CardFoil.Source = null;
                 CardBorder.Source = null; //XX
                 CardName.Effect = null;
                 LoreBorder.Source = null;
@@ -1020,6 +1074,25 @@ namespace OV.Pyramid
                     CardName.Foreground = Brushes.White;
                 else
                     CardName.Foreground = Brushes.Black; */
+                LinearGradientBrush b = new LinearGradientBrush();
+                b.StartPoint = new Point(0, 0.5);
+                b.EndPoint = new Point(160, 0.5);
+                b.SpreadMethod = GradientSpreadMethod.Repeat;
+                b.MappingMode = BrushMappingMode.Absolute;
+                b.GradientStops.Add(new GradientStop { Color = Colors.White, Offset = 0 });
+                b.GradientStops.Add(new GradientStop { Color = Color.FromRgb(200, 200, 200), Offset = 0.6 });
+                b.GradientStops.Add(new GradientStop { Color = Colors.White, Offset = 1 });
+
+                DropShadowEffect e = new DropShadowEffect();
+                e.ShadowDepth = 1;
+                e.Direction = -180;
+                e.BlurRadius = 10;
+                e.Color = Colors.Black;
+                e.RenderingBias = RenderingBias.Quality;
+
+                CardName.Foreground = b;
+                CardName.Effect = e;
+                
             }
             else if (CurrentCard.Rarity == RARITY.Rare)
             {
@@ -1129,7 +1202,7 @@ namespace OV.Pyramid
                 CardBorder.Source = Database.GetImage(@"Template\Border\Card\Gold.png");
                 LoreBorder.Source = Database.GetImage(@"Template\Border\Lore\Gold.png");
                 CardName.Foreground = new SolidColorBrush(Color.FromRgb(88, 76, 12));//234,255,255
-                
+
                 DropShadowEffect shadow = new DropShadowEffect();
                 shadow.BlurRadius = 2;
                 shadow.RenderingBias = RenderingBias.Quality;
@@ -1138,7 +1211,7 @@ namespace OV.Pyramid
                 shadow.Color = Color.FromRgb(255, 215, 0);
 
                 CardName.Effect = shadow;
-                
+
                 if (CurrentCard.IsPendulum)
                 {
                     if (Pendulum.GetLines().Count() < 4)
@@ -1158,7 +1231,8 @@ namespace OV.Pyramid
                     shadow.BlurRadius = 15;
                     shadow.ShadowDepth = 0;
                     ArtworkBorder.Effect = shadow;
-                } else
+                }
+                else
                 {
                     ArtworkBorder.Source = Database.GetImage(@"Template\Border\Artwork\Gold.png");
                 }
@@ -1270,7 +1344,7 @@ namespace OV.Pyramid
             Artwork.Source = Source;
         }
 
-        internal YGOCard SetFrame(FRAME frame)
+        internal YgoCard SetFrame(FRAME frame)
         {
             //Current.SetF
             return CurrentCard;
@@ -1291,7 +1365,8 @@ namespace OV.Pyramid
             if (double.IsNaN(value))
             {
                 result = "?";
-            } else
+            }
+            else
             {
                 result = value.ToString();
             }
@@ -1320,7 +1395,7 @@ namespace OV.Pyramid
                 {
                     string type = CurrentCard.Type != TYPE.NONE ? CurrentCard.Type.ToString() : "";// TransAbility(Current.Type);  
 
-                    
+
                     {
                         type = type.Replace("WingedBeast", "Winged Beast");
                         type = type.Replace("BeastWarrior", "Beast-Warrior");
@@ -1340,8 +1415,8 @@ namespace OV.Pyramid
                     {
                         abilityText.Add("Pendulum");
                     }
-                    
-                    foreach(ABILITY ability in CurrentCard.Abilities.Where(o => o != ABILITY.Effect && o != ABILITY.Tuner))
+
+                    foreach (ABILITY ability in CurrentCard.Abilities.Where(o => o != ABILITY.Effect && o != ABILITY.Tuner))
                     {
                         abilityText.Add(ability.ToString());
                     }
@@ -1434,7 +1509,7 @@ namespace OV.Pyramid
                 //Current.ArtworkByte = Database.GetImage(@"Template\NoneImage.png").GetImageArray();
             }
             Artwork.Source = CurrentCard.ArtworkByte.GetBitmapImageFromByteArray();
-            
+
         }
 
         private void HandleMiddle()
@@ -1483,7 +1558,7 @@ namespace OV.Pyramid
                 Grid.Children.Add(AbilityBlock);
                 AbilityBlock.FontFamily = BL.FontFamily;
 
-                string Ability = CurrentCard.Abilities.Count > 0 
+                string Ability = CurrentCard.Abilities.Count > 0
                     ? CurrentCard.Abilities[0].ToString()
                     : "";
 
@@ -1494,7 +1569,7 @@ namespace OV.Pyramid
                 //{
                 //    futureText = TransLanguage(Current.Frame.ToString());
                 //}
-                if (CurrentCard.Property != PROPERTY.NONE && CurrentCard.Property !=  PROPERTY.Normal)
+                if (CurrentCard.Property != PROPERTY.NONE && CurrentCard.Property != PROPERTY.Normal)
                 {
                     futureText += "    ";
                     Image property = new Image();
@@ -1573,7 +1648,7 @@ namespace OV.Pyramid
                     for (int i = 1; i <= number; i++)
                     {
                         Image Star = new Image();
-                        Star.Source = Database.GetImage(@"Template\" + type + 
+                        Star.Source = Database.GetImage(@"Template\" + type +
                             (CurrentCard.Rarity == RARITY.UltimateRare ? "Emboss" : null) + ".png");
 
 
@@ -1594,7 +1669,7 @@ namespace OV.Pyramid
 
             }
         }
-    
+
 
         private void HandleName()
         {
@@ -1639,7 +1714,8 @@ namespace OV.Pyramid
             if (CurrentCard.IsFrame(FRAME.Xyz) || CurrentCard.IsMagic())
             {
                 this.CardName.Foreground = Brushes.White;
-            } else
+            }
+            else
             {
                 this.CardName.Foreground = Brushes.Black;
             }
@@ -1652,8 +1728,8 @@ namespace OV.Pyramid
                 return;
             }
             Attribute.Source = Database.GetImage(@"Template\Attribute\" + CurrentCard.Attribute.ToString() + ".png");
-            
-            if (CurrentCard.Attribute !=ATTRIBUTE.UNKNOWN)
+
+            if (CurrentCard.Attribute != ATTRIBUTE.UNKNOWN)
             {
                 //AttributeText.Text = vietnameseLang.IsChecked == true ?
                 //    TransLanguage(Current.Attribute.ToString()) : Current.Attribute.ToString();
@@ -1667,7 +1743,8 @@ namespace OV.Pyramid
 
         public int RecommendedHeight
         {
-            get {
+            get
+            {
                 if (CurrentCard.IsPendulum)
                 {
                     if (Pendulum.GetLines().Count() < 4)
@@ -1685,10 +1762,10 @@ namespace OV.Pyramid
                 }
             }
         }
-        
+
 
         internal ImageSource ResizeArtwork(int padding, bool isAplly)
-        {           
+        {
             System.Drawing.Bitmap bitmap = CurrentCard.ArtworkByte.GetBitmapImageFromByteArray().ToBitmap();
             ImageSource Source = bitmap.ReduceHeightThenPadding(padding).ToBitmapSource();
             if (isAplly)
@@ -1700,31 +1777,614 @@ namespace OV.Pyramid
             {
                 Render(CurrentCard);
                 Artwork.Source = Source;
-            }            
+            }
             return Source;
         }
 
-        private void Attribute_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        #region EventHandler
+
+        private void Value_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+           ValueClick.Invoke(sender, e);
+        }
+        private void Ability_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            AbilityClick.Invoke(sender, e);
+        }
+        private void Artwork_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            ArtworkClick.Invoke(sender, e);
+        }
+        private void Attribute_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             AttributeClick.Invoke(sender, e);
         }
-        private void Frame_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Circulation_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            CirculationClick.Invoke(sender, e);
+        }
+        private void Description_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            DescriptionClick.Invoke(sender, e);
+        }
+        private void Frame_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             FrameClick.Invoke(sender, e);
         }
-        private void Middle_PreviewMouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        private void Middle_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
             MiddleClick.Invoke(sender, e);
         }
+        private void Name_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            NameClick.Invoke(sender, e);
+        }
+        #endregion EventHandler
 
         private void ControlZone_MouseEnter(object sender, MouseEventArgs e)
         {
             (sender as Border).BorderBrush = Brushes.Red;
         }
 
-        private void ControlZone_MouseLeave(object sender, System.Windows.Input.MouseEventArgs e)
+        private void ControlZone_MouseLeave(object sender, MouseEventArgs e)
         {
             (sender as Border).BorderBrush = Brushes.Transparent;
+        }
+    }
+
+    public class TextBlockAutoShrink : TextBlock, INotifyPropertyChanged
+    {
+        // private Viewbox _viewBox;
+        //private double _defaultMargin = 6;
+        private Typeface _typeface;
+        public const string LineCountPropertyName = "LineCount";
+
+        static TextBlockAutoShrink()
+        {
+            TextBlock.TextProperty.OverrideMetadata(typeof(TextBlockAutoShrink), new FrameworkPropertyMetadata(new PropertyChangedCallback(TextPropertyChanged)));
+        }
+
+        public TextBlockAutoShrink() : base()
+        {
+            _typeface = new Typeface(this.FontFamily, this.FontStyle, this.FontWeight, this.FontStretch, this.FontFamily);
+            base.DataContextChanged += new DependencyPropertyChangedEventHandler(TextBlockAutoShrink_DataContextChanged);
+            this.Loaded += OnLoaded;
+            this.SizeChanged += TextBlockAutoShrink_SizeChanged;
+        }
+
+        private void TextBlockAutoShrink_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            NotifyPropertyChanged(LineCountPropertyName);
+        }
+
+        private static void TextPropertyChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
+        {
+            var t = sender as TextBlockAutoShrink;
+            if (t != null)
+            {
+                t.FitSize();
+            }
+        }
+
+        void TextBlockAutoShrink_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            FitSize();
+        }
+
+        #region LineCount
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public void NotifyPropertyChanged(string propertyName = null)
+        {
+            if (PropertyChanged != null)
+            {
+                var e = new PropertyChangedEventArgs(propertyName);
+                PropertyChanged(this, e);
+            }
+        }
+
+        public int LineCount
+        {
+            get { return (int)GetPrivatePropertyInfo(typeof(TextBlock), LineCountPropertyName).GetValue(this, null); }
+        }
+
+        private PropertyInfo GetPrivatePropertyInfo(Type type, string propertyName)
+        {
+            var props = type.GetProperties(Flags);
+            return props.FirstOrDefault(propInfo => propInfo.Name == propertyName);
+        }
+
+        private void OnLoaded(object sender, RoutedEventArgs e)
+        {
+            NotifyPropertyChanged(LineCountPropertyName);
+        }
+
+        private BindingFlags Flags = BindingFlags.Instance
+                                   | BindingFlags.GetProperty
+                                   | BindingFlags.NonPublic;
+
+        #endregion Linecount
+
+        protected override void OnRenderSizeChanged(SizeChangedInfo sizeInfo)
+        {
+            FitSize();
+
+            base.OnRenderSizeChanged(sizeInfo);
+        }
+
+        private double DefaultLineHeight;
+
+        public double ScaledLineHeight
+        {
+            get { return (double)GetValue(ScaledLineHeightProperty); }
+            set
+            {
+                DefaultLineHeight = this.LineHeight;
+                SetValue(ScaledLineHeightProperty, value);
+            }
+        }
+
+        public static readonly DependencyProperty ScaledLineHeightProperty
+            = DependencyProperty.Register(
+              "ScaledLineHeight",
+              typeof(double),
+              typeof(TextBlockAutoShrink),
+              new PropertyMetadata(1.0)
+          );
+
+        public double MaxFontSize
+        {
+            get { return (double)GetValue(MaxFontSizeProperty); }
+            set
+            {
+                SetValue(MaxFontSizeProperty, value);
+            }
+        }
+
+        public static readonly DependencyProperty MaxFontSizeProperty
+            = DependencyProperty.Register(
+              "MaxFontSize",
+              typeof(double),
+              typeof(TextBlockAutoShrink),
+              new PropertyMetadata(double.NaN)
+          );
+
+        private void FitSize()
+        {
+           // return;
+            if (this.ActualHeight > 0 && this.Height > 0)
+            {
+                
+                var ratio = this.Height / (this.ActualHeight);
+                // Normalize due to Height miscalculation. We do it step by step repeatedly until the requested height is reached. Once the fontsize is changed, this event is re-raised
+                // And the ActualHeight is lowered a bit more until it doesnt enter the enclosing If block.
+                ratio = (1 - ratio > 0.04) ? Math.Sqrt(ratio) : ratio;
+                
+
+                double fitFontSize = Math.Min(this.FontSize * ratio, this.ActualHeight / this.LineCount);
+                
+                if (double.IsNaN(MaxFontSize) == false)
+                {
+                    fitFontSize = Math.Min(MaxFontSize, fitFontSize);
+                }
+                double fitLineHeight = fitFontSize;
+                if (double.IsNaN(this.ScaledLineHeight) == false)
+                {
+                    fitLineHeight = fitFontSize / this.ScaledLineHeight;
+                }
+                else
+                {
+                    fitLineHeight = this.DefaultLineHeight;
+                }
+
+                this.FontSize = Math.Round(fitFontSize, 2);
+                this.LineHeight = Math.Round(fitLineHeight, 2);
+                this.LineStackingStrategy = LineStackingStrategy.MaxHeight;
+
+                /*
+                while (this.ActualHeight > this.Height)                
+                {                    
+                    double fitFontSize = Math.Min(MaxFontSize, (this.ActualHeight) / this.LineCount);
+                    double fitLineHeight = fitFontSize;
+                    if (double.IsNaN(this.ScaledLineHeight) == false)
+                    {
+                        fitLineHeight = fitFontSize / this.ScaledLineHeight;
+                    }
+                    else
+                    {
+                        fitLineHeight = this.DefaultLineHeight;
+                    }
+
+                    this.FontSize = Math.Round(fitFontSize, 2);
+                    this.LineHeight = Math.Round(fitLineHeight, 2);
+                    this.UpdateLayout();                    
+                } */
+
+
+
+            }
+
+        }
+
+        /* Old FitSize
+        private void FitSize()
+        {
+            FrameworkElement parent = this.Parent as FrameworkElement;
+            if (parent != null)
+            {
+                var targetWidthSize = this.FontSize;
+                var targetHeightSize = this.FontSize;
+
+                var maxWidth = double.IsInfinity(this.MaxWidth) ? parent.ActualWidth : this.MaxWidth;
+                var maxHeight = double.IsInfinity(this.MaxHeight) ? parent.ActualHeight : this.MaxHeight;
+
+                if (this.ActualWidth > maxWidth)
+                {
+                    targetWidthSize = (double)(this.FontSize * (maxWidth / (this.ActualWidth + _defaultMargin)));
+
+                }
+
+                if (this.ActualHeight > maxHeight)
+                {
+                    var ratio = maxHeight / (this.ActualHeight);
+
+                    // Normalize due to Height miscalculation. We do it step by step repeatedly until the requested height is reached. Once the fontsize is changed, this event is re-raised
+                    // And the ActualHeight is lowered a bit more until it doesnt enter the enclosing If block.
+                    ratio = (1 - ratio > 0.04) ? Math.Sqrt(ratio) : ratio;
+
+                    targetHeightSize = (double)(this.FontSize * ratio);
+                }
+                double fitFontSize = Math.Min(targetWidthSize, targetHeightSize);
+                if (double.IsNaN(this.MaxFontSize) == false)
+                {
+                    fitFontSize = Math.Min(fitFontSize, this.MaxFontSize);
+                }
+
+                this.FontSize = fitFontSize;
+                if (double.IsNaN(this.ScaledLineHeight) == false)
+                {
+                    double modified = 0;
+                    if (this.LineCount > 6)
+                    {
+                        modified = 0.01;
+                        //this.FontSize = (maxHeight / this.LineCount);
+                    }
+                    this.LineHeight = this.FontSize / (1 / this.ScaledLineHeight - modified);
+
+                }
+                else
+                {
+                    this.LineHeight = this.DefaultLineHeight;
+                }
+            }
+        }  
+        */
+
+    }
+
+    public class MathConverter :
+#if !SILVERLIGHT
+         System.Windows.Markup.MarkupExtension,
+                IMultiValueConverter,
+#endif
+        IValueConverter
+    {
+
+        public MathConverter()
+        {
+
+        }
+        Dictionary<string, IExpression> _storedExpressions = new Dictionary<string, IExpression>();
+
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return Convert(new object[] { value }, targetType, parameter, culture);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        {
+            try
+            {
+                decimal result = Parse(parameter.ToString()).Eval(values);
+                if (targetType == typeof(decimal)) return result;
+                if (targetType == typeof(string)) return result.ToString();
+                if (targetType == typeof(int)) return (int)result;
+                if (targetType == typeof(double)) return (double)result;
+                if (targetType == typeof(long)) return (long)result;
+                throw new ArgumentException(String.Format("Unsupported target type {0}", targetType.FullName));
+            }
+            catch (Exception ex)
+            {
+                ProcessException(ex);
+            }
+
+            return DependencyProperty.UnsetValue;
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+
+#if !SILVERLIGHT
+        public override object ProvideValue(IServiceProvider serviceProvider)
+        {
+            return this;
+        }
+#endif
+        protected virtual void ProcessException(Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+
+        private IExpression Parse(string s)
+        {
+            IExpression result = null;
+            if (!_storedExpressions.TryGetValue(s, out result))
+            {
+                result = new Parser().Parse(s);
+                _storedExpressions[s] = result;
+            }
+
+            return result;
+        }
+
+        interface IExpression
+        {
+            decimal Eval(object[] args);
+        }
+
+        class Constant : IExpression
+        {
+            private decimal _value;
+
+            public Constant(string text)
+            {
+                if (!decimal.TryParse(text, out _value))
+                {
+                    throw new ArgumentException(String.Format("'{0}' is not a valid number", text));
+                }
+            }
+
+            public decimal Eval(object[] args)
+            {
+                return _value;
+            }
+        }
+
+        class Variable : IExpression
+        {
+            private int _index;
+
+            public Variable(string text)
+            {
+                if (!int.TryParse(text, out _index) || _index < 0)
+                {
+                    throw new ArgumentException(String.Format("'{0}' is not a valid parameter index", text));
+                }
+            }
+
+            public Variable(int n)
+            {
+                _index = n;
+            }
+
+            public decimal Eval(object[] args)
+            {
+                if (_index >= args.Length)
+                {
+                    throw new ArgumentException(String.Format("MathConverter: parameter index {0} is out of range. {1} parameter(s) supplied", _index, args.Length));
+                }
+
+                return System.Convert.ToDecimal(args[_index]);
+            }
+        }
+
+        class BinaryOperation : IExpression
+        {
+            private Func<decimal, decimal, decimal> _operation;
+            private IExpression _left;
+            private IExpression _right;
+
+            public BinaryOperation(char operation, IExpression left, IExpression right)
+            {
+                _left = left;
+                _right = right;
+                switch (operation)
+                {
+                    case '+': _operation = (a, b) => (a + b); break;
+                    case '-': _operation = (a, b) => (a - b); break;
+                    case '*': _operation = (a, b) => (a * b); break;
+                    case '/': _operation = (a, b) => (a / b); break;
+                    default: throw new ArgumentException("Invalid operation " + operation);
+                }
+            }
+
+            public decimal Eval(object[] args)
+            {
+                return _operation(_left.Eval(args), _right.Eval(args));
+            }
+        }
+
+        class Negate : IExpression
+        {
+            private IExpression _param;
+
+            public Negate(IExpression param)
+            {
+                _param = param;
+            }
+
+            public decimal Eval(object[] args)
+            {
+                return -_param.Eval(args);
+            }
+        }
+
+        class Parser
+        {
+            private string text;
+            private int pos;
+
+            public IExpression Parse(string text)
+            {
+                try
+                {
+                    pos = 0;
+                    this.text = text;
+                    var result = ParseExpression();
+                    RequireEndOfText();
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    string msg =
+                        String.Format("MathConverter: error parsing expression '{0}'. {1} at position {2}", text, ex.Message, pos);
+
+                    throw new ArgumentException(msg, ex);
+                }
+            }
+
+            private IExpression ParseExpression()
+            {
+                IExpression left = ParseTerm();
+
+                while (true)
+                {
+                    if (pos >= text.Length) return left;
+
+                    var c = text[pos];
+
+                    if (c == '+' || c == '-')
+                    {
+                        ++pos;
+                        IExpression right = ParseTerm();
+                        left = new BinaryOperation(c, left, right);
+                    }
+                    else
+                    {
+                        return left;
+                    }
+                }
+            }
+
+            private IExpression ParseTerm()
+            {
+                IExpression left = ParseFactor();
+
+                while (true)
+                {
+                    if (pos >= text.Length) return left;
+
+                    var c = text[pos];
+
+                    if (c == '*' || c == '/')
+                    {
+                        ++pos;
+                        IExpression right = ParseFactor();
+                        left = new BinaryOperation(c, left, right);
+                    }
+                    else
+                    {
+                        return left;
+                    }
+                }
+            }
+
+            private IExpression ParseFactor()
+            {
+                SkipWhiteSpace();
+                if (pos >= text.Length) throw new ArgumentException("Unexpected end of text");
+
+                var c = text[pos];
+
+                if (c == '+')
+                {
+                    ++pos;
+                    return ParseFactor();
+                }
+
+                if (c == '-')
+                {
+                    ++pos;
+                    return new Negate(ParseFactor());
+                }
+
+                if (c == 'x' || c == 'a') return CreateVariable(0);
+                if (c == 'y' || c == 'b') return CreateVariable(1);
+                if (c == 'z' || c == 'c') return CreateVariable(2);
+                if (c == 't' || c == 'd') return CreateVariable(3);
+
+                if (c == '(')
+                {
+                    ++pos;
+                    var expression = ParseExpression();
+                    SkipWhiteSpace();
+                    Require(')');
+                    SkipWhiteSpace();
+                    return expression;
+                }
+
+                if (c == '{')
+                {
+                    ++pos;
+                    var end = text.IndexOf('}', pos);
+                    if (end < 0) { --pos; throw new ArgumentException("Unmatched '{'"); }
+                    if (end == pos) { throw new ArgumentException("Missing parameter index after '{'"); }
+                    var result = new Variable(text.Substring(pos, end - pos).Trim());
+                    pos = end + 1;
+                    SkipWhiteSpace();
+                    return result;
+                }
+
+                const string decimalRegEx = @"(\d+\.?\d*|\d*\.?\d+)";
+                var match = Regex.Match(text.Substring(pos), decimalRegEx);
+                if (match.Success)
+                {
+                    pos += match.Length;
+                    SkipWhiteSpace();
+                    return new Constant(match.Value);
+                }
+                else
+                {
+                    throw new ArgumentException(String.Format("Unexpeted character '{0}'", c));
+                }
+            }
+
+            private IExpression CreateVariable(int n)
+            {
+                ++pos;
+                SkipWhiteSpace();
+                return new Variable(n);
+            }
+
+            private void SkipWhiteSpace()
+            {
+                while (pos < text.Length && Char.IsWhiteSpace((text[pos]))) ++pos;
+            }
+
+            private void Require(char c)
+            {
+                if (pos >= text.Length || text[pos] != c)
+                {
+                    throw new ArgumentException("Expected '" + c + "'");
+                }
+
+                ++pos;
+            }
+
+            private void RequireEndOfText()
+            {
+                if (pos != text.Length)
+                {
+                    throw new ArgumentException("Unexpected character '" + text[pos] + "'");
+                }
+            }
         }
     }
 }
