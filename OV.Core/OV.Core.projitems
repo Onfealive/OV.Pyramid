@@ -9,7 +9,8 @@
     <Import_RootNamespace>OV.Core</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)YGOCard.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)YGOSet.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extension.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)YgoCard.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)YgoSet.cs" />
   </ItemGroup>
 </Project>

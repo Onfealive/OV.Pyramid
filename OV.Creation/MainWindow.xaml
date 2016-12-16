@@ -6,263 +6,458 @@
         xmlns:local="clr-namespace:OV.Pyramid"
         xmlns:converters="clr-namespace:OV.Pyramid"
         mc:Ignorable="d"
-        Title="OV.Land.Pyramid.Creation 1.0 Alpha" SizeToContent="WidthAndHeight"
+        Title="OV.Land.Pyramid.Creation 1.0 Beta" SizeToContent="WidthAndHeight"
         WindowStartupLocation="CenterScreen" MinWidth="974" MinHeight="710" ResizeMode="CanMinimize">
     <Window.Resources>
-        <Style x:Key="RotatedTab" TargetType="{x:Type TabItem}">
-            <Setter Property="HeaderTemplate">
-                <Setter.Value>
-                    <DataTemplate>
-                        <ContentPresenter Content="{TemplateBinding Content}">
-                            <ContentPresenter.LayoutTransform>
-                                <RotateTransform Angle="90" />
-                            </ContentPresenter.LayoutTransform>
-                        </ContentPresenter>
-                    </DataTemplate>
-                </Setter.Value>
-            </Setter>
-            <Setter Property="Padding" Value="3" />
-        </Style>
-        <ControlTemplate x:Key="ExpanderToggleButton" TargetType="{x:Type ToggleButton}">
-            <Border Name="Border" CornerRadius="0,0,0,0" Background="{x:Null}" BorderBrush="{x:Null}" BorderThickness="0,0,1,0">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="20" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Path Name="Arrow" Fill="#FF4682B4" HorizontalAlignment="Center" VerticalAlignment="Center" Data="M 0 0 L 4 4 L 8 0 Z"/>
-                    <ContentPresenter Grid.Column="1"/>
-                </Grid>
-            </Border>
-        </ControlTemplate>
-        <Style TargetType="{x:Type Expander}">
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type Expander}">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Name="ContentRow" Height="0"/>
-                            </Grid.RowDefinitions>
-                            <Border Name="Border" Grid.Row="0" Background="{x:Null}" BorderBrush="{x:Null}" BorderThickness="1" CornerRadius="0,0,0,0">
-                                <ToggleButton IsChecked="{Binding Path=IsExpanded,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent}}" OverridesDefaultStyle="True" Template="{StaticResource ExpanderToggleButton}" Background="#FF4682B4">
-                                    <ToggleButton.Content>
-                                        <ContentPresenter ContentSource="Header" RecognizesAccessKey="True" />
-                                    </ToggleButton.Content>
-                                </ToggleButton>
-                            </Border>
-                            <Border Name="Content" Grid.Row="1" Background="{x:Null}" BorderBrush="{x:Null}" BorderThickness="1,0,1,1" CornerRadius="0,0,2,2">
-                                <ContentPresenter Margin="4" />
-                            </Border>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="Dictionary.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
 
-        <Style x:Key="SVStyle" TargetType="{x:Type ScrollViewer}">
-            <Setter Property="OverridesDefaultStyle" Value="True" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="{x:Type ScrollViewer}">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="*"/>
-                                <RowDefinition Height="Auto"/>
-                            </Grid.RowDefinitions>
-                            <ScrollContentPresenter Grid.ColumnSpan="2" Grid.RowSpan="2"/>
-                            <ScrollBar Name="PART_VerticalScrollBar"
-                            HorizontalAlignment="Right"
-                            Opacity="0.5" 
-                            Grid.Column="1"
-                            Value="{TemplateBinding VerticalOffset}"
-                            Maximum="{TemplateBinding ScrollableHeight}"
-                            ViewportSize="{TemplateBinding ViewportHeight}"
-                            Visibility="{TemplateBinding ComputedVerticalScrollBarVisibility}" />
-                            <ScrollBar Name="PART_HorizontalScrollBar"
-                            VerticalAlignment="Bottom"
-                            Orientation="Horizontal"
-                            Opacity="0.5"
-                            Grid.Row="1"
-                            Value="{TemplateBinding HorizontalOffset}"
-                            Maximum="{TemplateBinding ScrollableWidth}"
-                            ViewportSize="{TemplateBinding ViewportWidth}"
-                            Visibility="{TemplateBinding ComputedHorizontalScrollBarVisibility}"/>
-                        </Grid>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        <ControlTemplate x:Key="AnimatedExpanderButtonTemp" TargetType="{x:Type ToggleButton}">
-            <Border x:Name="ExpanderButtonBorder"
-        		Background="{TemplateBinding Background}"
-        		BorderBrush="{TemplateBinding BorderBrush}"
-        		BorderThickness="{TemplateBinding BorderThickness}"
-        		Padding="{TemplateBinding Padding}"
-                    >
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Rectangle Fill="Transparent"
-        				Grid.ColumnSpan="2"/>
-                    <Ellipse x:Name="Circle"
-        				Grid.Column="0"
-        				Stroke="DarkGray"
-        				Width="20"
-        				Height="20"
-        				HorizontalAlignment="Center"
-        				VerticalAlignment="Center" />
-                    <Path x:Name="Arrow"
-        				Grid.Column="0"
-        				Data="M 1,1.5 L 4.5,5 8,1.5"
-        				Stroke="#FF666666"
-        				StrokeThickness="2"
-        				HorizontalAlignment="Center"
-        				VerticalAlignment="Center"
-        				RenderTransformOrigin="0.5,0.5"
-                      >
-                        <Path.RenderTransform>
-                            <RotateTransform Angle="0"/>
-                        </Path.RenderTransform>
-                    </Path>
-                    <ContentPresenter x:Name="HeaderContent"
-        				Grid.Column="1"
-        				Margin="4,0,0,0"
-        				ContentSource="Content"/>
-                </Grid>
-            </Border>
-            <ControlTemplate.Triggers>
-                <!-- Animate arrow when toggled-->
-                <Trigger Property="IsChecked"
-                         Value="True">
-                    <Trigger.EnterActions>
-                        <BeginStoryboard>
-                            <Storyboard>
-                                <DoubleAnimation Storyboard.TargetName="Arrow"
-                                                 Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
-                                                 To="180"
-                                                 Duration="0:0:0.4"/>
-                            </Storyboard>
-                        </BeginStoryboard>
-                    </Trigger.EnterActions>
-                    <Trigger.ExitActions>
-                        <BeginStoryboard>
-                            <Storyboard>
-                                <DoubleAnimation Storyboard.TargetName="Arrow"
-                                                 Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
-                                                 To="0"
-                                                 Duration="0:0:0.4"/>
-                            </Storyboard>
-                        </BeginStoryboard>
-                    </Trigger.ExitActions>
-                </Trigger>
+            <local:ImageConverter x:Key="imageConverter"/>
+            <SolidColorBrush x:Key="TabControlNormalBorderBrush" Color="#8C8E94"/>
+            <Style x:Key="DockTabControl" TargetType="{x:Type TabControl}">
+                <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
+                <Setter Property="Padding" Value="4,4,4,4"/>
+                <Setter Property="BorderThickness" Value="1"/>
+                <Setter Property="BorderBrush" Value="{StaticResource TabControlNormalBorderBrush}"/>
+                <Setter Property="Background" Value="#F9F9F9"/>
+                <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                <Setter Property="VerticalContentAlignment" Value="Center"/>
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="{x:Type TabControl}">
+                            <Grid ClipToBounds="true" SnapsToDevicePixels="true" KeyboardNavigation.TabNavigation="Local">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition x:Name="ColumnDefinition0"/>
+                                    <ColumnDefinition x:Name="ColumnDefinition1" Width="0"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition x:Name="RowDefinition0" MinHeight="30" Height="Auto"/>
+                                    <RowDefinition x:Name="RowDefinition1" Height="*"/>
+                                </Grid.RowDefinitions>
+                                <DockPanel x:Name="HeaderPanel"   IsItemsHost="true" Margin="2,2,2,0" Grid.Row="0" KeyboardNavigation.TabIndex="1" Panel.ZIndex="1"/>
+                                <Border x:Name="ContentPanel" BorderBrush="{TemplateBinding BorderBrush}"  BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" Grid.Column="0" KeyboardNavigation.DirectionalNavigation="Contained" Grid.Row="1" KeyboardNavigation.TabIndex="2" KeyboardNavigation.TabNavigation="Local">
+                                    <ContentPresenter x:Name="PART_SelectedContentHost" ContentSource="SelectedContent" Margin="{TemplateBinding Padding}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
+                                </Border>
+                            </Grid>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="TabStripPlacement" Value="Bottom">
+                                    <Setter Property="Grid.Row" TargetName="HeaderPanel" Value="1"/>
+                                    <Setter Property="Grid.Row" TargetName="ContentPanel" Value="0"/>
+                                    <Setter Property="Height" TargetName="RowDefinition0" Value="*"/>
+                                    <Setter Property="Height" TargetName="RowDefinition1" Value="Auto"/>
+                                    <Setter Property="Margin" TargetName="HeaderPanel" Value="2,0,2,2"/>
+                                </Trigger>
+                                <Trigger Property="TabStripPlacement" Value="Left">
+                                    <Setter Property="Grid.Row" TargetName="HeaderPanel" Value="0"/>
+                                    <Setter Property="Grid.Row" TargetName="ContentPanel" Value="0"/>
+                                    <Setter Property="Grid.Column" TargetName="HeaderPanel" Value="0"/>
+                                    <Setter Property="Grid.Column" TargetName="ContentPanel" Value="1"/>
+                                    <Setter Property="Width" TargetName="ColumnDefinition0" Value="Auto"/>
+                                    <Setter Property="Width" TargetName="ColumnDefinition1" Value="*"/>
+                                    <Setter Property="Height" TargetName="RowDefinition0" Value="*"/>
+                                    <Setter Property="Height" TargetName="RowDefinition1" Value="0"/>
+                                    <Setter Property="Margin" TargetName="HeaderPanel" Value="2,2,0,2"/>
+                                </Trigger>
+                                <Trigger Property="TabStripPlacement" Value="Right">
+                                    <Setter Property="Grid.Row" TargetName="HeaderPanel" Value="1"/>
+                                    <Setter Property="Grid.Row" TargetName="ContentPanel" Value="0"/>
+                                    <Setter Property="Grid.Column" TargetName="HeaderPanel" Value="1"/>
+                                    <Setter Property="Grid.Column" TargetName="ContentPanel" Value="0"/>
+                                    <Setter Property="Width" TargetName="ColumnDefinition0" Value="*"/>
+                                    <Setter Property="Width" TargetName="ColumnDefinition1" Value="Auto"/>
+                                    <Setter Property="Height" TargetName="RowDefinition0" Value="*"/>
+                                    <Setter Property="Height" TargetName="RowDefinition1" Value="0"/>
+                                    <Setter Property="Margin" TargetName="HeaderPanel" Value="0,2,2,2"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="false">
+                                    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
 
-                <!-- MouseOver, Pressed behaviours-->
-                <Trigger Property="IsMouseOver"
-                                 Value="true">
-                    <Setter Property="Stroke"
-                                    Value="#FF3C7FB1"
-                                    TargetName="Circle"/>
-                    <Setter Property="Stroke"
-                                    Value="#222"
-                                    TargetName="Arrow"/>
-                </Trigger>
-                <Trigger Property="IsPressed"
-                                 Value="true">
-                    <Setter Property="Stroke"
-                                    Value="#FF526C7B"
-                                    TargetName="Circle"/>
-                    <Setter Property="StrokeThickness"
-                                    Value="1.5"
-                                    TargetName="Circle"/>
-                    <Setter Property="Stroke"
-                                    Value="#FF003366"
-                                    TargetName="Arrow"/>
-                </Trigger>
-            </ControlTemplate.Triggers>
-        </ControlTemplate>
+            <Style x:Key="RoundedBorder" TargetType="{x:Type Border}">
+                <Setter Property="Margin" Value="10"></Setter>
+                <Setter Property="Background" Value="Transparent"></Setter>
+                <Setter Property="BorderBrush" Value="Black"></Setter>
+                <Setter Property="BorderThickness" Value="1.5"></Setter>
+                <Setter Property="CornerRadius" Value="5"></Setter>
+                <Setter Property="VerticalAlignment" Value="Center"></Setter>
+                <Setter Property="Height" Value="40"></Setter>
+                <Setter Property="MinHeight" Value="40"></Setter>
+                <Setter Property="Width" Value="400"></Setter>
+            </Style>
 
-        <ControlTemplate x:Key="StretchyExpanderTemp" TargetType="{x:Type Expander}">
-            <DockPanel>
-                <ToggleButton x:Name="ExpanderButton" 
-        			DockPanel.Dock="Top"
-        			Template="{StaticResource AnimatedExpanderButtonTemp}"
-        			Content="{TemplateBinding Header}"
-        			IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}"
-        			OverridesDefaultStyle="True"
-        			Padding="1.5,0"/>
-                <ContentPresenter x:Name="ExpanderContent"
-        			ContentSource="Content"
-        			DockPanel.Dock="Bottom"
-                                  >
-                    <ContentPresenter.LayoutTransform>
-                        <ScaleTransform ScaleY="0"/>
-                    </ContentPresenter.LayoutTransform>
-                </ContentPresenter>
-            </DockPanel>
-            <ControlTemplate.Triggers>
-                <Trigger Property="IsExpanded" Value="True">
-                    <Trigger.EnterActions>
-                        <BeginStoryboard>
-                            <Storyboard>
-                                <DoubleAnimation Storyboard.TargetName="ExpanderContent"
-                                                 Storyboard.TargetProperty="(FrameworkElement.LayoutTransform).(ScaleTransform.ScaleY)" 
-                                                 From="0"
-                                                 To="1"
-                                                 Duration="0:0:0.4"/>
-                            </Storyboard>
-                        </BeginStoryboard>
-                    </Trigger.EnterActions>
-                    <Trigger.ExitActions>
-                        <BeginStoryboard>
-                            <Storyboard>
-                                <DoubleAnimation Storyboard.TargetName="ExpanderContent"
-                                                 Storyboard.TargetProperty="(FrameworkElement.LayoutTransform).(ScaleTransform.ScaleY)"
-                                                 To="0"
-                                                 Duration="0:0:0.4"/>
-                            </Storyboard>
-                        </BeginStoryboard>
-                    </Trigger.ExitActions>
-                </Trigger>
+            <Style x:Key="InsideBorderExpander" TargetType="{x:Type Expander}">
+                <Setter Property="OverridesDefaultStyle" Value="True"></Setter>
+                <Setter Property="Template" Value="{StaticResource StretchyExpanderTemp}"></Setter>
+                <Setter Property="Height" Value="Auto"></Setter>
+                <Setter Property="HorizontalAlignment" Value="Left"></Setter>
+                <Setter Property="VerticalAlignment" Value="Top"></Setter>
+                <Setter Property="Margin" Value="8,8,0,0"></Setter>
+                <Setter Property="HorizontalAlignment" Value="Stretch"></Setter>
+                <EventSetter Event="Expanded" Handler="InsideBorderExpander_Expanded"></EventSetter>
+                <EventSetter Event="Collapsed" Handler="InsideBorderExpander_Collapsed"></EventSetter>
+            </Style>
 
-            </ControlTemplate.Triggers>
-        </ControlTemplate>
-        <Style x:Key="TabItemFocusVisual">
-            <Setter Property="Control.Template">
-                <Setter.Value>
-                    <ControlTemplate>
-                        <Rectangle Margin="3,3,3,1" SnapsToDevicePixels="true" Stroke="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}" StrokeThickness="1" StrokeDashArray="1 2"/>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-        
-        <LinearGradientBrush x:Key="ButtonNormalBackground" EndPoint="0,1" StartPoint="0,0">
-            <GradientStop Color="#F3F3F3" Offset="0"/>
-            <GradientStop Color="#EBEBEB" Offset="0.5"/>
-            <GradientStop Color="#DDDDDD" Offset="0.5"/>
-            <GradientStop Color="#CDCDCD" Offset="1"/>
-        </LinearGradientBrush>
-        <LinearGradientBrush x:Key="TabItemHotBackground" EndPoint="0,1" StartPoint="0,0">
-            <GradientStop Color="#EAF6FD" Offset="0.15"/>
-            <GradientStop Color="#D9F0FC" Offset=".5"/>
-            <GradientStop Color="#BEE6FD" Offset=".5"/>
-            <GradientStop Color="#A7D9F5" Offset="1"/>
-        </LinearGradientBrush>
-        <SolidColorBrush x:Key="TabItemSelectedBackground" Color="#F9F9F9"/>
-        <SolidColorBrush x:Key="TabItemHotBorderBrush" Color="#3C7FB1"/>
-        <SolidColorBrush x:Key="TabItemDisabledBackground" Color="#F4F4F4"/>
-        <SolidColorBrush x:Key="TabItemDisabledBorderBrush" Color="#FFC9C7BA"/>
-        
+            <Style TargetType="{x:Type TextBox}">
+                <EventSetter Event="GotFocus" Handler="TextBox_GotFocus"></EventSetter>
+            </Style>
+        </ResourceDictionary>
 
     </Window.Resources>
-    <Canvas Name="mainCanvas"  Width="974" Height="670" >
-        <Frame x:Name="_mainFrame" Width="974" Height="670" NavigationUIVisibility="Hidden" />
-    </Canvas>
+    <Window.CommandBindings>
+        <CommandBinding Command="New" CanExecute="NewCommand_CanExecute" Executed="NewCommand_Executed"/>
+    </Window.CommandBindings>
+
+    <StackPanel Name="mainCanvas" Width="974" Height="670">
+        <Menu DockPanel.Dock="Top" >
+            <MenuItem Header="_File">
+                <MenuItem Header="_New" Command="New"/>
+                <MenuItem Header="_Open" />
+                <MenuItem Header="_Save" />
+                <Separator />
+                <MenuItem Header="_Exit" />
+            </MenuItem>
+        </Menu>
+
+        <StackPanel Orientation="Horizontal">
+            <StackPanel Margin="0 0 10 0">
+                <TextBlock Margin="15 10 0 10" TextWrapping="Wrap" Text="CARD LAYOUT" />
+                <local:YgoView x:Name="YgoView" Margin="15 0 0 0"
+                       AttributeClick="RenderCard_AttributeClick"
+                       NameClick="RenderCard_NameClick"
+                       AbilityClick="RenderCard_AbilityClick"
+                       CirculationClick="RenderCard_CirculationClick"
+                       ValueClick="RenderCard_ValueClick" ArtworkClick="RenderCard_ArtworkClick"                       
+                       DescriptionClick="RenderCard_DescriptionClick"
+                       FrameClick="RenderCard_FrameClick" MiddleClick="RenderCard_MiddleClick" >
+                </local:YgoView >
+            </StackPanel>
+            <TabControl x:Name="tabControl" Height="640" Width="450"
+                    Canvas.Left="445" Canvas.Top="10" local:TabContent.IsCached="True"
+                    Style="{DynamicResource DockTabControl}" >
+                <TabItem Header="Details">
+                    <ScrollViewer  Name="Scroll" VerticalScrollBarVisibility="Visible" Width="Auto" Height="614"
+                       Canvas.Left="461" Canvas.Top="44"
+                               Loaded="cardDetailsScroll_Loaded" Unloaded="cardDetailsScroll_Unloaded">
+                        <StackPanel Name="Grid" Width="Auto" Height="950" Canvas.Top="0" Canvas.Left="0">
+                            <Border Name="NameBorder">
+                                <Canvas Height="40" Name="NameCanvas">
+                                    <Label FontSize="14" Canvas.Left="13" Canvas.Top="8">Name</Label>
+                                    <TextBox Name="NameEdit"  Canvas.Left="60" Canvas.Top="10"
+                                        Width="350" FontSize="15"
+                                TextChanged="Name_TextBox_TextChanged"></TextBox>
+                                </Canvas>
+                            </Border>
+                            <Border x:Name="RarityBorder" Style="{StaticResource RoundedBorder}">
+                                <Expander Style="{StaticResource InsideBorderExpander}">
+                                    <Expander.Header>
+                                        <TextBlock FontSize="14" Canvas.Left="4">Rarity</TextBlock>
+                                    </Expander.Header>
+                                    <Canvas x:Name="RarityCanvas" Height="160"></Canvas>
+                                </Expander>
+                            </Border>
+                            <Border x:Name="AttributeBorder" Style="{StaticResource RoundedBorder}">
+                                <Expander Style="{StaticResource InsideBorderExpander}">
+                                    <Expander.Header>
+                                        <TextBlock FontSize="14" Canvas.Left="4">Attribute</TextBlock>
+                                    </Expander.Header>
+                                    <Canvas x:Name="AttributeCanvas" Height="160">
+                                    </Canvas>
+                                </Expander>
+                            </Border>
+                            <Border x:Name="MiddleBorder" Style="{StaticResource RoundedBorder}">
+                                <Expander Style="{StaticResource InsideBorderExpander}">
+                                    <Expander.Header>
+                                        <TextBlock FontSize="14" Canvas.Left="4">Level/Rank/Property</TextBlock>
+                                    </Expander.Header>
+                                    <Canvas x:Name="MiddleCanvas" Height="230"/>
+                                </Expander>
+                            </Border>
+                            <Border x:Name="FrameBorder" Style="{StaticResource RoundedBorder}">
+                                <Expander Style="{StaticResource InsideBorderExpander}">
+                                    <Expander.Header>
+                                        <TextBlock FontSize="14" Canvas.Left="4">Card Type</TextBlock>
+                                    </Expander.Header>
+                                    <Canvas x:Name="FrameCanvas" Height="160"></Canvas>
+                                </Expander>
+                            </Border>
+                            <Border x:Name="TypeBorder" Style="{StaticResource RoundedBorder}">
+                                <Expander Style="{StaticResource InsideBorderExpander}">
+                                    <Expander.Header>
+                                        <TextBlock FontSize="14" Canvas.Left="4">Monster Type</TextBlock>
+                                    </Expander.Header>
+                                    <Canvas x:Name="TypeCanvas" Height="294"></Canvas>
+                                </Expander>
+                            </Border>
+                            <Border x:Name="AbilityBorder" Style="{StaticResource RoundedBorder}">
+                                <Expander Style="{StaticResource InsideBorderExpander}">
+                                    <Expander.Header>
+                                        <TextBlock FontSize="14" Canvas.Left="4">Ability</TextBlock>
+                                    </Expander.Header>
+                                    <Canvas x:Name="AbilityCanvas" Height="152">
+                                    </Canvas>
+                                </Expander>
+                            </Border>
+                            <Border x:Name="ValueBorder" Style="{StaticResource RoundedBorder}">
+                                <Expander Style="{StaticResource InsideBorderExpander}">
+                                    <Expander.Header>
+                                        <TextBlock FontSize="14" Canvas.Left="4">ATK/DEF</TextBlock>
+                                    </Expander.Header>
+                                    <Canvas Height="80" Name="ValueCanvas">
+                                        <TextBlock Canvas.Top="8" Canvas.Left="40" FontSize="14">ATK</TextBlock>
+                                        <TextBox Name="ATKBox" Width="70" FontSize="14" local:Masking.Mask="([0-9])|(^\?$)"
+                                 Canvas.Left="76" Canvas.Top="5" MaxLength="4" TextAlignment="Right"
+                                 TextChanged="ATK_TextBox_TextChanged" ></TextBox>
+                                        <TextBlock Canvas.Top="8" Canvas.Left="250" FontSize="14">DEF</TextBlock>
+                                        <TextBox Name="DEFBox" Width="70" FontSize="14" local:Masking.Mask="([0-9])|(^\?$)"
+                                 Canvas.Left="286" Canvas.Top="5" MaxLength="4"
+                                 TextChanged="DEF_TextBox_TextChanged" TextAlignment="Right"></TextBox>
+                                    </Canvas>
+                                </Expander>
+                            </Border>
+                            <Border x:Name="ScaleBorder" Style="{StaticResource RoundedBorder}">
+                                <Expander Style="{StaticResource InsideBorderExpander}">
+                                    <Expander.Header>
+                                        <TextBlock FontSize="14" Canvas.Left="4">Pendulum Scale</TextBlock>
+                                    </Expander.Header>
+                                    <Canvas x:Name="ScaleCanvas" Height="192">
+                                        <TextBox Name="ScaleLeftBox" local:Masking.Mask="^([0-9]|[1][0-3]|\?)$"  TextChanged="ScaleLeft_TextChanged" Width="40" TextAlignment="Right"></TextBox>
+                                        <TextBox Name="ScaleRightBox" local:Masking.Mask="^([0-9]|[1][0-3]|\?)$" TextChanged="ScaleRight_TextChanged"  Width="40"></TextBox>
+                                    </Canvas>
+                                </Expander>
+                            </Border>
+                            <Border Name="DocumentBorder">
+                                <Canvas x:Name="DocumentCanvas"  Height="330">
+                                    <TextBlock FontSize="14" Canvas.Top="5" Canvas.Left="118">Pendulum Effect and Description</TextBlock>
+                                    <RichTextBox Name="PendulumBox" Canvas.Top="30" Canvas.Left="30" Height="120" Width="360"></RichTextBox>
+                                    <RichTextBox x:Name="DescriptionBox" Canvas.Top="170" Canvas.Left="30" Height="120" Width="360"/>
+                                    <Button Canvas.Top="300" Canvas.Right="20" Padding="5" Click="ApplyDocument_Click">Apply</Button>
+                                    <TextBlock Canvas.Left="20" Canvas.Top="300" TextWrapping="Wrap"><Run Text="{}{.}, {a}, {b}, {o} =&gt;●, α, β, Ω"/><Run/></TextBlock>
+                                </Canvas>
+                            </Border>
+                            <Border x:Name="CirculationBorder" Style="{StaticResource RoundedBorder}">
+                                <Expander Style="{StaticResource InsideBorderExpander}">
+                                    <Expander.Header>
+                                        <TextBlock FontSize="14" Canvas.Left="4">Circulation</TextBlock>
+                                    </Expander.Header>
+                                    <Canvas x:Name="CirculationCanvas" Height="196">
+                                        <TextBlock Canvas.Top="22">Edition</TextBlock>
+                                        <ComboBox Name="EditionCombo" Width="120" SelectionChanged="Edition_SelectionChanged"
+                                              Canvas.Left="135" Canvas.Top="20"></ComboBox>
+                                        <TextBlock Canvas.Top="52">Card Number</TextBlock>
+                                        <TextBox Name="CardNumberEdit" Width="80" MaxLength="8" TextChanged="CardNumber_TextChanged"
+                                             Canvas.Top="50" Canvas.Left="135"></TextBox>
+                                        <Button Canvas.Top="50" Canvas.Left="225" Click="Random_Click">Random</Button>
+                                        <TextBlock Canvas.Top="82">Set Number</TextBlock>
+                                        <TextBox Name="SetNumberEdit" Width="100" MaxLength="10" TextChanged="SetNumber_TextChanged"
+                                             Canvas.Top="80" Canvas.Left="135"></TextBox>
+                                        <TextBlock Canvas.Top="115">Eye of Anubis Hologram</TextBlock>
+                                        <ComboBox Name="StickerCombo" Width="110" SelectionChanged="Sticker_SelectionChanged"
+                                              Canvas.Top="112" Canvas.Left="135"></ComboBox>
+                                        <TextBlock Canvas.Top="142">Creator</TextBlock>
+                                        <CheckBox Name="CreatorCheckBox" Canvas.Top="142" Canvas.Left="135" Click="CreatorCheckBox_Checked">Display</CheckBox>
+                                    </Canvas>
+                                </Expander>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem>
+                <TabItem Header="Artwork">
+                    <Canvas>
+                        <Border Canvas.Left="60" Canvas.Top="10" BorderThickness="1" BorderBrush="Black">
+                            <Image Name="ControlArtwork" Stretch="Fill" Width="300" Height="300"></Image>
+                        </Border>
+                        <TextBox Name="ArtworkPath" MinLines="2" TextWrapping="Wrap" Canvas.Left="10" Canvas.Top="320" Width="320"
+                             TextChanged="ArtworkPath_TextChanged" IsReadOnly="True"></TextBox>
+                        <Button Canvas.Left="335" Canvas.Top="320" Width="75" Click="ArtworkBrowser_Click">Browse</Button>
+
+                        <TextBlock Canvas.Left="10" TextWrapping="Wrap" Text="Reduce/Increase Height" Canvas.Top="366"/>
+                        <TextBox x:Name="artworkPaddingHeight" Height="23" Canvas.Left="141" TextWrapping="Wrap" Text="0" TextAlignment="Right" Canvas.Top="363" Width="95"/>
+                        <Button x:Name="previewResizeArtworkButton" Content="Preview" Canvas.Left="255" Canvas.Top="364" Width="75" Click="previewResizeArtworkButton_Click"/>
+                        <Button x:Name="resizeArtworkButton" Content="Apply" Canvas.Left="335" Canvas.Top="363" Width="75" Click="resizeArtworkButton_Click"/>
+                    </Canvas>
+                </TabItem>
+                <TabItem Header="Set Detail">
+                    <StackPanel Background="#FFE5E5E5">
+                        <StackPanel Orientation="Horizontal" Margin="10 5">
+                            <TextBlock FontSize="14">Name</TextBlock>
+                            <TextBox Margin="5 0 0 0" FontSize="14" Name="SetEdit" Width="400" TextChanged="SetEdit_TextChanged">Set Name</TextBox>
+                        </StackPanel>
+                        <DockPanel Margin="5">
+                            <ListView Name="cardList" Canvas.Left="10" Canvas.Top="66" Width="Auto" Height="300"
+                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                              SelectionChanged="cardList_SelectionChanged" SelectionMode="Single"
+                             PreviewKeyDown="cardList_PreviewKeyDown">
+                                <ListView.View>
+                                    <GridView>
+                                        <GridViewColumn Header="Name" Width="120">
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <TextBlock Text="{Binding Name}" Cursor="Hand" />
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                        <GridViewColumn  Header="Artwork" Width="150">
+                                            <GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <Image Source="{Binding ArtworkByte, Converter={StaticResource imageConverter}}"
+                                                   Width="60" Height="60"  Cursor="Hand" />
+                                                </DataTemplate>
+                                            </GridViewColumn.CellTemplate>
+                                        </GridViewColumn>
+                                    </GridView>
+                                </ListView.View>
+                            </ListView>
+                            <StackPanel >
+                                <Button x:Name="InsertNewCard" Content="+1 Card" Width="75" Height="Auto"
+                            Click="InsertNewCard_Click"/>
+                            </StackPanel>
+                        </DockPanel>
+                        <StackPanel>
+                            <TextBox Name="DataText" IsEnabled="False" IsReadOnly="True" Height="200" Margin="10"></TextBox>
+                            <Button Margin="10 0 10 0" Name="DataTextCopy" Click="DataTextCopy_Click"
+                                Padding="5">Copy</Button>
+                        </StackPanel>
+                    </StackPanel>
+                </TabItem>
+                <TabItem Header="Settings" HorizontalAlignment="Right">
+                    <StackPanel>
+                        <Canvas>
+                            <Label Content="File Extensions: *.OCC, *OCS" Canvas.Left="10" Canvas.Top="10"/>
+                            <Button Name="Associate" Canvas.Left="182" Canvas.Top="9" Padding="5" Click="Associate_Click">Associate</Button>
+                            <Button x:Name="Unassociate" Canvas.Left="251" Canvas.Top="9" Padding="5" Content="Unassociate" Click="Unassociate_Click"/>
+                        </Canvas>
+                        <GroupBox Header="Export Settings" Margin="10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"></ColumnDefinition>
+                                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*"></RowDefinition>
+                                    <RowDefinition Height="*"></RowDefinition>
+                                </Grid.RowDefinitions>
+                                <Label>Export Path</Label>
+                                <TextBox Name="exportPathTextBox" TextChanged="ExportPathTextBox_TextChanged" IsReadOnly="True" Margin="5" Grid.Row="1" HorizontalAlignment="Stretch"></TextBox>
+                                <Button Name="exportPathButton" Click="ExportPathButton_Click" Margin="5" Padding="5" Grid.Column="2" Grid.Row="1" HorizontalAlignment="Right" Content="Browse"/>
+                            </Grid>
+                        </GroupBox>
+                        <GroupBox Header="Export Single Card" Margin="10" Canvas.Top="100">
+                            <StackPanel Margin="0,5,0,0">
+                                <GroupBox Grid.Row="0" Header="Image">
+                                    <DockPanel>
+                                        <StackPanel Width="100" DockPanel.Dock="Left">
+                                            <RadioButton Name="SingleJPG" Grid.Row="1" IsChecked="True">JPG</RadioButton>
+                                            <RadioButton Name="SinglePNG" Grid.Row="2">PNG</RadioButton>
+                                            <RadioButton Name="SingleBMP" Grid.Row="3">BMP</RadioButton>
+                                        </StackPanel>
+                                        <StackPanel DockPanel.Dock="Top">
+                                            <CheckBox>Open image after Export</CheckBox>
+                                        </StackPanel>
+                                        <Button Name="SingleImageExportButton" Padding="4 3" VerticalAlignment="Bottom"
+                                Content="Image only" Click="SingleImageExportButton_Click"/>
+                                    </DockPanel>
+
+                                </GroupBox>
+                                <GroupBox Grid.Column="1" Header="Data">
+                                    <DockPanel>
+                                        <StackPanel Width="100" DockPanel.Dock="Left">
+                                        </StackPanel>
+                                        <Button Name="SingleDataExportButton" Click="SingleDataExportButton_Click" Padding="5">Data Only</Button>
+                                    </DockPanel>
+                                </GroupBox>
+                                <StackPanel VerticalAlignment="Bottom">
+                                    <Button Name="SingleAllExportButton" Click="SingleAllExportButton_Click" Margin="5" Padding="5">Both Image and Data</Button>
+                                </StackPanel>
+                            </StackPanel>
+                        </GroupBox>
+                        <GroupBox Header="Export Set Card" Margin="10" Canvas.Top="100">
+                            <StackPanel Margin="0,5,0,0">
+                                <GroupBox Grid.Row="0" Header="Image">
+                                    <DockPanel>
+                                        <StackPanel Width="100" DockPanel.Dock="Left">
+                                            <RadioButton Name="SetJPG" Grid.Row="1" IsChecked="True">JPG</RadioButton>
+                                            <RadioButton Name="SetPNG" Grid.Row="2">PNG</RadioButton>
+                                            <RadioButton Name="SetBMP" Grid.Row="3">BMP</RadioButton>
+                                        </StackPanel>
+                                        <StackPanel DockPanel.Dock="Top">
+                                            <CheckBox>Open folder after Export</CheckBox>
+                                            <CheckBox IsChecked="True" IsEnabled="False">Image for each Card</CheckBox>
+                                        </StackPanel>
+                                        <Button Name="SetImageExportButton" Padding="4 3" VerticalAlignment="Bottom" Content="Image only" Click="SetImageExportButton_Click"/>
+                                    </DockPanel>
+
+                                </GroupBox>
+                                <GroupBox Grid.Column="1" Header="Data">
+                                    <DockPanel>
+                                        <StackPanel>
+                                            <CheckBox Name="EachCardData">Data for each Card</CheckBox>
+                                            <Button Name="SetDataExportButton" Padding="10 5" HorizontalAlignment="Right"
+                                    Click="SetDataExportButton_Click">Data Only</Button>
+                                        </StackPanel>
+
+                                    </DockPanel>
+                                </GroupBox>
+                                <StackPanel VerticalAlignment="Bottom">
+                                    <Button Name="SetAllExportButton" Margin="5" Padding="5" Click="SetAllExportButton_Click">Both Image and Data</Button>
+                                </StackPanel>
+                            </StackPanel>
+                        </GroupBox>
+                    </StackPanel>
+                </TabItem>
+            </TabControl>
+            <StackPanel Margin="10">
+                <Button x:Name="Exit" Height="60" Width="60" BorderBrush="Black" BorderThickness="1.5" Click="Exit_Click" />
+                <Button Visibility="Hidden" Name="Talk" Height="60" Canvas.Left="990" Canvas.Top="466" Width="60" BorderBrush="Black" BorderThickness="1.5" ></Button>
+                <Button Name="Home" Height="60" Canvas.Left="900" Canvas.Top="526" Width="60" BorderBrush="Black" BorderThickness="1.5" Click="Home_Click"></Button>
+                <Button Name="About" Height="60" Canvas.Left="900" Canvas.Top="586" Width="60" BorderBrush="Black" BorderThickness="1.5" Click="About_Click" ></Button>
+                <Button Name="Export" Height="60" Canvas.Left="900" Canvas.Top="152" Width="60" BorderBrush="Black" BorderThickness="1.5" ></Button>
+
+                <Button x:Name="Load" Height="60" Canvas.Left="900" Canvas.Top="212" Width="60" BorderBrush="Black" BorderThickness="1.5" />
+            </StackPanel>
+        </StackPanel>
+
+
+        <TextBlock FontFamily="./Resources/#Yu-Gi-Oh! Matrix Small Caps 2" Visibility="Hidden"
+                   FontSize="60" Canvas.Left="109" Canvas.Top="19" Panel.ZIndex="10">
+            <TextBlock.Foreground>
+                <LinearGradientBrush StartPoint="0, 0.5"
+                                     EndPoint="80, 0.5"
+                                     SpreadMethod="Reflect"
+                                     MappingMode="Absolute">
+                    <GradientStop Color="Yellow" Offset="0"></GradientStop>
+                    <GradientStop Color="#B87E19" Offset="1"/>
+                </LinearGradientBrush>
+
+            </TextBlock.Foreground>
+            <TextBlock.Effect>
+                <DropShadowEffect ShadowDepth="1" Direction="-180" BlurRadius="10"></DropShadowEffect>
+            </TextBlock.Effect>
+            Snow Plow Hustle Rustle
+        </TextBlock>
+
+
+        <TextBlock Canvas.Left="151" FontFamily="./Resources/#Yu-Gi-Oh! Matrix Small Caps 2"
+                   FontSize="60" TextWrapping="Wrap" Text="Tricky Twins" Canvas.Top="70"
+                   Visibility="Hidden">
+            <TextBlock.Foreground>
+                <LinearGradientBrush StartPoint="0,0.5" EndPoint="80,0.5" 
+                                     MappingMode="Absolute" SpreadMethod="Repeat">
+                    <GradientStop Color="White" Offset="0" />
+                    <GradientStop Color="#B7C5C8" Offset="0.5" />
+                    <GradientStop Color="White" Offset="1" />
+                </LinearGradientBrush>
+            </TextBlock.Foreground>
+            <TextBlock.Effect>
+                <DropShadowEffect ShadowDepth="1" Direction="-180" BlurRadius="3"></DropShadowEffect>
+            </TextBlock.Effect>
+
+        </TextBlock>
+    </StackPanel>
 </Window>

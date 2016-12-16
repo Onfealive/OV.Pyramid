@@ -2,10 +2,7 @@
 using System.Collections.Generic;
 using System;
 using System.Linq;
-using System.Windows.Media.Imaging;
 using System.Runtime.Serialization;
-using System.Windows;
-using Newtonsoft.Json;
 
 namespace OV.Core
 {
@@ -87,7 +84,7 @@ namespace OV.Core
                 defaultCard.Level = 4;
                 defaultCard.Creator = CREATOR.KazukiTakahashi;
                 defaultCard.Rarity = RARITY.Common;
-                defaultCard.Type = TYPE.NONE;
+                defaultCard.Type = TYPE.Warrior;
                 defaultCard.Sticker = STICKER.PromoSilver;
                 defaultCard.ArtworkByte = Database.GetData(@"Template\NoneImage.png").Bytes;
                 defaultCard.Set = "";
@@ -134,6 +131,33 @@ namespace OV.Core
                 clone.Abilities.Add(ability);
             }
             return clone;
+        }
+
+
+        public string GetData()
+        {
+            if (this == null) { return ""; }
+            string result = "";
+            result += this.Name;
+            if (this.IsMonster())
+            {
+                result += Environment.NewLine;
+                result += this.IsFrame(FRAME.Xyz)
+                    ? string.Format("Rank {0}", this.Rank)
+                    : string.Format("Level {0}", this.Level);
+                result += " " + this.Attribute.ToString();
+                result += " " + string.Format("{0}-Type", this.Type);
+                result += " " + this.Frame;
+                if (this.Abilities.Count > 0)
+                {
+                    result += " " + string.Join(" ", this.Abilities);
+                }
+                result += Environment.NewLine;
+                result += string.Format("ATK {0}\nDEF {1}", this.ATK, this.DEF);
+            }
+            result += Environment.NewLine;
+            result += this.Description.CleanUpUnnecessarySpace();
+            return result;
         }
 
         [OnDeserialized]
@@ -458,6 +482,11 @@ namespace OV.Core
                     IsPendulum = true;
                 }
             }
+            if (double.IsNaN(value) == false)
+            {
+                value = (int)value;
+                value = value.Clamp(0, 13);
+            }
             ScaleLeft = value;
         }
 
@@ -480,6 +509,11 @@ namespace OV.Core
                     ATK = DEF = double.NaN;
                     IsPendulum = true;
                 }
+            }
+            if (double.IsNaN(value) == false)
+            {
+                value = (int)value;
+                value = value.Clamp(0, 13);
             }
             ScaleRight = value;
         }
@@ -696,79 +730,5 @@ internal void CleanUp()
     }
 
 
-    static class Static
-    {
-        /// <summary>
-        /// Check the card whether it is this Frame or not
-        /// </summary>
-        /// <param name="card"></param>
-        /// <param name="frame"></param>
-        /// <returns></returns>
-        public static bool IsFrame(this YgoCard card, FRAME frame)
-        {
-            return frame == card.Frame;
-        }
-
-        /// <summary>
-        /// Check the card whether it is Spell/Trap, or not
-        /// </summary>
-        /// <param name="card"></param>
-        /// <returns></returns>
-        public static bool IsMagic(this YgoCard card)
-        {
-            if (card != null)
-            {
-                if (card.Frame == FRAME.Spell && card.Attribute == ATTRIBUTE.SPELL) { return true; }
-                if (card.Frame == FRAME.Trap && card.Attribute == ATTRIBUTE.TRAP) { return true; }
-            }
-            //if (card.Attribute == ATTRIBUTE.UNKNOWN) { return false; }
-            return false;
-        }
-
-        /// <summary>
-        /// Check the card whether it is Monster or not
-        /// </summary>
-        /// <param name="card"></param>
-        /// <returns></returns>
-        public static bool IsMonster(this YgoCard card)
-        {
-            return card != null && !card.IsMagic();
-        }
-
-        /// <summary>
-        /// Check the Property whether it is Property can only go with Spell Card
-        /// </summary>
-        /// <param name="property"></param>
-        /// <returns></returns>
-        public static bool IsSpellPropertyOnly(this PROPERTY property)
-        {
-            if (property == PROPERTY.Equip) return true;
-            if (property == PROPERTY.Field) return true;
-            if (property == PROPERTY.QuickPlay) return true;
-            if (property == PROPERTY.Ritual) return true;
-            return false;
-        }
-
-        /// <summary>
-        /// Check the Property whether it is Property can only go with Trap Card
-        /// </summary>
-        /// <param name="property"></param>
-        /// <returns></returns>
-        public static bool IsTrapPropertyOnly(this PROPERTY property)
-        {
-            if (property == PROPERTY.Counter) return true;
-            return false;
-        }
-
-        /// <summary>
-        /// Check if Ability that must go with "Effect" Ability 
-        /// </summary>
-        /// <param name="ability"></param>
-        /// <returns></returns>
-        public static bool IsEffectAbility(this ABILITY ability)
-        {
-            if (ability != ABILITY.Effect && ability != ABILITY.Tuner) { return true; }
-            return false;
-        }
-    }
+    
 }

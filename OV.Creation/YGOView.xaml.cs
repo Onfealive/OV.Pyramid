@@ -15,6 +15,7 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using static OV.Tools.Utilities;
@@ -26,7 +27,7 @@ namespace OV.Pyramid
     /// </summary>
     public partial class YgoView : UserControl, INotifyPropertyChanged
     {
-        private YgoCard CurrentCard;
+        internal YgoCard CurrentCard { get; private set; }
         private static string DatabasePath;
 
         private ByteDatabase Database;
@@ -151,39 +152,59 @@ namespace OV.Pyramid
             }
         }
 
+        private void RenderAll()
+        {
+            HandleName();
+            HandleAttribute();
+            HandleMiddle();
+            HandleArtwork();
+            HandleAD();
+            HandleAbility();
+            HandleCreator();
+            HandleDescription();
+            HandlePendulum();
+            HandleFrame();
+            HandleScale();
+            HandleRarity();
+            HandleSticker();
+            HandleEdition();
+            HandleCartNumber();
+            HandleSetCard();
+        }
+
         internal void Render(YgoCard card)
         {
             SetDefaultValue();
-            YgoCard preCard = this.CurrentCard != null ? (YgoCard)this.CurrentCard.Clone() : null;
-            this.CurrentCard = (YgoCard)card.Clone();
+            YgoCard preCard = this.CurrentCard != null ? this.CurrentCard.Clone() : null;
+            this.CurrentCard = card.Clone();
 
             if (preCard == null)
             {
-                HandleName();
-                HandleAttribute();
-                HandleMiddle();
-                HandleArtwork();
-                HandleAD();
-                HandleAbility();
-                HandleCreator();
-                HandleDescription();
-                HandlePendulum();
-                HandleFrame();
-                HandleScale();
-                HandleRarity();
-                HandleSticker();
-                HandleEdition();
-                HandleCartNumber();
-                HandleSetCard();
+                RenderAll();
             }
             else
             {
+                if (preCard.Name != CurrentCard.Name)
+                {
+                    HandleName();
+                }
+
                 if (preCard.Name != CurrentCard.Name
-                    || preCard.Frame != CurrentCard.Frame) { HandleName(); }
-                if (preCard.Attribute != CurrentCard.Attribute) { HandleAttribute(); }
+                    || preCard.Rarity != CurrentCard.Rarity
+                    || preCard.Frame != CurrentCard.Frame)
+                {
+                    HandleNameRarity();
+                }
+
+                if (preCard.Attribute != CurrentCard.Attribute
+                    || preCard.Rarity != CurrentCard.Rarity)
+                {
+                    HandleAttribute();
+                }
                 if (preCard.Level.CompareTo(CurrentCard.Level) != 0
                     || preCard.Rank.CompareTo(CurrentCard.Rank) != 0
-                    || preCard.Property != CurrentCard.Property)
+                    || preCard.Property != CurrentCard.Property
+                    || preCard.Rarity != CurrentCard.Rarity)
                 {
                     HandleMiddle();
                 }
@@ -309,11 +330,10 @@ namespace OV.Pyramid
 
             Pendulum.MaxFontSize = fontDefault;
             Pendulum.ScaledLineHeight = 1;
-
             if (Pendulum.GetLines().Count() < 4)
             {
                 Canvas.SetTop(Pendulum, 785);
-                Pendulum.Height = 97;
+                Pendulum.Height = 90;
             }
             else
             {
@@ -619,10 +639,7 @@ namespace OV.Pyramid
 
         public void Save()
         {
-
             string text = JsonConvert.SerializeObject(CurrentCard, Formatting.Indented);
-            //MessageBox.Show(xml);
-
 
             Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
             if (CurrentCard.Name == null)
@@ -631,16 +648,11 @@ namespace OV.Pyramid
                 dlg.FileName = CurrentCard.Name.Replace(":", " -"); // Default file name
             //dlg.DefaultExt = ".png"; // Default file extension
             dlg.Filter = "OV.Creation Card|*.occ"; // Filter files by extension 
-
-            // Show save file dialog box
-
-
             // Process save file dialog box results 
             if (dlg.ShowDialog() == true)
             {
                 // Save document 
-                string filename = dlg.FileName;
-                File.WriteAllText(filename, text);
+                File.WriteAllText(dlg.FileName, text);
             }
         }
 
@@ -650,13 +662,36 @@ namespace OV.Pyramid
             CurrentCard = card;
             Render(CurrentCard);
             //Render(Current);
+        }               
+
+        internal void SaveImageTo(string fileName)
+        {            
+            CreateBitmapFromVisual(CardCanvas, fileName);
         }
 
-        public void Export()
+        internal void SaveImageTo(YgoCard card, string fileName)
+        {
+            
+            CreateBitmapFromVisual(CardCanvas, fileName);
+            //Render(origin);
+        }
+
+        public void SaveDataTo(string fileName)
+        {
+            string text = JsonConvert.SerializeObject(CurrentCard, Formatting.Indented);
+            File.WriteAllText(fileName, text);
+        }
+
+        internal void SaveDataTo(YgoCard card, string fileName)
+        {
+            string text = JsonConvert.SerializeObject(card, Formatting.Indented);
+            File.WriteAllText(fileName, text);
+        }
+
+        public void CallExport()
         {
             if (CurrentCard == null)
             {
-
                 return;
             }
             Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
@@ -677,33 +712,13 @@ namespace OV.Pyramid
 
         }
 
-        public void CreateBitmapFromVisual(Visual target, string fileName)
-        {
-            //double scale = 96 / 96;
-
-
+        private void CreateBitmapFromVisual(Visual target, string fileName)
+        {            
             if (target == null || string.IsNullOrEmpty(fileName))
             {
                 return;
             }
-            /*
-            Rect bounds = VisualTreeHelper.GetDescendantBounds(target);
-
-            RenderTargetBitmap renderTarget = new RenderTargetBitmap((Int32)bounds.Width, (Int32)bounds.Height, scale * 96, scale * 96, PixelFormats.Pbgra32);
-
-            DrawingVisual visual = new DrawingVisual();
-
-            Size size = new Size(bounds.Size.Width / (scale), bounds.Size.Height / (scale));
-
-            using (DrawingContext context = visual.RenderOpen())
-            {
-                VisualBrush visualBrush = new VisualBrush(target);
-                context.DrawRectangle(visualBrush, null, new Rect(new Point(), size));
-                //context.DrawRectangle(visualBrush, null, new Rect(new Point(), new Size(813, 1185)));
-            }
-            //MessageBox.Show(bounds.Size.ToString());
-            renderTarget.Render(visual);
-            */
+            
             BitmapSource source = null;
             if (target == CardCanvas)
             {
@@ -722,19 +737,21 @@ namespace OV.Pyramid
 
             BitmapEncoder bitmapEncoder = null;
             if (fileName.IsExtension(".png"))
+            {
                 bitmapEncoder = new PngBitmapEncoder();
+            }
             else if (fileName.IsExtension(".jpg"))
             {
                 bitmapEncoder = new JpegBitmapEncoder();
             }
             else if (fileName.IsExtension(".bmp"))
+            {
                 bitmapEncoder = new BmpBitmapEncoder();
+            }
 
-
+            //source = source.CreateResizedImage(813, 1185, 0);
             bitmapEncoder.Frames.Add(BitmapFrame.Create(source));
-            //else if (target == AllView_Triad)
-            //bitmapEncoder.Frames.Add(BitmapFrame.Create(ImageSource_Triad as BitmapSource));
-
+            
             using (Stream stm = File.Create(fileName))
             {
 
@@ -770,39 +787,47 @@ namespace OV.Pyramid
         {
             get
             {
-
                 CardCanvas.Measure(new Size(CardCanvas.Width, CardCanvas.Height));
                 CardCanvas.Arrange(new Rect(new Size(CardCanvas.Width, CardCanvas.Height)));
                 CardCanvas.UpdateLayout();
                 Visual target = CardCanvas;
 
-                double scale = 96 / 96;
-                //Rect bounds = VisualTreeHelper.GetDescendantBounds(target);
-                //MessageBox.Show(bounds.Height.ToString());
-                //RenderTargetBitmap renderTarget = new RenderTargetBitmap((int)bounds.Width, (int)bounds.Height, scale * 96, scale * 96, PixelFormats.Default);
-                RenderTargetBitmap renderTarget = new RenderTargetBitmap(813, 1185, scale * 96, scale * 96, PixelFormats.Pbgra32);
+                double scale = 310 / 96;
+                Size realSize = new Size(813, 1185);
+                /*
+                double realRatio = realSize.Width / realSize.Height;
+
+                Size setSize = new Size(600, 800);
+                double setRatio = setSize.Width / setSize.Height;
+                if (setRatio > realRatio)
+                {
+                    setSize.Width = setSize.Height * realRatio;
+                } else
+                {
+                    setSize.Height = setSize.Width / realRatio;
+                }
+                realSize = setSize;
+                */
+                Size newSize = new Size(
+                    Math.Round(realSize.Width / scale, MidpointRounding.ToEven), 
+                    Math.Round(realSize.Height / scale, MidpointRounding.ToEven));
+                RenderTargetBitmap renderTarget = new RenderTargetBitmap(
+                    (int)realSize.Width, (int)realSize.Height, scale * 96, scale * 96, PixelFormats.Pbgra32);
 
                 DrawingVisual visual = new DrawingVisual();
-
-                Size size = new Size(813, 1185);
-                //Size size = new Size(bounds.Size.Width / (scale), bounds.Size.Height / (scale));
+                
                 using (DrawingContext context = visual.RenderOpen())
                 {
                     VisualBrush visualBrush = new VisualBrush(target);
-
-                    context.DrawRectangle(visualBrush, null, new Rect(new Point(), size));
-
-                    //context.DrawRectangle(visualBrush, null, new Rect(new Point(), new Size(813, 1185)));
+                    context.DrawRectangle(visualBrush, null, new Rect(new Point(), newSize));
                 }
-                //MessageBox.Show(bounds.Size.ToString());
 
                 renderTarget.Render(visual);
-
-
-
                 return renderTarget;
             }
         }
+
+        
 
         private void HandleDescription()
         {
@@ -828,10 +853,11 @@ namespace OV.Pyramid
                     TextBlockDescription.Visibility = Visibility.Hidden;
                     TextBlockDescription.Visibility = Visibility.Hidden;
                     /* test */
-                    Paragraph Para = new Paragraph();
-
-                    Para.TextAlignment = TextAlignment.Justify;
-                    Para.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
+                    Paragraph Para = new Paragraph()
+                    {
+                        TextAlignment = TextAlignment.Justify,
+                        LineStackingStrategy = LineStackingStrategy.BlockLineHeight
+                    };
 
                     //if (Text != null)
                     //Text = Text.Replace("\r\n", Environment.NewLine);
@@ -973,7 +999,7 @@ namespace OV.Pyramid
                 Canvas.SetTop(TextBlockDescription, 891);
                 RichTextBoxDescription.Height = 226;//226
                                                     //MessageBox.Show(RichTextBoxDescription.Height.ToString());
-                RichTextBoxDescription.Background = Brushes.Azure;
+                                                    //RichTextBoxDescription.Background = Brushes.Azure;
             }
 
 
@@ -986,19 +1012,11 @@ namespace OV.Pyramid
             Para.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
             double Default = 32.4;
 
+            RichTextBoxDescription.Document.Blocks.Clear();
+            RichTextBoxDescription.Document.Blocks.Add(Para);
+            Para.Inlines.Add(new Run(Text));
 
-
-            {
-
-                RichTextBoxDescription.Document.Blocks.Clear();
-                RichTextBoxDescription.Document.Blocks.Add(Para);
-                Para.Inlines.Add(new Run(Text));
-
-                Para.FontFamily = Fonts.MatrixBook;
-
-
-            }
-
+            Para.FontFamily = Fonts.MatrixBook;
             Para.FontSize = Default;
             // 6-26.5
             while (Default * (CurrentCard.IsFrame(FRAME.Normal) && (Text != "" && Text.IsVietnamese()) ? 1.1 : 1)
@@ -1036,172 +1054,51 @@ namespace OV.Pyramid
         private void HandleRarity()
         {
             if (CurrentCard == null) { return; }
-            BitmapSource Source = null;
-            //if (!String.IsNullOrEmpty(Current.Artwork))
-            Source = CurrentCard.ArtworkByte.GetBitmapImageFromByteArray();
-            //else
-            //    Source = Uti.GetImage("/Artwork/_None");//XX
-            //Initialize
-            {
-                ArtworkFoil.Opacity = 1;
-                ArtworkFoil.Source = null;
-                CardFoil.Source = null;
-                CardBorder.Source = null; //XX
-                CardName.Effect = null;
-                LoreBorder.Source = null;
-                ArtworkBorder.Source = ArtworkBorder.Source ?? null;
-                ArtworkBorder.Effect = null;
-                /*
-                if (Current.Attribute !=  AttributeEnum.UNKNOWN)
-                    Attribute.Source = Uti.GetImage("/Attribute/" + Current.Attribute + Language);
-                if (!Current.IsMagic && Current.Middle != null)
-                {
-                    if (Current.Middle.Split('_').Length > 1)
-                    {
-                        string type = Current.Middle.Split('_')[0];
-                        int number = Int32.Parse(Current.Middle.Split('_')[1]);
-                        ChangeLevel(number, type);
-                    }
-                }
-                */
-                //Frame.Source = Uti.GetImage("/Frame/" + Current.Frame );
+            BitmapSource Source = CurrentCard.ArtworkByte.GetBitmapImageFromByteArray();
 
-            }
+            ArtworkFoil.Opacity = 1;
+            ArtworkFoil.Source = null;
+            CardFoil.Source = null;
+            CardBorder.Source = null; //XX
+            LoreBorder.Source = null;
+            ArtworkBorder.Source = null;
+            
             if (CurrentCard.Rarity == RARITY.Common)
             {
-                /*
-                if (Current.IsFrame(FRAME.Xyz) || Current.IsMagic())
-                    CardName.Foreground = Brushes.White;
-                else
-                    CardName.Foreground = Brushes.Black; */
-                LinearGradientBrush b = new LinearGradientBrush();
-                b.StartPoint = new Point(0, 0.5);
-                b.EndPoint = new Point(160, 0.5);
-                b.SpreadMethod = GradientSpreadMethod.Repeat;
-                b.MappingMode = BrushMappingMode.Absolute;
-                b.GradientStops.Add(new GradientStop { Color = Colors.White, Offset = 0 });
-                b.GradientStops.Add(new GradientStop { Color = Color.FromRgb(200, 200, 200), Offset = 0.6 });
-                b.GradientStops.Add(new GradientStop { Color = Colors.White, Offset = 1 });
 
-                DropShadowEffect e = new DropShadowEffect();
-                e.ShadowDepth = 1;
-                e.Direction = -180;
-                e.BlurRadius = 10;
-                e.Color = Colors.Black;
-                e.RenderingBias = RenderingBias.Quality;
-
-                CardName.Foreground = b;
-                CardName.Effect = e;
-                
             }
             else if (CurrentCard.Rarity == RARITY.Rare)
             {
-                CardName.Foreground = new SolidColorBrush(Color.FromRgb(79, 79, 79)); //180
-
-
-                DropShadowEffect shadow = new DropShadowEffect();
-                shadow.BlurRadius = 2;
-                shadow.RenderingBias = RenderingBias.Quality;
-                shadow.Direction = -90;
-                shadow.ShadowDepth = 1.5;
-                shadow.Color = Colors.White;
-
-                CardName.Effect = shadow;
-                //new SolidColorBrush(Color.FromRgb(206, 212, 217));
+                                
             }
             else if (CurrentCard.Rarity == RARITY.SuperRare)
             {
-                if (CurrentCard.IsFrame(FRAME.Xyz) || CurrentCard.IsMagic())
-                    CardName.Foreground = Brushes.White;
-                else
-                    CardName.Foreground = Brushes.Black;
-
-
-
                 ArtworkFoil.Source = Database.GetImage(@"Template\Foil\Super.png");
             }
             else if (CurrentCard.Rarity == RARITY.UltraRare)
-            {
-                CardName.Foreground = new SolidColorBrush(Color.FromRgb(88, 76, 12));//222, 178, 29));
-                ArtworkFoil.Source = Database.GetImage(@"Template\Foil\Super.png");
-
-                DropShadowEffect shadow = new DropShadowEffect();
-                shadow.BlurRadius = 2;
-                shadow.RenderingBias = RenderingBias.Quality;
-                shadow.Direction = -90;
-                shadow.ShadowDepth = 1.5;
-                shadow.Color = Color.FromRgb(255, 255, 177);
-
-                CardName.Effect = shadow;
+            {                
+                ArtworkFoil.Source = Database.GetImage(@"Template\Foil\Super.png");                
             }
             else if (CurrentCard.Rarity == RARITY.SecretRare)
-            {
-                CardName.Foreground = new SolidColorBrush(Color.FromRgb(211, 252, 252));//234,255,255
+            {                
                 ArtworkFoil.Source = Database.GetImage(@"Template\Foil\Secret.png");
-
-                DropShadowEffect shadow = new DropShadowEffect();
-                shadow.BlurRadius = 2;
-                shadow.RenderingBias = RenderingBias.Quality;
-                shadow.Direction = -90;
-                shadow.ShadowDepth = 1.5;
-                shadow.Color = Color.FromRgb(214, 255, 255);
-
-                CardName.Effect = shadow;
             }
             else if (CurrentCard.Rarity == RARITY.ParallelRare)
-            {
-                CardName.Foreground = new SolidColorBrush(Color.FromRgb(88, 76, 12));//234,255,255
-                CardFoil.Source = Database.GetImage(@"Template\Foil\Parallel.png");
-
-                DropShadowEffect shadow = new DropShadowEffect();
-                shadow.BlurRadius = 2;
-                shadow.RenderingBias = RenderingBias.Quality;
-                shadow.Direction = -90;
-                shadow.ShadowDepth = 1.5;
-                shadow.Color = Color.FromRgb(255, 215, 0);
-
-                CardName.Effect = shadow;
+            {               
+                CardFoil.Source = Database.GetImage(@"Template\Foil\Parallel.png");                
             }
             else if (CurrentCard.Rarity == RARITY.StarfoilRare)
-            {
-                if (CurrentCard.IsFrame(FRAME.Xyz) || CurrentCard.IsMagic())
-                    CardName.Foreground = Brushes.White;
-                else
-                    CardName.Foreground = Brushes.Black;
-                CardFoil.Source = Database.GetImage(@"Template\Foil\Star.png");
-
-                DropShadowEffect shadow = new DropShadowEffect();
-                shadow.BlurRadius = 2;
-                shadow.RenderingBias = RenderingBias.Quality;
-                shadow.Direction = -90;
-                shadow.ShadowDepth = 1.5;
-                shadow.Color = Colors.White;
-
-                CardName.Effect = shadow;
+            {                
+                CardFoil.Source = Database.GetImage(@"Template\Foil\Star.png");                
             }
             else if (CurrentCard.Rarity == RARITY.MosaicRare)
-            {
-                if (CurrentCard.IsFrame(FRAME.Xyz) || CurrentCard.IsMagic())
-                    CardName.Foreground = Brushes.White;
-                else
-                    CardName.Foreground = Brushes.Black;
+            {                
                 CardFoil.Source = Database.GetImage(@"Template\Foil\Mosaic.png");
-
-                DropShadowEffect shadow = new DropShadowEffect();
-                shadow.BlurRadius = 2;
-                shadow.RenderingBias = RenderingBias.Quality;
-                shadow.Direction = -90;
-                shadow.ShadowDepth = 1.5;
-                shadow.Color = Colors.White;
-
-                CardName.Effect = shadow;
             }
             else if (CurrentCard.Rarity == RARITY.GoldRare)
             {
-
                 CardBorder.Source = Database.GetImage(@"Template\Border\Card\Gold.png");
                 LoreBorder.Source = Database.GetImage(@"Template\Border\Lore\Gold.png");
-                CardName.Foreground = new SolidColorBrush(Color.FromRgb(88, 76, 12));//234,255,255
 
                 DropShadowEffect shadow = new DropShadowEffect();
                 shadow.BlurRadius = 2;
@@ -1209,9 +1106,7 @@ namespace OV.Pyramid
                 shadow.Direction = -90;
                 shadow.ShadowDepth = 1.5;
                 shadow.Color = Color.FromRgb(255, 215, 0);
-
-                CardName.Effect = shadow;
-
+                
                 if (CurrentCard.IsPendulum)
                 {
                     if (Pendulum.GetLines().Count() < 4)
@@ -1240,69 +1135,35 @@ namespace OV.Pyramid
             else if (CurrentCard.Rarity == RARITY.UltimateRare)
             {
                 /*
-                if (Current.Attribute != null)
-                    Attribute.Source = Uti.GetImage("/Attribute/" + Current.Attribute + "_Emboss" + Language);
-                    */
+                if (CurrentCard.Attribute != ATTRIBUTE.UNKNOWN)
+                    Attribute.Source = Database.GetImage(@"Template\Attribute\"
+                        + CurrentCard.Attribute + "_Emboss");
+                 */
 
                 /*
-                if (!Current.IsMagic && Current.Middle != null)
-                {
-                    string type = Current.Middle.Split('_')[0];
-                    int number = Int32.Parse(Current.Middle.Split('_')[1]);
-                    ChangeLevel(number, type);
-                }
+                
                 if (!Current.IsFrame("Pendulum"))
                     Lore_Border.Source = Uti.GetImage("/Lore_Border_Emboss");
                     */
-                CardName.Foreground = new SolidColorBrush(Color.FromRgb(69, 34, 12));//222, 178, 29));
+                
                 ArtworkFoil.Source = Database.GetImage(@"Template\Foil\Ultimate.png");
                 ArtworkFoil.Opacity = 0.2;
 
                 CardBorder.Source = Database.GetImage(@"Template\Border\Card\Emboss.png");
-                //Frame.Source = Uti.GetImage("/Frame/" + Current.Frame + "_Emboss");
-                //Frame.Source = G.ToBitmapSource(G.Brightness(G.ToBitmap(Uti.GetImage("/Frame/" + Current.Frame) as BitmapImage), -40, 100, 100));
-                //Frame.Source = G.ToBitmapSource(G.Brightness(G.ToBitmap(Uti.GetBitmapImage(@"C:\Effect.ovpng")), -40));
-                DropShadowEffect shadow = new DropShadowEffect();
-                shadow.BlurRadius = 2;
-                shadow.RenderingBias = RenderingBias.Quality;
-                shadow.Direction = 90;
-                shadow.ShadowDepth = 1.5;
-                shadow.Color = Colors.White;
-
-                CardName.Effect = shadow;
-
-                //Source = Graphic.ToBitmapSource(Graphic.EmbossArtwork(Graphic.ToBitmap(Source)));
-                //Source = Graphic.ToBitmapSource(Graphic.Brightness(Graphic.ToBitmap(Source), -40));
-                //Source = Graphic.ToBitmapSource(Graphic.Contrast(Graphic.ToBitmap(Source), -10));
-
-                /*Source = Source.ToBitmap().EmbossArtwork().ToBitmapSource();
-                Source = Source.ToBitmap().Brightness(-40).ToBitmapSource();
-                Source = Source.ToBitmap().Contrast(-10).ToBitmapSource();*/
+                ArtworkBorder.Source = Database.GetImage(@"Template\Border\Artwork\Emboss.png");
                 Source = (Source as BitmapImage).ToBitmap().Emboss().Brightness(-40).Contrast(-10).ToBitmapSource();
-
+                
             }
 
             else if (CurrentCard.Rarity == RARITY.GhostRare)
             {
                 if (Source != null)
                 {
-                    //Source = Graphic.ToBitmapSource(Graphic.Brightness(Graphic.ToBitmap(Source), -110));
-                    //Source = Graphic.ToBitmapSource(Graphic.ColorBalance(Graphic.ToBitmap(Source), 255, 0, -35));
-                    //Source = Graphic.ToBitmapSource(Graphic.Contrast(Graphic.ToBitmap(Source), 10));
-                    //Source = Graphic.Negative(Source);
+                    
                     Source = (Source as BitmapImage).ToBitmap().Brightness(-110)
                         .ColorBalance(255, 0, -35).Contrast(10).Negative().ToBitmapSource();
                 }
-
-                CardName.Foreground = new SolidColorBrush(Color.FromRgb(234, 255, 255));
-                DropShadowEffect shadow = new DropShadowEffect();
-                shadow.BlurRadius = 2;
-                shadow.RenderingBias = RenderingBias.Quality;
-                shadow.Direction = -90;
-                shadow.ShadowDepth = 1.5;
-                shadow.Color = Color.FromRgb(182, 162, 255);
-
-                CardName.Effect = shadow;
+                
             }
             /*
             else if (Rarity == "OV Rare")
@@ -1338,10 +1199,195 @@ namespace OV.Pyramid
             {
                 CardFoil.Source = Database.GetImage(@"Template\Foil\Shatter.png");
             }
-
-
-
             Artwork.Source = Source;
+        }
+
+        private void SilverHolofoil()
+        {
+            LinearGradientBrush b = new LinearGradientBrush()
+            {
+                StartPoint = new Point(0, 0.5),
+                EndPoint = new Point(160, 0.5),
+                SpreadMethod = GradientSpreadMethod.Repeat,
+                MappingMode = BrushMappingMode.Absolute
+            };
+            b.GradientStops.Add(new GradientStop { Color = Colors.White, Offset = 0 });
+            b.GradientStops.Add(new GradientStop { Color = Color.FromRgb(200, 200, 200), Offset = 0.6 });
+            b.GradientStops.Add(new GradientStop { Color = Colors.White, Offset = 1 });
+
+            DropShadowEffect e = new DropShadowEffect();
+            e.ShadowDepth = 1;
+            e.Direction = -180;
+            e.BlurRadius = 10;
+            e.Color = Colors.Black;
+            e.RenderingBias = RenderingBias.Quality;
+
+            CardName.Foreground = b;
+            CardName.Effect = e;
+        }
+
+        private void GoldHolofoil()
+        {
+            LinearGradientBrush b = new LinearGradientBrush()
+            {
+                StartPoint = new Point(0, 0.5),
+                EndPoint = new Point(80, 1),
+                SpreadMethod = GradientSpreadMethod.Reflect,
+                MappingMode = BrushMappingMode.Absolute
+            };
+            b.GradientStops.Add(new GradientStop { Color = Color.FromRgb(250, 230, 60), Offset = 0 });
+            b.GradientStops.Add(new GradientStop { Color = Color.FromRgb(180, 120, 60), Offset = 1.8 });
+            //b.GradientStops.Add(new GradientStop { Color = Color.FromRgb(255, 215, 0), Offset = 0 });
+            //b.GradientStops.Add(new GradientStop { Color = Color.FromRgb(179, 156, 6), Offset = 1.8 });
+
+            DropShadowEffect e = new DropShadowEffect();
+            e.ShadowDepth = 1;
+            e.Direction = -180;
+            e.BlurRadius = 10;
+            e.Color = Colors.Black;
+            e.RenderingBias = RenderingBias.Quality;
+
+            CardName.Foreground = b;
+            CardName.Effect = e;
+        }
+
+        private void RainbowHolofoil()
+        {
+            LinearGradientBrush b = new LinearGradientBrush()
+            {
+                StartPoint = new Point(0, 0.5),
+                EndPoint = new Point(80, 1),
+                SpreadMethod = GradientSpreadMethod.Reflect,
+                MappingMode = BrushMappingMode.Absolute
+            };
+            //b.GradientStops.Add(new GradientStop { Color = Color.FromRgb(211, 252, 252), Offset = 0 });
+            //b.GradientStops.Add(new GradientStop { Color = Color.FromRgb(214, 255, 255), Offset = 1.8 });
+            b.GradientStops.Add(new GradientStop { Color = Color.FromRgb(234, 255, 255), Offset = 0 });
+            b.GradientStops.Add(new GradientStop { Color = Color.FromRgb(182, 162, 255), Offset = 1.8 });
+            
+            DropShadowEffect e = new DropShadowEffect();
+            e.ShadowDepth = 1;
+            e.Direction = -180;
+            e.BlurRadius = 10;
+            e.Color = Colors.Black;
+            e.RenderingBias = RenderingBias.Quality;
+
+            CardName.Foreground = b;
+            CardName.Effect = e;
+        }
+
+        private void HandleNameRarity()
+        {
+            if (CurrentCard == null) { return; }
+
+            CardName.Effect = null;
+            if (CurrentCard.Rarity == RARITY.Common)
+            {
+                //New
+                if (CurrentCard.IsFrame(FRAME.Xyz) || CurrentCard.IsMagic())
+                {
+                    this.CardName.Foreground = Brushes.White;
+                }
+                else
+                {
+                    this.CardName.Foreground = Brushes.Black;
+                }
+            }
+            else if (CurrentCard.Rarity == RARITY.Rare)
+            {
+                /* New */
+                SilverHolofoil();    
+            }
+            else if (CurrentCard.Rarity == RARITY.SuperRare)
+            {
+                //New
+                if (CurrentCard.IsFrame(FRAME.Xyz) || CurrentCard.IsMagic())
+                    CardName.Foreground = Brushes.White;
+                else
+                    CardName.Foreground = Brushes.Black;
+            }
+            else if (CurrentCard.Rarity == RARITY.UltraRare)
+            {
+                //New
+                GoldHolofoil();               
+            }
+            else if (CurrentCard.Rarity == RARITY.SecretRare)
+            {
+                //New
+                RainbowHolofoil();              
+            }
+            else if (CurrentCard.Rarity == RARITY.ParallelRare)
+            {                
+                GoldHolofoil();
+               
+            }
+            else if (CurrentCard.Rarity == RARITY.StarfoilRare)
+            {
+                if (CurrentCard.IsFrame(FRAME.Xyz) || CurrentCard.IsMagic())
+                    CardName.Foreground = Brushes.White;
+                else
+                    CardName.Foreground = Brushes.Black;
+
+                DropShadowEffect shadow = new DropShadowEffect();
+                shadow.BlurRadius = 2;
+                shadow.RenderingBias = RenderingBias.Quality;
+                shadow.Direction = -90;
+                shadow.ShadowDepth = 1.5;
+                shadow.Color = Colors.White;
+
+                CardName.Effect = shadow;
+            }
+            else if (CurrentCard.Rarity == RARITY.MosaicRare)
+            {
+                if (CurrentCard.IsFrame(FRAME.Xyz) || CurrentCard.IsMagic())
+                    CardName.Foreground = Brushes.White;
+                else
+                    CardName.Foreground = Brushes.Black;
+
+                /*
+                DropShadowEffect shadow = new DropShadowEffect();
+                shadow.BlurRadius = 2;
+                shadow.RenderingBias = RenderingBias.Quality;
+                shadow.Direction = -90;
+                shadow.ShadowDepth = 1.5;
+                shadow.Color = Colors.White;
+
+                CardName.Effect = shadow;*/
+            }
+            else if (CurrentCard.Rarity == RARITY.GoldRare)
+            {
+                GoldHolofoil();
+            }
+            else if (CurrentCard.Rarity == RARITY.UltimateRare)
+            {                
+                CardName.Foreground = new SolidColorBrush(Color.FromRgb(69, 34, 12));//222, 178, 29));
+
+                
+                DropShadowEffect shadow = new DropShadowEffect();
+                shadow.BlurRadius = 2;
+                shadow.RenderingBias = RenderingBias.Quality;
+                shadow.Direction = 90;
+                shadow.ShadowDepth = 1.5;
+                shadow.Color = Colors.White;
+
+                CardName.Effect = shadow;
+                
+                
+            }
+            else if (CurrentCard.Rarity == RARITY.GhostRare)
+            {
+                /*
+                CardName.Foreground = new SolidColorBrush(Color.FromRgb(234, 255, 255));
+                DropShadowEffect shadow = new DropShadowEffect();
+                shadow.BlurRadius = 2;
+                shadow.RenderingBias = RenderingBias.Quality;
+                shadow.Direction = -90;
+                shadow.ShadowDepth = 1.5;
+                shadow.Color = Color.FromRgb(182, 162, 255);
+
+                CardName.Effect = shadow;*/
+                RainbowHolofoil();
+            }
         }
 
         internal YgoCard SetFrame(FRAME frame)
@@ -1675,50 +1721,14 @@ namespace OV.Pyramid
         {
             if (CurrentCard == null)
             {
-
                 return;
             }
-            CardName.Text = CurrentCard.Name;
-            /*
-            if (Current.Name.Length > 0)
-            {
-                int Position = TextBox.SelectionStart;
-                if (Char.IsLower(TextBox.Text[0]) && TextBox.Text[0] != 'α' && TextBox.Text[0] != 'β' && TextBox.Text[0] != 'Ω')
-                {
-                    //if ()
-                    TextBox.Text = TextBox.Text.Replace(TextBox.Text[0], Char.ToUpper(TextBox.Text[0]));
-                    TextBox.SelectionStart = Position; // add some logic if length is 0
-                    TextBox.SelectionLength = 0;
-                    return;
-                }
-            }
-            */
+            CardName.Text = CurrentCard.Name;            
 
-
-
-            FormattedText formattedText = new FormattedText
-                (
-                    CardName.Text,
-                    CultureInfo.GetCultureInfo("en-us"),
-                    FlowDirection.LeftToRight,
-                    new Typeface(CardName.FontFamily, CardName.FontStyle, CardName.FontWeight, CardName.FontStretch, null),
-                    CardName.FontSize,
-                    Brushes.Black
-                );
-
-            if (formattedText.Width > NameViewbox.Width)
+            if (CardName.GetFormattedText().Width > NameViewbox.Width)
                 CardName.Width = double.NaN;
             else
                 CardName.Width = NameViewbox.Width;
-
-            if (CurrentCard.IsFrame(FRAME.Xyz) || CurrentCard.IsMagic())
-            {
-                this.CardName.Foreground = Brushes.White;
-            }
-            else
-            {
-                this.CardName.Foreground = Brushes.Black;
-            }
         }
 
         private void HandleAttribute()
@@ -1727,17 +1737,29 @@ namespace OV.Pyramid
             {
                 return;
             }
-            Attribute.Source = Database.GetImage(@"Template\Attribute\" + CurrentCard.Attribute.ToString() + ".png");
+            Attribute.Source = Database.GetImage(
+                @"Template\Attribute\" + (CurrentCard.Rarity == RARITY.UltimateRare ? @"Emboss\" : "") +
+                CurrentCard.Attribute.ToString() + ".png");
 
             if (CurrentCard.Attribute != ATTRIBUTE.UNKNOWN)
             {
-                //AttributeText.Text = vietnameseLang.IsChecked == true ?
-                //    TransLanguage(Current.Attribute.ToString()) : Current.Attribute.ToString();
                 AttributeText.Text = CurrentCard.Attribute.ToString();
             }
             else
             {
                 AttributeText.Text = null;
+            }
+
+            if (CurrentCard.Rarity == RARITY.UltimateRare)
+            {
+                Attribute.Source = Database.GetImage(
+                   @"Template\Attribute\Emboss\" + CurrentCard.Attribute.ToString() + ".png");
+                AttributeText.Foreground = Brushes.White;
+            } else
+            {
+                Attribute.Source = Database.GetImage(
+                   @"Template\Attribute\" + CurrentCard.Attribute.ToString() + ".png");
+                AttributeText.Foreground = Brushes.Gray;
             }
         }
 

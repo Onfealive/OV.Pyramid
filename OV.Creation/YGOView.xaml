@@ -20,8 +20,9 @@
                 <TextBlock Name="CardName" FontSize="{Binding Height, ElementName=NameViewbox}" ></TextBlock>
             </Viewbox>
             <Image Name="Attribute" Width="79" Height="79" Stretch="Fill" Canvas.Top="54" Canvas.Left="678"></Image>
-            <Viewbox Width="80" Height="35" Stretch="Fill" Canvas.Left="677.5" Canvas.Top="54.5" >
-                <TextBlock Width="100" Height="35" Name="AttributeText" TextAlignment="Center" Foreground="White" FontSize="17" FontWeight="Bold"></TextBlock>
+            <Viewbox Width="80" Height="31" Stretch="Fill" Canvas.Left="677.5" Canvas.Top="56.5" >
+                <TextBlock Width="100" Height="35" Name="AttributeText" TextAlignment="Center"
+                           Foreground="White" FontSize="17" FontWeight="ExtraBold"></TextBlock>
             </Viewbox>
             <Image Name="PendulumLine"></Image>
             <Image Name="SpellHalf"></Image>
