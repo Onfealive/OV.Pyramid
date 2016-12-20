@@ -94,7 +94,9 @@
             <TextBlock Name="ScaleRightBlock"  FontSize="58"></TextBlock>
             <Image Name="CardBorder"></Image>
             <Image Name="LoreBorder"></Image>            
-            <Image Name="Sticker" Width="40" Height="40" Stretch="Fill" Canvas.Left="750" Canvas.Top="1120"></Image>
+            <Image Name="Sticker" Width="40" Height="40" Stretch="Fill" Canvas.Left="750" Canvas.Top="1120">
+                
+            </Image>
             <TextBlock Name="ATKBlock" TextAlignment="Right"
                        FontSize="37" FontWeight="DemiBold" >
             </TextBlock>
@@ -112,8 +114,9 @@
                         PreviewMouseLeftButtonDown="Frame_PreviewMouseLeftButtonDown"
                     Width="758" Height="1130" Canvas.Left="27.5" Canvas.Top="27.5" ></Border>
                 <Border Name="AttributeZone" Style="{StaticResource ZoneBorder}"
-                        PreviewMouseLeftButtonDown="Attribute_PreviewMouseLeftButtonDown"
-                    Width="79" Height="79" Canvas.Top="54" Canvas.Left="677"></Border>
+                    Width="79" Height="79" Canvas.Top="54" Canvas.Left="677"
+                    PreviewMouseLeftButtonDown="Attribute_PreviewMouseLeftButtonDown">
+                </Border>
                 <Border Name="NameZone" Style="{StaticResource ZoneBorder}"
                         PreviewMouseLeftButtonDown="Name_PreviewMouseLeftButtonDown"
                     Height="79"  Width="606" Canvas.Top="54" Canvas.Left="61" ></Border>
@@ -147,8 +150,8 @@
                         </MultiBinding>
                     </Border.Width>
                 </Border>
-                <Border Name="AbilityZone" Style="{StaticResource ZoneBorder}"
-                        PreviewMouseLeftButtonDown="Ability_PreviewMouseLeftButtonDown"
+                <Border Name="TypeZone" Style="{StaticResource ZoneBorder}"
+                        PreviewMouseLeftButtonDown="Type_PreviewMouseLeftButtonDown"
                         Canvas.Left="{Binding Path=(Canvas.Left), ElementName=AbilityViewbox}"
                         Canvas.Top="{Binding Path=(Canvas.Top), ElementName=AbilityViewbox}"
                         Width="{Binding Path=ActualWidth, ElementName=RichTextBoxDescription}"

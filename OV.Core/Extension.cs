@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using OV.Tools;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -6,6 +7,7 @@ using System.Text;
 
 namespace OV.Core
 {
+    
     static class Extension
     {
 #region Card
@@ -93,6 +95,9 @@ namespace OV.Core
             File.WriteAllText(fileName, data);
         }
 
+        
+
+
         #endregion Card
 
         #region Set
@@ -106,6 +111,8 @@ namespace OV.Core
             string data = JsonConvert.SerializeObject(set, Formatting.Indented);
             File.WriteAllText(fileName, data);
         }
+
+        
         #endregion Set
     }
 }

@@ -1,5 +1,4 @@
 ﻿using CustomFileExtensionControl;
-using JsonNet.PrivateSettersContractResolvers;
 using Microsoft.Win32;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -11,9 +10,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -21,14 +18,13 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Markup;
 using System.Windows.Media;
-using System.Windows.Navigation;
 using System.Xml.Linq;
+using Telerik.Windows.Controls;
 using static OV.Tools.Utilities;
 using Forms = System.Windows.Forms;
 
 namespace OV.Pyramid
 {
-
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -41,8 +37,30 @@ namespace OV.Pyramid
         private bool inChangeSetCard;
 
         private static string DatabasePath;
-
         private ByteDatabase Database;
+        private string currentFilePath;
+
+        const string CARD_EXTENSION = ".occ";
+        const string SET_EXTENSION = ".ocs";
+
+        private bool IsSaved
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(currentFilePath) == false)
+                {
+                    if (currentFilePath.IsExtension(CARD_EXTENSION))
+                    {
+                        return YgoCard.LoadFrom(currentFilePath) == CurrentCard;
+                    }
+                    else
+                    {
+                        return YgoSet.LoadFrom(currentFilePath).Equals(CurrentSet);
+                    }
+                }
+                return false;
+            }
+        }
 
         internal YgoCard CurrentCard
         {
@@ -66,6 +84,8 @@ namespace OV.Pyramid
             Database = new ByteDatabase(DatabasePath);
             InitializeComponent();
             FirstLoad();
+            
+            
         }
 
         private void FirstLoad()
@@ -79,12 +99,9 @@ namespace OV.Pyramid
             {
                 MessageBox.Show("The file settings.json cannot be found!");
                 GenerateSettings();
-
-            }
-
+            }            
             CurrentSet.Cards.Add(YgoCard.Default);
-            YgoView.SetDefaultArtwork(Database.GetData(@"Template\NoneImage.png").Bytes);
-            //RenderCard.Render(YGOCard.Default);            
+            YgoView.SetDefaultArtwork(Database.GetData(@"Template\NoneImage.png").Bytes);  
 
             LoadControl();
             LoadButton();
@@ -93,6 +110,7 @@ namespace OV.Pyramid
 
             cardList.ItemsSource = CurrentSet.Cards;
             cardList.SelectedIndex = 0;
+            
         }
 
         private void LoadSettings()
@@ -132,7 +150,6 @@ namespace OV.Pyramid
             if (CurrentCard == null) { return; }
 
             YgoView.Render(CurrentCard);
-
         }
 
         private void RefreshControl()
@@ -165,8 +182,15 @@ namespace OV.Pyramid
 
             DataText.Text = CurrentCard.GetData();
 
-            inRefreshControl = false;
+            Message.Text = string.IsNullOrEmpty(currentFilePath)
+                ? "Unsaved"
+                : Path.GetFileName(currentFilePath);
+            if (IsSaved == false)
+            {
+                Message.Text += " *";
+            }
 
+            inRefreshControl = false;
         }
 
         private void RefreshSetting()
@@ -212,18 +236,12 @@ namespace OV.Pyramid
 
         private void RefreshPendulumControl()
         {
-            //PendulumBox.Document.Blocks.Clear();
-            //PendulumBox.Document.Blocks.Add(new Paragraph(new Run(CurrentCard.PendulumEffect)));
             PendulumBox.SetText(CurrentCard.PendulumEffect);
         }
 
         private void RefreshDescriptionControl()
         {
-            //DescriptionBox.Document.Blocks.Clear();
-            //DescriptionBox.Document.Blocks.Add(new Paragraph(new Run(CurrentCard.Description)));
             DescriptionBox.SetText(CurrentCard.Description);
-
-
         }
 
         private void RefreshScaleControl()
@@ -247,7 +265,6 @@ namespace OV.Pyramid
                             button.IsEnabled = false;
                         }
                     }
-
                     if (CurrentCard.ScaleLeft >= 0 || double.IsNaN(CurrentCard.ScaleLeft))
                     {
                         ScaleLeftBox.Text = double.IsNaN(CurrentCard.ScaleLeft) ? "?" : CurrentCard.ScaleLeft.ToString();
@@ -305,7 +322,6 @@ namespace OV.Pyramid
                     button.IsEnabled = CurrentCard.Abilities.Count() != 0;
                     continue;
                 }
-
                 if (button.IsEnabled == false)
                 {
                     button.IsEnabled = true;
@@ -320,7 +336,6 @@ namespace OV.Pyramid
                             button.IsEnabled = false;
                         }
                     }
-
                     TextBlock content = button.FindChildrens<TextBlock>().ToList()[0] as TextBlock;
                     Image icon = button.FindChildrens<Image>().ToList()[0] as Image;
                     if (CurrentCard.Abilities.Contains(button.Tag.ToString().ToEnum<ABILITY>()))
@@ -373,10 +388,8 @@ namespace OV.Pyramid
                     {
                         button.IsEnabled = false;
                     }
-
                     if (button.Tag.ToString() == "Pendulum")
                     {
-
                         TextBlock content = button.FindChildrens<TextBlock>().ToList()[0] as TextBlock;
                         Image icon = button.FindChildrens<Image>().ToList()[0] as Image;
                         if (CurrentCard.IsPendulum)
@@ -397,23 +410,25 @@ namespace OV.Pyramid
 
         private void RefreshMiddleControl()
         {
-            foreach (Button button in MiddleCanvas.FindChildrens<Button>())
+            MiddleCanvas.FindChildrens<Button>().Where(o => o.IsEnabled == false)
+                .ToList().ForEach(s => s.IsEnabled = true);
+
+            MiddleCanvas.FindChildrens<Button>().Where(s => s.Tag != null && (s.Tag.ToString() == "Level_" + CurrentCard.Level.ToString()
+                        || s.Tag.ToString() == "Rank_" + CurrentCard.Rank.ToString()
+                        || s.Tag.ToString() == CurrentCard.Frame.ToString() + "_" + CurrentCard.Property.ToString()))
+                .ToList().ForEach(s => s.IsEnabled = false);
+            
+            if (CurrentCard.IsFrame(FRAME.Xyz))
             {
-                if (button.IsEnabled == false)
-                {
-                    button.IsEnabled = true;
-                }
-
-                if (button.Tag != null)
-                {
-                    if (button.Tag.ToString() == "Level_" + CurrentCard.Level.ToString()
-                        || button.Tag.ToString() == "Rank_" + CurrentCard.Rank.ToString()
-                        || button.Tag.ToString() == CurrentCard.Frame.ToString() + "_" + CurrentCard.Property.ToString())
-                    {
-
-                        button.IsEnabled = false;
-                    }
-                }
+                MiddleTab.SelectedIndex = 1; //RankTab
+            }
+            else if (CurrentCard.IsMagic())
+            {
+                MiddleTab.SelectedIndex = 2; //PropertyTab
+            }
+            else
+            {
+                MiddleTab.SelectedIndex = 0; //LevelTab
             }
         }
 
@@ -449,7 +464,7 @@ namespace OV.Pyramid
 
         private void LoadButton()
         {
-            Button[] Stack = new Button[] { Home, Talk, About, Export, Load, Exit };
+            Button[] Stack = new Button[] { Home, About, Export, Load, Exit };
             for (int i = 0; i < Stack.Length; i++)
             {
                 StackPanel Zone = new StackPanel()
@@ -467,21 +482,14 @@ namespace OV.Pyramid
                 Zone.Children.Add(new TextBlock(new Run(Stack[i].Name)));
 
                 Stack[i].Content = Zone;
-            }
-            //Home.Click += Home_Click;
-            //Talk.Click += Talk_Click;
-            //About.Click += About_Click;
+            }            
             Export.Click += Export_Click;
-            //Save.Click += Save_Click;
             Load.Click += Load_Click;
-            //Update.Click += Update_Click;
-            //Exit.Click += Exit_Click;
         }
 
         private void Load_Click(object sender, RoutedEventArgs e)
         {
             LoadSet();
-
         }
 
         private void LoadSet(string filePath = "")
@@ -491,9 +499,8 @@ namespace OV.Pyramid
             {
                 OpenFileDialog choofdlog = new OpenFileDialog()
                 {
-                    Filter = "OV.Creation Card/Set Card|*.occ;*.ocs",
-
-                    //FilterIndex = 1,
+                    Filter = string.Format("OV.Creation Card/Set Card|*{0};*{1}",
+                        CARD_EXTENSION, SET_EXTENSION),
                     Multiselect = false
                 };
                 if (choofdlog.ShowDialog() == true)
@@ -508,28 +515,25 @@ namespace OV.Pyramid
 
             if (string.IsNullOrEmpty(path) || !File.Exists(path))
                 return;
-            //var settings = new ObjectCustomerSettings();
-            //Current = JsonConvert.DeserializeObject<YGOSet>(File.ReadAllText(path)).Cards[0];
-            var settings = new JsonSerializerSettings
-            {
-                ContractResolver = new PrivateSetterContractResolver(),
-            };
+            
             if (path.IsExtension(".ocs"))
             {
-                CurrentSet = JsonConvert.DeserializeObject<YgoSet>(File.ReadAllText(path), settings);
+                CurrentSet = YgoSet.LoadFrom(path);
             }
             else
             {
                 CurrentSet.Cards.Clear();
-
-                CurrentSet.Cards.Add(JsonConvert.DeserializeObject<YgoCard>(File.ReadAllText(path), settings));
+                CurrentSet.Cards.Add(YgoCard.LoadFrom(path));
                 currentIndex = 0;
             }
-
             inChangeSetCard = true;
+
             SetEdit.Text = CurrentSet.Name;
             cardList.ItemsSource = CurrentSet.Cards;
             currentIndex = 0;
+            cardList.SelectedIndex = currentIndex;
+            currentFilePath = path;
+
             inChangeSetCard = false;
 
             RefreshArtwork();
@@ -549,38 +553,38 @@ namespace OV.Pyramid
             if (Application.Current.Properties["ArbitraryArgName"] != null)
             {
                 string fname = Application.Current.Properties["ArbitraryArgName"].ToString();
-                //RenderCard.Load(fname);
-                LoadSet(fname);
+                try
+                {
+                    currentFilePath = fname;
+                    LoadSet(fname);
+                }
+                catch {
+                    MessageBox.Show("Error #2");
+                }
             }
         }
 
-        private void Save_Click(object sender, RoutedEventArgs e)
-        {
-            SaveSet();
-        }
-
-        private void SaveSet()
+        private void SaveSet(string fileName = "")
         {
             string text;
-            //MessageBox.Show(xml);
 
-
-            SaveFileDialog dlg = new SaveFileDialog();
-            if (string.IsNullOrWhiteSpace(CurrentSet.Name))
-                dlg.FileName = "Set Name";
-            else
-                dlg.FileName = CurrentSet.Name.Replace(":", " -"); // Default file name
-            //dlg.DefaultExt = ".png"; // Default file extension
-            dlg.Filter = "OV.Creation Card|*.occ|OV.Creation Set Card|*.ocs"; // Filter files by extension 
-
-            // Show save file dialog box
-
-            // Process save file dialog box results 
-            if (dlg.ShowDialog() == true)
+            if (string.IsNullOrEmpty(fileName))
             {
-                // Save document 
-                string filename = dlg.FileName;
-                if (filename.IsExtension(".ocs"))
+                SaveFileDialog dlg = new SaveFileDialog();
+                if (string.IsNullOrWhiteSpace(CurrentSet.Name))
+                    dlg.FileName = "Set Name";
+                else
+                    dlg.FileName = CurrentSet.Name.Replace(":", " -"); // Default file name
+                dlg.Filter = string.Format("OV.Creation Card|*{0}|OV.Creation Set Card|*{1}",
+                    CARD_EXTENSION, SET_EXTENSION);
+                if (dlg.ShowDialog() == true)
+                {
+                    fileName = dlg.FileName;
+                }
+            }
+            if (string.IsNullOrEmpty(fileName) == false)
+            {
+                if (fileName.IsExtension(".ocs"))
                 {
                     text = JsonConvert.SerializeObject(CurrentSet, Formatting.Indented);
                 }
@@ -589,14 +593,17 @@ namespace OV.Pyramid
                     text = JsonConvert.SerializeObject(CurrentCard, Formatting.Indented);
 
                 }
-                File.WriteAllText(filename, text);
+                File.WriteAllText(fileName, text);
+            }
+            else
+            {
+                tabControl.SelectedIndex = 4;//ExportTab
             }
         }
 
         private void Export_Click(object sender, RoutedEventArgs e)
         {
-            var app = Application.Current.MainWindow as MainWindow;
-            //app.GoToExportPage();
+            tabControl.SelectedIndex = 4; //ExportTab
         }
 
         private void LoadControl()
@@ -609,7 +616,6 @@ namespace OV.Pyramid
             LoadMiddleControl();
             LoadScaleControl();
             LoadAbilityControl();
-            //SetColorControl();
         }
 
         private void LoadAbilityControl()
@@ -618,11 +624,11 @@ namespace OV.Pyramid
 
             for (int i = 1; i <= Ability_String.Length; i++)
             {
-                Button Button = new Button();
-                Button.Width = 90;
-
+                Button Button = new Button()
+                {
+                    Width = 90
+                };
                 AbilityCanvas.Children.Add(Button);
-
                 Canvas.SetTop(Button, 8 + ((i - 1) / 4) * 33);
                 Canvas.SetLeft(Button, 36 + ((i - 1) % 4) * (Button.Width + 4) - 32);
                 StackPanel Zone = new StackPanel()
@@ -640,16 +646,16 @@ namespace OV.Pyramid
                 Zone.Children.Add(Icon);
                 Zone.Children.Add(new TextBlock(new Run(Ability_String[i - 1])));
                 Zone.Margin = new Thickness(0, 4, 0, 0);
-
                 Button.Content = Zone;
                 Button.Tag = Ability_String[i - 1];
                 Button.Click += Button_Ability;
             }
-
-            Button Reset = new Button();
-            Reset.IsEnabled = false;
-            Reset.Width = 90;
-            Reset.Name = "Ability_Reset";
+            Button Reset = new Button()
+            {
+                IsEnabled = false,
+                Width = 90,
+                Name = "Ability_Reset"
+            };
             Canvas.SetTop(Reset, 80);
             Canvas.SetLeft(Reset, 286);
             AbilityCanvas.Children.Add(Reset);
@@ -659,16 +665,17 @@ namespace OV.Pyramid
                 {
                     Orientation = Orientation.Horizontal
                 };
-                Image Icon = new Image();
-                Icon.Source = Database.GetImage(@"Other\Reset.png");
-                Icon.Width = 20;
-                Icon.Height = 20;
-                Icon.Stretch = Stretch.Uniform;
-                Icon.Margin = new Thickness(0, 0, 4, 0);
+                Image Icon = new Image()
+                {
+                    Source = Database.GetImage(@"Other\Reset.png"),
+                    Width = 20,
+                    Height = 20,
+                    Stretch = Stretch.Uniform,
+                    Margin = new Thickness(0, 0, 4, 0)
+                };
                 Zone.Children.Add(Icon);
                 Zone.Children.Add(new TextBlock(new Run("Reset")));
                 Zone.Margin = new Thickness(0, 4, 0, 0);
-
                 Reset.Content = Zone;
             }
         }
@@ -677,10 +684,9 @@ namespace OV.Pyramid
         {
             CurrentCard.ResetAbility();
             YgoView.Render(CurrentCard);
-            //RefreshAbilityControl();
             RefreshControl();
         }
-
+        
         private void Button_Ability(object sender, RoutedEventArgs e)
         {
             ABILITY ability = (sender as Button).Tag.ToString().ToEnum<ABILITY>();
@@ -693,9 +699,7 @@ namespace OV.Pyramid
                 CurrentCard.SetAbility(ability, true);
 
             }
-
             YgoView.Render(CurrentCard);
-            //RefreshAbilityControl();
             RefreshControl();
         }
 
@@ -705,7 +709,6 @@ namespace OV.Pyramid
             TextBox txtBox = sender as TextBox;
             CurrentCard.SetDEF(int.TryParse(txtBox.Text, out int value) ? value : double.NaN);
             YgoView.Render(CurrentCard);
-
             RefreshControl();
         }
 
@@ -713,11 +716,8 @@ namespace OV.Pyramid
         {
             if (inRefreshControl) { return; }
             TextBox txtBox = sender as TextBox;
-            int value;
-
-            CurrentCard.SetATK(int.TryParse(txtBox.Text, out value) ? value : double.NaN);
+            CurrentCard.SetATK(int.TryParse(txtBox.Text, out int value) ? value : double.NaN);
             YgoView.Render(CurrentCard);
-
             RefreshControl();
         }
 
@@ -729,23 +729,24 @@ namespace OV.Pyramid
             InLeft.Height = 32;
             Canvas.SetLeft(InLeft, 188);
             Canvas.SetTop(InLeft, 64);
-
             Canvas.SetTop(ScaleLeftBox, Canvas.GetTop(InLeft) + 40);
             Canvas.SetLeft(ScaleLeftBox, Canvas.GetLeft(InLeft) + 20);
             ScaleCanvas.Children.Add(InLeft);
-            {
-                Image InRight = new Image();
-                InRight.Source = Database.GetImage(@"Template\Middle\ScaleRight.png");
-                InRight.Width = 32;
-                InRight.Height = 32;
+            
+                Image InRight = new Image()
+                {
+                    Source = Database.GetImage(@"Template\Middle\ScaleRight.png"),
+                    Width = 32,
+                    Height = 32
+                };
                 Canvas.SetLeft(InRight, 322);
                 Canvas.SetTop(InRight, Canvas.GetTop(InLeft));
                 ScaleCanvas.Children.Add(InRight);
 
                 Canvas.SetTop(ScaleRightBox, Canvas.GetTop(InRight) + 40);
                 Canvas.SetLeft(ScaleRightBox, Canvas.GetLeft(InRight) - 30);
-            }
-
+            
+    
             Button button = new Button();
             TextBlock Text = new TextBlock()
             {
@@ -761,28 +762,21 @@ namespace OV.Pyramid
             Canvas.SetTop(button, 58);
             Canvas.SetLeft(button, 221);
 
-
-
-
-
             int left = 16, top = 14; //110-36
             for (int i = 0; i <= 13; i++)
             {
-                Button ButtonX = new Button()
+                Button scaleButton = new Button()
                 {
                     Width = 50
                 };
-                ScaleCanvas.Children.Add(ButtonX);
-
-                Canvas.SetTop(ButtonX, top + 36 * ((i - 1) / 3));
-                Canvas.SetLeft(ButtonX, left + ((i - 1) % 3) * (ButtonX.Width + 4));
-
+                ScaleCanvas.Children.Add(scaleButton);
+                Canvas.SetTop(scaleButton, top + 36 * ((i - 1) / 3));
+                Canvas.SetLeft(scaleButton, left + ((i - 1) % 3) * (scaleButton.Width + 4));
                 if (i == 0 || i == 13)
                 {
-                    Canvas.SetTop(ButtonX, top);
-                    Canvas.SetLeft(ButtonX, i == 0 ? 210 : 280);
+                    Canvas.SetTop(scaleButton, top);
+                    Canvas.SetLeft(scaleButton, i == 0 ? 210 : 280);
                 }
-
                 StackPanel Zone = new StackPanel()
                 {
                     Orientation = Orientation.Horizontal
@@ -798,10 +792,9 @@ namespace OV.Pyramid
                 Zone.Children.Add(Icon);
                 Zone.Children.Add(new TextBlock(new Run("x" + i.ToString())));
                 Zone.Margin = new Thickness(0, 4, 0, 0);
-
-                ButtonX.Content = Zone;
-                ButtonX.Tag = i;
-                ButtonX.Click += Button_Scale;
+                scaleButton.Content = Zone;
+                scaleButton.Tag = i;
+                scaleButton.Click += Button_Scale;
             }
         }
 
@@ -815,37 +808,28 @@ namespace OV.Pyramid
         }
 
         private void LoadMiddleControl()
-        {
-
-            TabControl Tab = new TabControl();
-            Tab.Name = "Middle_Tab";
-            //Tab.TabStripPlacement = Dock.Right;
-
-            Tab.Width = 380;
-            Tab.Height = 185;
-
-            MiddleCanvas.Children.Add(Tab);
-            Canvas.SetTop(Tab, 8);
-
-            TabItem Level = new TabItem();
-            Level.Header = "Level";
-            Level.Content = new Canvas();
-            Tab.Items.Add(Level);
-
-            TabItem Rank = new TabItem();
-            Rank.Header = "Rank";
-            Rank.Content = new Canvas();
-            Tab.Items.Add(Rank);
-
-            TabItem Property = new TabItem();
-            Property.Header = "Property";
-            Property.Content = new Canvas();
-            Tab.Items.Add(Property);
-
+        {            
+            TabItem Level = new TabItem()
+            {
+                Header = "Level",
+                Content = new Canvas()
+            };
+            MiddleTab.Items.Add(Level);
+            TabItem Rank = new TabItem()
+            {
+                Header = "Rank",
+                Content = new Canvas()
+            };
+            MiddleTab.Items.Add(Rank);
+            TabItem Property = new TabItem()
+            {
+                Header = "Property",
+                Content = new Canvas()
+            };
+            MiddleTab.Items.Add(Property);
             MiddleReload(Level.Content as Canvas, "Level");
             MiddleReload(Rank.Content as Canvas, "Rank");
             MiddleReload(Property.Content as Canvas, "Property");
-            //Tab.Resources.Add(typeof(TabItem), this.FindResource("RotatedTab") as Style);
         }
 
         private void MiddleReload(Canvas MiddleCanvas, string type)
@@ -853,15 +837,20 @@ namespace OV.Pyramid
             MiddleCanvas.Children.Clear();
             if (type != "Property")
             {
-                int left = 90, top = 30;
-                for (int i = 1; i <= 12; i++)
+                int left = 64, top = 30;
+                for (int i = 0; i <= 12; i++)
                 {
-                    Button Button = new Button();
-                    Button.Width = 50;
+                    Button Button = new Button()
+                    {
+                        Width = 50
+                    };
                     MiddleCanvas.Children.Add(Button);
-
-
-                    if (i <= 4)
+                    if (i == 0)
+                    {
+                        Canvas.SetTop(Button, top);
+                        Canvas.SetLeft(Button, 278);
+                    }
+                    else if (i <= 4)
                     {
                         Canvas.SetTop(Button, top);
                         Canvas.SetLeft(Button, left + ((i - 1) % 4) * (Button.Width + 4) - 14);
@@ -876,49 +865,26 @@ namespace OV.Pyramid
                         Canvas.SetTop(Button, top + 72);
                         Canvas.SetLeft(Button, left + ((i - 1) % 4) * (Button.Width + 4) - 14);
                     }
-
-
-                    StackPanel Zone = new StackPanel();
-                    Zone.Orientation = Orientation.Horizontal;
-                    Image Icon = new Image();
-                    Icon.Source = Database.GetImage(@"Template\Middle\" + type + ".png");
-                    Icon.Width = 20;
-                    Icon.Height = 20;
-                    Icon.Stretch = Stretch.Uniform;
-                    Icon.Margin = new Thickness(0, 0, 4, 0);
+                    StackPanel Zone = new StackPanel()
+                    {
+                        Orientation = Orientation.Horizontal
+                    };
+                    Image Icon = new Image()
+                    {
+                        Source = Database.GetImage(@"Template\Middle\" + type + ".png"),
+                        Width = 20,
+                        Height = 20,
+                        Stretch = Stretch.Uniform,
+                        Margin = new Thickness(0, 0, 4, 0)
+                    };
                     Zone.Children.Add(Icon);
                     Zone.Children.Add(new TextBlock(new Run("x" + i.ToString())));
                     Zone.Margin = new Thickness(0, 4, 0, 0);
 
                     Button.Tag = type.Replace(' ', '_') + "_" + i.ToString();
                     Button.Content = Zone;
-
-
                     Button.Click += Button_LR;
-                }
-                /*
-                Button Reset = new Button();
-                Reset.Width = 80;
-                Reset.Name = "Middle_" + type + "_Reset";
-                Canvas.SetTop(Reset, 6);
-                Canvas.SetLeft(Reset, 264);
-                MiddleCanvas.Children.Add(Reset);
-                //Reset.Click += Button_Reset;
-                {
-                    StackPanel Zone = new StackPanel();
-                    Zone.Orientation = Orientation.Horizontal;
-                    Image Icon = new Image();
-                    Icon.Source = Database.GetImage(@"Other\Reset.png");
-                    Icon.Width = 20;
-                    Icon.Height = 20;
-                    Icon.Stretch = Stretch.Uniform;
-                    Icon.Margin = new Thickness(0, 0, 4, 0);
-                    Zone.Children.Add(Icon);
-                    Zone.Children.Add(new TextBlock(new Run("Reset")));
-                    Zone.Margin = new Thickness(0, 4, 0, 0);
-
-                    Reset.Content = Zone;
-                }  */
+                }                
             }
             else
             {
@@ -973,16 +939,19 @@ namespace OV.Pyramid
                         Canvas.SetTop(Button, 34 + ((i - 1) / 3) * 33 + (count - 1) * 90);
                         Canvas.SetLeft(Button, 60 + ((i - 1) % 3) * (Button.Width + 4) - 32);
 
-                        StackPanel Zone = new StackPanel();
-
-                        Zone.Orientation = Orientation.Horizontal;
+                        StackPanel Zone = new StackPanel()
+                        {
+                            Orientation = Orientation.Horizontal
+                        };
                         Button.Content = Zone;
-                        Image Icon = new Image();
-                        Icon.Source = Database.GetImage(@"Template\Middle\" + Property_String[i - 1].Remove("-") + ".png");
-                        Icon.Width = 20;
-                        Icon.Height = 20;
-                        Icon.Stretch = Stretch.Uniform;
-                        Icon.Margin = new Thickness(0, 0, 6, 0);
+                        Image Icon = new Image()
+                        {
+                            Source = Database.GetImage(@"Template\Middle\" + Property_String[i - 1].Remove("-") + ".png"),
+                            Width = 20,
+                            Height = 20,
+                            Stretch = Stretch.Uniform,
+                            Margin = new Thickness(0, 0, 6, 0)
+                        };
                         Zone.Children.Add(Icon);
                         Zone.Children.Add(new TextBlock(new Run(Property_String[i - 1])));
                     }
@@ -995,10 +964,8 @@ namespace OV.Pyramid
         {
             string Frame = (sender as Button).Tag.ToString().Split('_')[0];
             string Property = (sender as Button).Tag.ToString().Split('_')[1];
-
             CurrentCard.SetProperty(Frame == "Spell" ? FRAME.Spell : FRAME.Trap, Property.ToEnum<PROPERTY>());
             YgoView.Render(CurrentCard);
-            //RefreshMiddleControl();
             RefreshControl();
         }
 
@@ -1006,22 +973,17 @@ namespace OV.Pyramid
         {
             string type = (sender as Button).Tag.ToString().Split('_')[0];
             int number = Int32.Parse((sender as Button).Tag.ToString().Split('_')[1]);
-
             if (type == "Level")
             {
                 CurrentCard.SetLevel(number);
-
                 CurrentCard.SetRank(double.NaN, false);
-
             }
             else
             {
-
                 CurrentCard.SetLevel(double.NaN, false);
                 CurrentCard.SetRank(number);
             }
             YgoView.Render(CurrentCard);
-            //RefreshMiddleControl();
             RefreshControl();
         }
 
@@ -1031,8 +993,10 @@ namespace OV.Pyramid
             string[] Attribute_String = typeof(ATTRIBUTE).GetList().Where(o => o != ATTRIBUTE.UNKNOWN.ToString()).ToArray();
             for (int i = 1; i <= Attribute_String.Length; i++)
             {
-                Button Button = new Button();
-                Button.Width = 70;
+                Button Button = new Button()
+                {
+                    Width = 70
+                };
                 AttributeCanvas.Children.Add(Button);
                 {
                     if (i <= 2)
@@ -1056,24 +1020,24 @@ namespace OV.Pyramid
                         Canvas.SetLeft(Button, left + ((i - 3) % 4) * (Button.Width + 4) - 14);
                     }
                 }
-                StackPanel Zone = new StackPanel();
-
-                Zone.Orientation = Orientation.Horizontal;
-
-                Image Icon = new Image();
-                Icon.Source = Database.GetImage(@"Template\Attribute\" + Attribute_String[i - 1] + ".png");
-                Icon.Width = 20;
-                Icon.Height = 20;
-                Icon.Stretch = Stretch.Uniform;
-                Icon.Margin = new Thickness(0, 0, 4, 0);
+                StackPanel Zone = new StackPanel()
+                {
+                    Orientation = Orientation.Horizontal
+                };
+                Image Icon = new Image()
+                {
+                    Source = Database.GetImage(@"Template\Attribute\" + Attribute_String[i - 1] + ".png"),
+                    Width = 20,
+                    Height = 20,
+                    Stretch = Stretch.Uniform,
+                    Margin = new Thickness(0, 0, 4, 0)
+                };
                 Zone.Children.Add(Icon);
                 Zone.Children.Add(new TextBlock(new Run(Attribute_String[i - 1])));
                 Zone.Margin = new Thickness(0, 4, 0, 0);
-
                 Button.Name = Attribute_String[i - 1];
                 Button.Content = Zone;
                 Button.Tag = Attribute_String[i - 1].ToEnum<ATTRIBUTE>();
-
                 Button.Click += Button_Attribute;
             }
         }
@@ -1082,7 +1046,6 @@ namespace OV.Pyramid
         {
             CurrentCard.SetAttribute((sender as Button).Tag.ToString().ToEnum<ATTRIBUTE>());
             YgoView.Render(CurrentCard);
-            //RefreshAttributeControl();
             RefreshControl();
         }
 
@@ -1091,13 +1054,13 @@ namespace OV.Pyramid
             List<string> frameList = typeof(FRAME).GetList().ToList();
             frameList.Insert(frameList.IndexOf("Spell"), "Pendulum");
             string[] Frame_String = frameList.ToArray();
-
             double left = 25;
-
             for (int i = 1; i <= Frame_String.Length; i++)
             {
-                Button Button = new Button();
-                Button.Width = 78;
+                Button Button = new Button()
+                {
+                    Width = 78
+                };
                 FrameCanvas.Children.Add(Button);
                 {
                     if (i <= 2)
@@ -1127,10 +1090,10 @@ namespace OV.Pyramid
                         Canvas.SetLeft(Button, ((i - 3) % 4) * (Button.Width + 4) + left);
                     }
                 }
-                StackPanel Zone = new StackPanel();
-
-                Zone.Orientation = Orientation.Horizontal;
-
+                StackPanel Zone = new StackPanel()
+                {
+                    Orientation = Orientation.Horizontal
+                };
                 Image Icon = new Image();
                 if (i == 8)
                     Icon.Source = Database.GetImage(@"Template\Pendulum.png");
@@ -1146,7 +1109,6 @@ namespace OV.Pyramid
 
                 Button.Tag = Frame_String[i - 1];
                 Button.Content = Zone;
-
                 Button.Click += Button_Frame;
             }
         }
@@ -1161,10 +1123,8 @@ namespace OV.Pyramid
             else
             {
                 CurrentCard.SetFrame(frameName.ToEnum<FRAME>());
-                //Current = RenderCard.SetFrame(frameName.ToEnum<FRAME>());
             }
             YgoView.Render(CurrentCard);
-            //RefreshFrameControl();
             RefreshControl();
         }
 
@@ -1174,9 +1134,10 @@ namespace OV.Pyramid
 
             for (int i = 1; i <= Type_String.Length; i++)
             {
-                Button Button = new Button();
-                Button.Width = 90;
-
+                Button Button = new Button()
+                {
+                    Width = 90
+                };
                 TypeCanvas.Children.Add(Button);
                 {
                     if (i >= Type_String.Length - 4)
@@ -1204,16 +1165,18 @@ namespace OV.Pyramid
                         }
                     }
                 }
-                StackPanel Zone = new StackPanel();
-
-                Zone.Orientation = Orientation.Horizontal;
-
-                Image Icon = new Image();
-                Icon.Source = Database.GetImage(@"Template\Type\" + Type_String[i - 1] + ".png");
-                Icon.Width = 20;
-                Icon.Height = 20;
-                Icon.Stretch = Stretch.Uniform;
-                Icon.Margin = new Thickness(0, 0, 4, 0);
+                StackPanel Zone = new StackPanel()
+                {
+                    Orientation = Orientation.Horizontal
+                };
+                Image Icon = new Image()
+                {
+                    Source = Database.GetImage(@"Template\Type\" + Type_String[i - 1] + ".png"),
+                    Width = 20,
+                    Height = 20,
+                    Stretch = Stretch.Uniform,
+                    Margin = new Thickness(0, 0, 4, 0)
+                };
                 Zone.Children.Add(Icon);
                 string type = Type_String[i - 1];
                 type = type.Replace("WingedBeast", "Winged Beast");
@@ -1242,7 +1205,6 @@ namespace OV.Pyramid
             StickerCombo.Items.Add("Silver");
             StickerCombo.Items.Add("Promo Silver");
             StickerCombo.Items.Add("Promo Gold");
-
         }
 
         private void LoadRarityControl()
@@ -1277,7 +1239,6 @@ namespace OV.Pyramid
         {
             CurrentCard.SetType((sender as Button).Tag.ToString().ToEnum<TYPE>());
             YgoView.Render(CurrentCard);
-            //RefreshTypeControl();
             RefreshControl();
         }
 
@@ -1299,13 +1260,9 @@ namespace OV.Pyramid
         private void CardNumber_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (inRefreshControl) { return; }
-            int value;
-            int.TryParse((sender as TextBox).Text, out value);
+            int.TryParse((sender as TextBox).Text, out int value);
             CurrentCard.SetNumber(value);
-
-
             YgoView.Render(CurrentCard);
-            //RefreshAttributeControl();
             RefreshControl();
         }
 
@@ -1331,7 +1288,6 @@ namespace OV.Pyramid
             futureText = futureText.Replace("{a}", "α");
             futureText = futureText.Replace("{b}", "β");
             futureText = futureText.Replace("{o}", "Ω");
-
             return futureText;
         }
 
@@ -1343,29 +1299,16 @@ namespace OV.Pyramid
 
             RefreshArtwork();
             RefreshControl();
-
-
         }
-        /*
-        private void Symbol_Click(object sender, RoutedEventArgs e)
-        {
-            TextBox Edit = (NameExpander.Header as Canvas).FindChildren<TextBox>("NameEdit");
-
-            Edit.Text = Edit.Text.Insert(Edit.CaretIndex, (sender as Button).Content.ToString());
-        }
-        */
 
         private void Button_Rarity(object sender, RoutedEventArgs e)
         {
             Button button = sender as Button;
-            //ChangeRarity(Button.Content.ToString().Replace('_', ' '));
             CurrentCard.SetRarity(button.Tag.ToString().ToEnum<RARITY>());
             YgoView.Render(CurrentCard);
-            RefreshRarityControl();
+            //RefreshRarityControl();
+            RefreshControl();
         }
-
-
-
         private void ScaleLeft_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (inRefreshControl) { return; }
@@ -1387,17 +1330,13 @@ namespace OV.Pyramid
         private void ApplyDocument_Click(object sender, RoutedEventArgs e)
         {
             if (inRefreshControl) { return; }
-            //CurrentCard.SetDescription(RenderText(DescriptionBox.GetText()));
-            //CurrentCard.SetPendulumEffect(RenderText(PendulumBox.GetText()));
-
             CurrentCard.SetDescription(RenderText(DescriptionBox.GetText()));
             CurrentCard.SetPendulumEffect(RenderText(PendulumBox.GetText()));
-
             RefreshControl();
             YgoView.Render(CurrentCard);
         }
 
-        private void cardList_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void CardList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (inChangeSetCard) { return; }
             currentIndex = cardList.SelectedIndex;
@@ -1553,7 +1492,7 @@ namespace OV.Pyramid
             cardExtension.ApplicationName = "OV.Creation.exe";
             cardExtension.Description = "OV.Creation Card";
             cardExtension.EmbeddedIcon = false;
-            cardExtension.Extension = ".occ";
+            cardExtension.Extension = CARD_EXTENSION;
             cardExtension.Handler = "OV.Creation.Card";
             cardExtension.IconName = @"Resources\OV.Card.ico";
             cardExtension.IconPosition = 0;
@@ -1565,7 +1504,7 @@ namespace OV.Pyramid
             setExtension.IconPosition = 0;
             setExtension.OpenText = "Open with OV.Creation";
             setExtension.Description = "OV.Creation Set Card";
-            setExtension.Extension = ".ocs";
+            setExtension.Extension = SET_EXTENSION;
             setExtension.Handler = "OV.Creation.Set";
             setExtension.IconName = @"Resources\OV.Set.ico";
 
@@ -1673,6 +1612,13 @@ namespace OV.Pyramid
                     Ex.IsExpanded = true;
                 }
             }
+            if (border == NameBorder)
+            {
+                (RarityBorder.Child as Expander).IsExpanded = true;
+            } else if (border == TypeBorder)
+            {
+                (AbilityBorder.Child as Expander).IsExpanded = true;
+            }
         }
 
         private void RenderCard_AttributeClick(object sender, EventArgs e)
@@ -1683,9 +1629,9 @@ namespace OV.Pyramid
         {
             ScrollToControlCanvas(NameBorder);
         }
-        private void RenderCard_AbilityClick(object sender, EventArgs e)
+        private void RenderCard_TypeClick(object sender, EventArgs e)
         {
-            ScrollToControlCanvas(AbilityBorder);
+            ScrollToControlCanvas(TypeBorder);
         }
         private void RenderCard_CirculationClick(object sender, EventArgs e)
         {
@@ -1828,7 +1774,7 @@ namespace OV.Pyramid
             var main = Application.Current.MainWindow as MainWindow;
             string cardName = main.YgoView.CurrentCard.Name.ToNonVietnamese();
 
-            string extension = ".occ";
+            string extension = CARD_EXTENSION;
 
             string fileName = folderPath + @"\" + cardName + extension;
             //main.YgoView.SaveDataTo(fileName);
@@ -1870,7 +1816,7 @@ namespace OV.Pyramid
 
             folderPath += @"\" + set.Name;
             Directory.CreateDirectory(folderPath);
-            string extension = ".ocs";
+            string extension = SET_EXTENSION;
 
             set.SaveTo(folderPath + @"\" + set.Name + extension);
             if (EachCardData.IsChecked == true)
@@ -1878,7 +1824,7 @@ namespace OV.Pyramid
                 Directory.CreateDirectory(folderPath + @"\Data\");
                 foreach (YgoCard card in set.Cards)
                 {
-                    extension = ".occ";
+                    extension = CARD_EXTENSION;
 
                     string fileName = folderPath + @"\Data\" + card.Name.ToNonVietnamese() + extension;
                     card.SaveTo(fileName);
@@ -1975,6 +1921,314 @@ namespace OV.Pyramid
         }
 
         #endregion Event
+
+        private void OpenCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = true;
+        }
+
+        private void OpenCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            LoadSet();
+        }
+
+        private void SaveCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {  
+            e.CanExecute = true;
+        }
+
+        private void SaveCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            SaveSet(currentFilePath);
+        }
+
+        private void CloseCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = true;
+        }
+
+        private void CloseCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        private void Window_Closing(object sender, CancelEventArgs e)
+        {
+            e.Cancel = true;
+            if (IsSaved == false)
+            {
+                if (string.IsNullOrWhiteSpace(currentFilePath) == false) //In Opening
+                {
+                    SaveSet(currentFilePath);
+                }
+                else
+                {
+                    MessageBoxResult result = MessageBox.Show("Want to save your current card/set?",
+                        "", MessageBoxButton.YesNoCancel);
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        SaveSet();
+                    }
+                    else if (result == MessageBoxResult.No)
+                    {
+                        e.Cancel = false;
+                    }
+                }
+            }
+            else
+            {
+                e.Cancel = false;
+            }
+        }
+    }
+
+    public class RelayCommand : ICommand
+    {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RelayCommand"/> class.
+        /// </summary>
+        /// <param name="execute">The execute.</param>
+        public RelayCommand(Action<object> execute)
+            : this(execute, null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RelayCommand"/> class.
+        /// </summary>
+        /// <param name="execute">The execute.</param>
+        /// <param name="canExecute">The can execute.</param>
+        public RelayCommand(Action<object> execute, Predicate<object> canExecute)
+        {
+            if (execute == null)
+                throw new ArgumentNullException("execute");
+            _execute = execute;
+            _canExecute = canExecute;
+        }
+
+        /// <summary>
+        /// Defines the method that determines whether the command can execute in its current state.
+        /// </summary>
+        /// <param name="parameter">Data used by the command.  If the command does not require data to be passed, this object can be set to null.</param>
+        /// <returns>
+        /// true if this command can be executed; otherwise, false.
+        /// </returns>
+        public bool CanExecute(object parameter)
+        {
+            return _canExecute == null ? true : _canExecute(parameter);
+        }
+
+        /// <summary>
+        /// Occurs when changes occur that affect whether or not the command should execute.
+        /// </summary>
+        public event EventHandler CanExecuteChanged
+        {
+            add { CommandManager.RequerySuggested += value; }
+            remove { CommandManager.RequerySuggested -= value; }
+        }
+
+        /// <summary>
+        /// Defines the method to be called when the command is invoked.
+        /// </summary>
+        /// <param name="parameter">Data used by the command.  If the command does not require data to be passed, this object can be set to null.</param>
+        public void Execute(object parameter)
+        {
+            _execute(parameter);
+        }
+
+        /// <summary>
+        /// Action
+        /// </summary>
+        private readonly Action<object> _execute;
+
+
+        /// <summary>
+        /// Predicate
+        /// </summary>
+        private readonly Predicate<object> _canExecute;
+    }
+
+    public static class GridHelpers
+    {
+        #region RowCount Property
+
+        /// <summary>
+        /// Adds the specified number of Rows to RowDefinitions. 
+        /// Default Height is Auto
+        /// </summary>
+        public static readonly DependencyProperty RowCountProperty =
+            DependencyProperty.RegisterAttached(
+                "RowCount", typeof(int), typeof(GridHelpers),
+                new PropertyMetadata(-1, RowCountChanged));
+
+        // Get
+        public static int GetRowCount(DependencyObject obj)
+        {
+            return (int)obj.GetValue(RowCountProperty);
+        }
+
+        // Set
+        public static void SetRowCount(DependencyObject obj, int value)
+        {
+            obj.SetValue(RowCountProperty, value);
+        }
+
+        // Change Event - Adds the Rows
+        public static void RowCountChanged(
+            DependencyObject obj, DependencyPropertyChangedEventArgs e)
+        {
+            if (!(obj is Grid) || (int)e.NewValue < 0)
+                return;
+
+            Grid grid = (Grid)obj;
+            grid.RowDefinitions.Clear();
+
+            for (int i = 0; i < (int)e.NewValue; i++)
+                grid.RowDefinitions.Add(
+                    new RowDefinition() { Height = GridLength.Auto });
+
+            SetStarRows(grid);
+        }
+
+        #endregion
+
+        #region ColumnCount Property
+
+        /// <summary>
+        /// Adds the specified number of Columns to ColumnDefinitions. 
+        /// Default Width is Auto
+        /// </summary>
+        public static readonly DependencyProperty ColumnCountProperty =
+            DependencyProperty.RegisterAttached(
+                "ColumnCount", typeof(int), typeof(GridHelpers),
+                new PropertyMetadata(-1, ColumnCountChanged));
+
+        // Get
+        public static int GetColumnCount(DependencyObject obj)
+        {
+            return (int)obj.GetValue(ColumnCountProperty);
+        }
+
+        // Set
+        public static void SetColumnCount(DependencyObject obj, int value)
+        {
+            obj.SetValue(ColumnCountProperty, value);
+        }
+
+        // Change Event - Add the Columns
+        public static void ColumnCountChanged(
+            DependencyObject obj, DependencyPropertyChangedEventArgs e)
+        {
+            if (!(obj is Grid) || (int)e.NewValue < 0)
+                return;
+
+            Grid grid = (Grid)obj;
+            grid.ColumnDefinitions.Clear();
+
+            for (int i = 0; i < (int)e.NewValue; i++)
+                grid.ColumnDefinitions.Add(
+                    new ColumnDefinition() { Width = GridLength.Auto });
+
+            SetStarColumns(grid);
+        }
+
+        #endregion
+
+        #region StarRows Property
+
+        /// <summary>
+        /// Makes the specified Row's Height equal to Star. 
+        /// Can set on multiple Rows
+        /// </summary>
+        public static readonly DependencyProperty StarRowsProperty =
+            DependencyProperty.RegisterAttached(
+                "StarRows", typeof(string), typeof(GridHelpers),
+                new PropertyMetadata(string.Empty, StarRowsChanged));
+
+        // Get
+        public static string GetStarRows(DependencyObject obj)
+        {
+            return (string)obj.GetValue(StarRowsProperty);
+        }
+
+        // Set
+        public static void SetStarRows(DependencyObject obj, string value)
+        {
+            obj.SetValue(StarRowsProperty, value);
+        }
+
+        // Change Event - Makes specified Row's Height equal to Star
+        public static void StarRowsChanged(
+            DependencyObject obj, DependencyPropertyChangedEventArgs e)
+        {
+            if (!(obj is Grid) || string.IsNullOrEmpty(e.NewValue.ToString()))
+                return;
+
+            SetStarRows((Grid)obj);
+        }
+
+        #endregion
+
+        #region StarColumns Property
+
+        /// <summary>
+        /// Makes the specified Column's Width equal to Star. 
+        /// Can set on multiple Columns
+        /// </summary>
+        public static readonly DependencyProperty StarColumnsProperty =
+            DependencyProperty.RegisterAttached(
+                "StarColumns", typeof(string), typeof(GridHelpers),
+                new PropertyMetadata(string.Empty, StarColumnsChanged));
+
+        // Get
+        public static string GetStarColumns(DependencyObject obj)
+        {
+            return (string)obj.GetValue(StarColumnsProperty);
+        }
+
+        // Set
+        public static void SetStarColumns(DependencyObject obj, string value)
+        {
+            obj.SetValue(StarColumnsProperty, value);
+        }
+
+        // Change Event - Makes specified Column's Width equal to Star
+        public static void StarColumnsChanged(
+            DependencyObject obj, DependencyPropertyChangedEventArgs e)
+        {
+            if (!(obj is Grid) || string.IsNullOrEmpty(e.NewValue.ToString()))
+                return;
+
+            SetStarColumns((Grid)obj);
+        }
+
+        #endregion
+
+        private static void SetStarColumns(Grid grid)
+        {
+            string[] starColumns =
+                GetStarColumns(grid).Split(',');
+
+            for (int i = 0; i < grid.ColumnDefinitions.Count; i++)
+            {
+                if (starColumns.Contains(i.ToString()))
+                    grid.ColumnDefinitions[i].Width =
+                        new GridLength(1, GridUnitType.Star);
+            }
+        }
+
+        private static void SetStarRows(Grid grid)
+        {
+            string[] starRows =
+                GetStarRows(grid).Split(',');
+
+            for (int i = 0; i < grid.RowDefinitions.Count; i++)
+            {
+                if (starRows.Contains(i.ToString()))
+                    grid.RowDefinitions[i].Height =
+                        new GridLength(1, GridUnitType.Star);
+            }
+        }
     }
 
     public static class TabContent

@@ -15,7 +15,6 @@ using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Animation;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using static OV.Tools.Utilities;
@@ -46,10 +45,14 @@ namespace OV.Pyramid
                 border.MouseEnter += ControlZone_MouseEnter;
                 border.MouseLeave += ControlZone_MouseLeave;
             }
+
+            ContextMenu AttributeContextMenu = new ContextMenu();
+            AttributeZone.ContextMenu = AttributeContextMenu;
+            AttributeContextMenu.Items.Add("kk");
         }
 
         public event EventHandler ValueClick;        
-        public event EventHandler AbilityClick;
+        public event EventHandler TypeClick;
         public event EventHandler ArtworkClick;
         public event EventHandler AttributeClick;
         public event EventHandler CirculationClick;
@@ -296,7 +299,7 @@ namespace OV.Pyramid
 
         private void RefreshZone()
         {
-            AbilityZone.Visibility = CurrentCard.IsMonster() ? Visibility.Visible : Visibility.Hidden;
+            TypeZone.Visibility = CurrentCard.IsMonster() ? Visibility.Visible : Visibility.Hidden;
         }
 
         private void HandlePendulum()
@@ -924,8 +927,6 @@ namespace OV.Pyramid
 
                     TextBlockDescription.FontFamily = Fonts.StoneSerifItalic;
                     TextBlockDescription.FontStyle = FontStyles.Italic;
-                    //Description.MaxFontSize = 25.57;
-                    //Description.ScaledLineHeight = 1.25;
                     TextBlockDescription.MaxHeight = TextBlockDescription.Height;
                     TextBlockDescription.MaxWidth = TextBlockDescription.Width;
                     TextBlockDescription.Text = Text;
@@ -942,36 +943,11 @@ namespace OV.Pyramid
             double fontDefault = 32.4;
             TextBlockDescription.FontFamily = Fonts.MatrixBook;
             TextBlockDescription.FontStyle = FontStyles.Normal;
-            //Description.FontSize = fontDefault;
-
-            //Description.LineHeight = fontDefault * 1;
-
-
-            
-
             TextBlockDescription.MaxFontSize = fontDefault;
             TextBlockDescription.ScaledLineHeight = 1.02;
-
             TextBlockDescription.Text = Text;
-
-
-            /*
-            double lineScale = 0.95;
-            if (Description.GetLines().Count() > 6)
-            {
-                lineScale = 0.94;
-            }
-            Description.LineHeight = lineScale * Description.FontSize;
-            */
+                        
             TextBlockDescription.FontSize = TextBlockDescription.MaxFontSize;
-
-            /*
-            Description.UpdateLayout();
-            while (Description.FontSize * Description.GetLines().Count() > Description.Height)
-            {
-                Description.FontSize -= 0.1;
-                Description.UpdateLayout();
-            } */
             double lineScale = 0.95;
             while (TextBlockDescription.FontSize * (Text.IsVietnamese()
                 ? 1.1 : 1) * TextBlockDescription.GetLines().Count() > TextBlockDescription.Height)
@@ -991,25 +967,20 @@ namespace OV.Pyramid
             if (CurrentCard.IsMonster())
             {
                 Canvas.SetTop(TextBlockDescription, 922);
-                //RichTextBoxDescription.Height = 155;//160
                 RichTextBoxDescription.Height = 158;
             }
             else
             {
                 Canvas.SetTop(TextBlockDescription, 891);
-                RichTextBoxDescription.Height = 226;//226
-                                                    //MessageBox.Show(RichTextBoxDescription.Height.ToString());
-                                                    //RichTextBoxDescription.Background = Brushes.Azure;
-            }
-
-
-            //Text.ReplaceLastOccurrence("\n", "");
+                RichTextBoxDescription.Height = 226;
+            }            
             this.RichTextBoxDescription.Visibility = Visibility.Visible;
             TextBlockDescription.Visibility = Visibility.Hidden;
-            Paragraph Para = new Paragraph();
-
-            Para.TextAlignment = TextAlignment.Justify;
-            Para.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
+            Paragraph Para = new Paragraph()
+            {
+                TextAlignment = TextAlignment.Justify,
+                LineStackingStrategy = LineStackingStrategy.BlockLineHeight
+            };
             double Default = 32.4;
 
             RichTextBoxDescription.Document.Blocks.Clear();
@@ -1019,20 +990,21 @@ namespace OV.Pyramid
             Para.FontFamily = Fonts.MatrixBook;
             Para.FontSize = Default;
             // 6-26.5
-            while (Default * (CurrentCard.IsFrame(FRAME.Normal) && (Text != "" && Text.IsVietnamese()) ? 1.1 : 1)
+            while (Default * (CurrentCard.IsFrame(FRAME.Normal) 
+                && (Text != "" && Text.IsVietnamese()) ? 1.1 : 1)
                 * RichTextBoxDescription.CountLine() > RichTextBoxDescription.Height)
             {
                 Default -= 0.1;
-                Para = new Paragraph(new Run(Text));
-                Para.TextAlignment = TextAlignment.Justify;
-                Para.LineStackingStrategy = LineStackingStrategy.BlockLineHeight;
-                Para.FontFamily = Fonts.MatrixBook;
-                Para.FontSize = Default;
+                Para = new Paragraph(new Run(Text))
+                {
+                    TextAlignment = TextAlignment.Justify,
+                    LineStackingStrategy = LineStackingStrategy.BlockLineHeight,
+                    FontFamily = Fonts.MatrixBook,
+                    FontSize = Default
+                };
                 RichTextBoxDescription.Document.Blocks.Clear();
                 RichTextBoxDescription.Document.Blocks.Add(Para);
             }
-
-
             int Line = RichTextBoxDescription.CountLine();
             Para.LineHeight = (CurrentCard.IsFrame(FRAME.Normal) ? 1.1 : 1) * Para.FontSize;
             if (CurrentCard.IsFrame(FRAME.Normal))
@@ -1754,12 +1726,12 @@ namespace OV.Pyramid
             {
                 Attribute.Source = Database.GetImage(
                    @"Template\Attribute\Emboss\" + CurrentCard.Attribute.ToString() + ".png");
-                AttributeText.Foreground = Brushes.White;
+                AttributeText.Foreground = Brushes.Gray;
             } else
             {
                 Attribute.Source = Database.GetImage(
                    @"Template\Attribute\" + CurrentCard.Attribute.ToString() + ".png");
-                AttributeText.Foreground = Brushes.Gray;
+                AttributeText.Foreground = Brushes.White;
             }
         }
 
@@ -1809,9 +1781,9 @@ namespace OV.Pyramid
         {
            ValueClick.Invoke(sender, e);
         }
-        private void Ability_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        private void Type_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            AbilityClick.Invoke(sender, e);
+            TypeClick.Invoke(sender, e);
         }
         private void Artwork_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
@@ -1852,6 +1824,84 @@ namespace OV.Pyramid
         {
             (sender as Border).BorderBrush = Brushes.Transparent;
         }
+    }
+
+    public class LeftClickContextMenu
+    {
+        private static Visibility previousContextVisility;
+
+        private static readonly DependencyProperty LeftClickContextMenuProperty =
+          DependencyProperty.RegisterAttached(
+            "Enabled", typeof(bool), typeof(LeftClickContextMenu),
+            new PropertyMetadata(new PropertyChangedCallback(HandlePropertyChanged))
+          );
+
+        public static bool GetEnabled(DependencyObject obj)
+        {
+            return (bool)obj.GetValue(LeftClickContextMenuProperty);
+        }
+
+        public static void SetEnabled(DependencyObject obj, bool value)
+        {
+            obj.SetValue(LeftClickContextMenuProperty, value);
+        }
+
+        private static void HandlePropertyChanged(
+          DependencyObject obj, DependencyPropertyChangedEventArgs args)
+        {
+            FrameworkElement ele = obj as FrameworkElement;
+            bool enabled = (bool)obj.GetValue(LeftClickContextMenuProperty);
+            if (ele != null)
+            {
+                if (ele.ContextMenu != null)
+                {
+                    if (enabled)
+                    {
+                        previousContextVisility = ele.ContextMenu.Visibility;
+
+                    }
+                    else
+                    {
+                        ele.ContextMenu.Visibility = previousContextVisility;
+                    }
+                }
+
+                ele.MouseLeftButtonDown -= ExecuteLeftMouseDown;
+                ele.MouseRightButtonDown -= ExecuteRightMouseDown;
+                ele.MouseLeftButtonDown += ExecuteLeftMouseDown;
+                ele.MouseRightButtonDown += ExecuteRightMouseDown;
+            }           
+        }
+
+        private static void ExecuteRightMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            FrameworkElement obj = sender as FrameworkElement;
+            bool enabled = (bool)obj.GetValue(LeftClickContextMenuProperty);
+
+            if (enabled)
+            {
+                if (obj.ContextMenu != null)
+                {                    
+                    obj.ContextMenu.Visibility = Visibility.Hidden;
+                }
+            }
+        }
+
+        private static void ExecuteLeftMouseDown(object sender, MouseEventArgs args)
+        {
+            FrameworkElement obj = sender as FrameworkElement;
+            bool enabled = (bool)obj.GetValue(LeftClickContextMenuProperty);
+            
+            if (obj != null && enabled)
+            {
+                if (obj.ContextMenu != null)
+                {
+                    obj.ContextMenu.IsOpen = true;
+                    obj.ContextMenu.Visibility = previousContextVisility;
+                }
+            }
+        }
+        
     }
 
     public class TextBlockAutoShrink : TextBlock, INotifyPropertyChanged

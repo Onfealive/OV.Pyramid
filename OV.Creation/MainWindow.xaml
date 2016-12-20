@@ -4,81 +4,24 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:OV.Pyramid"
-        xmlns:converters="clr-namespace:OV.Pyramid"
         mc:Ignorable="d"
         Title="OV.Land.Pyramid.Creation 1.0 Beta" SizeToContent="WidthAndHeight"
-        WindowStartupLocation="CenterScreen" MinWidth="974" MinHeight="710" ResizeMode="CanMinimize">
-    <Window.Resources>
+        WindowStartupLocation="CenterScreen" MinWidth="974" MinHeight="710" ResizeMode="CanMinimize"
+        Closing="Window_Closing">
+    
+        <Window.Resources>        
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Dictionary.xaml"/>
             </ResourceDictionary.MergedDictionaries>
-
+            <RoutedUICommand x:Key="Close" Text="Close">
+                <RoutedUICommand.InputGestures>
+                    <KeyGesture>Ctrl+Q</KeyGesture>
+                </RoutedUICommand.InputGestures>
+            </RoutedUICommand>
             <local:ImageConverter x:Key="imageConverter"/>
-            <SolidColorBrush x:Key="TabControlNormalBorderBrush" Color="#8C8E94"/>
-            <Style x:Key="DockTabControl" TargetType="{x:Type TabControl}">
-                <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.ControlTextBrushKey}}"/>
-                <Setter Property="Padding" Value="4,4,4,4"/>
-                <Setter Property="BorderThickness" Value="1"/>
-                <Setter Property="BorderBrush" Value="{StaticResource TabControlNormalBorderBrush}"/>
-                <Setter Property="Background" Value="#F9F9F9"/>
-                <Setter Property="HorizontalContentAlignment" Value="Center"/>
-                <Setter Property="VerticalContentAlignment" Value="Center"/>
-                <Setter Property="Template">
-                    <Setter.Value>
-                        <ControlTemplate TargetType="{x:Type TabControl}">
-                            <Grid ClipToBounds="true" SnapsToDevicePixels="true" KeyboardNavigation.TabNavigation="Local">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition x:Name="ColumnDefinition0"/>
-                                    <ColumnDefinition x:Name="ColumnDefinition1" Width="0"/>
-                                </Grid.ColumnDefinitions>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition x:Name="RowDefinition0" MinHeight="30" Height="Auto"/>
-                                    <RowDefinition x:Name="RowDefinition1" Height="*"/>
-                                </Grid.RowDefinitions>
-                                <DockPanel x:Name="HeaderPanel"   IsItemsHost="true" Margin="2,2,2,0" Grid.Row="0" KeyboardNavigation.TabIndex="1" Panel.ZIndex="1"/>
-                                <Border x:Name="ContentPanel" BorderBrush="{TemplateBinding BorderBrush}"  BorderThickness="{TemplateBinding BorderThickness}" Background="{TemplateBinding Background}" Grid.Column="0" KeyboardNavigation.DirectionalNavigation="Contained" Grid.Row="1" KeyboardNavigation.TabIndex="2" KeyboardNavigation.TabNavigation="Local">
-                                    <ContentPresenter x:Name="PART_SelectedContentHost" ContentSource="SelectedContent" Margin="{TemplateBinding Padding}" SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}"/>
-                                </Border>
-                            </Grid>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="TabStripPlacement" Value="Bottom">
-                                    <Setter Property="Grid.Row" TargetName="HeaderPanel" Value="1"/>
-                                    <Setter Property="Grid.Row" TargetName="ContentPanel" Value="0"/>
-                                    <Setter Property="Height" TargetName="RowDefinition0" Value="*"/>
-                                    <Setter Property="Height" TargetName="RowDefinition1" Value="Auto"/>
-                                    <Setter Property="Margin" TargetName="HeaderPanel" Value="2,0,2,2"/>
-                                </Trigger>
-                                <Trigger Property="TabStripPlacement" Value="Left">
-                                    <Setter Property="Grid.Row" TargetName="HeaderPanel" Value="0"/>
-                                    <Setter Property="Grid.Row" TargetName="ContentPanel" Value="0"/>
-                                    <Setter Property="Grid.Column" TargetName="HeaderPanel" Value="0"/>
-                                    <Setter Property="Grid.Column" TargetName="ContentPanel" Value="1"/>
-                                    <Setter Property="Width" TargetName="ColumnDefinition0" Value="Auto"/>
-                                    <Setter Property="Width" TargetName="ColumnDefinition1" Value="*"/>
-                                    <Setter Property="Height" TargetName="RowDefinition0" Value="*"/>
-                                    <Setter Property="Height" TargetName="RowDefinition1" Value="0"/>
-                                    <Setter Property="Margin" TargetName="HeaderPanel" Value="2,2,0,2"/>
-                                </Trigger>
-                                <Trigger Property="TabStripPlacement" Value="Right">
-                                    <Setter Property="Grid.Row" TargetName="HeaderPanel" Value="1"/>
-                                    <Setter Property="Grid.Row" TargetName="ContentPanel" Value="0"/>
-                                    <Setter Property="Grid.Column" TargetName="HeaderPanel" Value="1"/>
-                                    <Setter Property="Grid.Column" TargetName="ContentPanel" Value="0"/>
-                                    <Setter Property="Width" TargetName="ColumnDefinition0" Value="*"/>
-                                    <Setter Property="Width" TargetName="ColumnDefinition1" Value="Auto"/>
-                                    <Setter Property="Height" TargetName="RowDefinition0" Value="*"/>
-                                    <Setter Property="Height" TargetName="RowDefinition1" Value="0"/>
-                                    <Setter Property="Margin" TargetName="HeaderPanel" Value="0,2,2,2"/>
-                                </Trigger>
-                                <Trigger Property="IsEnabled" Value="false">
-                                    <Setter Property="Foreground" Value="{DynamicResource {x:Static SystemColors.GrayTextBrushKey}}"/>
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Setter.Value>
-                </Setter>
-            </Style>
+            
+            
 
             <Style x:Key="RoundedBorder" TargetType="{x:Type Border}">
                 <Setter Property="Margin" Value="10"></Setter>
@@ -112,39 +55,51 @@
     </Window.Resources>
     <Window.CommandBindings>
         <CommandBinding Command="New" CanExecute="NewCommand_CanExecute" Executed="NewCommand_Executed"/>
+        <CommandBinding Command="Open" CanExecute="OpenCommand_CanExecute" Executed="OpenCommand_Executed"/>
+        <CommandBinding Command="Save" CanExecute="SaveCommand_CanExecute" Executed="SaveCommand_Executed"                        />
+        <CommandBinding Command="{StaticResource Close}" CanExecute="CloseCommand_CanExecute" Executed="CloseCommand_Executed"/>
+        
     </Window.CommandBindings>
-
     <StackPanel Name="mainCanvas" Width="974" Height="670">
-        <Menu DockPanel.Dock="Top" >
-            <MenuItem Header="_File">
-                <MenuItem Header="_New" Command="New"/>
-                <MenuItem Header="_Open" />
-                <MenuItem Header="_Save" />
-                <Separator />
-                <MenuItem Header="_Exit" />
-            </MenuItem>
-        </Menu>
-
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            <Menu Name="MainMenu" Grid.Column="0">
+                <MenuItem Header="_File" Height="20">
+                    <MenuItem Header="_New" Command="New"/>
+                    <MenuItem Header="_Open" Command="Open" />
+                    <MenuItem Header="_Save" Command="Save" />
+                    <Separator />
+                    <MenuItem Header="_Exit" Command="{StaticResource Close}"/>
+                </MenuItem>
+            </Menu>
+            <TextBlock Name="Message" Background="{Binding ElementName=MainMenu, Path=Background}"
+                       Grid.Column="1" Padding="2">                
+            </TextBlock>
+        </Grid>
         <StackPanel Orientation="Horizontal">
             <StackPanel Margin="0 0 10 0">
-                <TextBlock Margin="15 10 0 10" TextWrapping="Wrap" Text="CARD LAYOUT" />
+                <TextBlock Margin="15 5 0 10" TextWrapping="Wrap" Text="CARD LAYOUT" />
                 <local:YgoView x:Name="YgoView" Margin="15 0 0 0"
                        AttributeClick="RenderCard_AttributeClick"
                        NameClick="RenderCard_NameClick"
-                       AbilityClick="RenderCard_AbilityClick"
+                       TypeClick="RenderCard_TypeClick"
                        CirculationClick="RenderCard_CirculationClick"
                        ValueClick="RenderCard_ValueClick" ArtworkClick="RenderCard_ArtworkClick"                       
                        DescriptionClick="RenderCard_DescriptionClick"
                        FrameClick="RenderCard_FrameClick" MiddleClick="RenderCard_MiddleClick" >
                 </local:YgoView >
-            </StackPanel>
-            <TabControl x:Name="tabControl" Height="640" Width="450"
+            </StackPanel>            
+            <TabControl x:Name="tabControl" Height="640" Width="450" Margin="0 3 0 0"
                     Canvas.Left="445" Canvas.Top="10" local:TabContent.IsCached="True"
-                    Style="{DynamicResource DockTabControl}" >
-                <TabItem Header="Details">
+                    Style="{DynamicResource DockTabControl}">
+                
+                <TabItem Header="Details" Grid.Column="1" DockPanel.Dock="Left">
                     <ScrollViewer  Name="Scroll" VerticalScrollBarVisibility="Visible" Width="Auto" Height="614"
                        Canvas.Left="461" Canvas.Top="44"
-                               Loaded="cardDetailsScroll_Loaded" Unloaded="cardDetailsScroll_Unloaded">
+                       Loaded="cardDetailsScroll_Loaded" Unloaded="cardDetailsScroll_Unloaded">
                         <StackPanel Name="Grid" Width="Auto" Height="950" Canvas.Top="0" Canvas.Left="0">
                             <Border Name="NameBorder">
                                 <Canvas Height="40" Name="NameCanvas">
@@ -176,7 +131,9 @@
                                     <Expander.Header>
                                         <TextBlock FontSize="14" Canvas.Left="4">Level/Rank/Property</TextBlock>
                                     </Expander.Header>
-                                    <Canvas x:Name="MiddleCanvas" Height="230"/>
+                                    <Canvas x:Name="MiddleCanvas" Height="230">
+                                        <TabControl Name="MiddleTab" Canvas.Top="8" Width="380" Height="185"></TabControl>
+                                    </Canvas>
                                 </Expander>
                             </Border>
                             <Border x:Name="FrameBorder" Style="{StaticResource RoundedBorder}">
@@ -268,8 +225,9 @@
                         </StackPanel>
                     </ScrollViewer>
                 </TabItem>
-                <TabItem Header="Artwork">
-                    <Canvas>
+                <TabItem Header="Artwork" DockPanel.Dock="Left">
+                    <Canvas Name="ArtworkCanvas">
+                        
                         <Border Canvas.Left="60" Canvas.Top="10" BorderThickness="1" BorderBrush="Black">
                             <Image Name="ControlArtwork" Stretch="Fill" Width="300" Height="300"></Image>
                         </Border>
@@ -281,9 +239,10 @@
                         <TextBox x:Name="artworkPaddingHeight" Height="23" Canvas.Left="141" TextWrapping="Wrap" Text="0" TextAlignment="Right" Canvas.Top="363" Width="95"/>
                         <Button x:Name="previewResizeArtworkButton" Content="Preview" Canvas.Left="255" Canvas.Top="364" Width="75" Click="previewResizeArtworkButton_Click"/>
                         <Button x:Name="resizeArtworkButton" Content="Apply" Canvas.Left="335" Canvas.Top="363" Width="75" Click="resizeArtworkButton_Click"/>
+                        
                     </Canvas>
                 </TabItem>
-                <TabItem Header="Set Detail">
+                <TabItem Header="Set Detail"  DockPanel.Dock="Left">
                     <StackPanel Background="#FFE5E5E5">
                         <StackPanel Orientation="Horizontal" Margin="10 5">
                             <TextBlock FontSize="14">Name</TextBlock>
@@ -292,7 +251,7 @@
                         <DockPanel Margin="5">
                             <ListView Name="cardList" Canvas.Left="10" Canvas.Top="66" Width="Auto" Height="300"
                               ScrollViewer.VerticalScrollBarVisibility="Auto"
-                              SelectionChanged="cardList_SelectionChanged" SelectionMode="Single"
+                              SelectionChanged="CardList_SelectionChanged" SelectionMode="Single"
                              PreviewKeyDown="cardList_PreviewKeyDown">
                                 <ListView.View>
                                     <GridView>
@@ -326,13 +285,17 @@
                         </StackPanel>
                     </StackPanel>
                 </TabItem>
-                <TabItem Header="Settings" HorizontalAlignment="Right">
+                <TabItem Header="Settings" DockPanel.Dock="Right" HorizontalAlignment="Right">
                     <StackPanel>
                         <Canvas>
                             <Label Content="File Extensions: *.OCC, *OCS" Canvas.Left="10" Canvas.Top="10"/>
                             <Button Name="Associate" Canvas.Left="182" Canvas.Top="9" Padding="5" Click="Associate_Click">Associate</Button>
                             <Button x:Name="Unassociate" Canvas.Left="251" Canvas.Top="9" Padding="5" Content="Unassociate" Click="Unassociate_Click"/>
                         </Canvas>
+                    </StackPanel>
+                </TabItem>
+                <TabItem Header="Export" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                    <StackPanel>
                         <GroupBox Header="Export Settings" Margin="10">
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -411,15 +374,18 @@
                         </GroupBox>
                     </StackPanel>
                 </TabItem>
+                               
             </TabControl>
             <StackPanel Margin="10">
-                <Button x:Name="Exit" Height="60" Width="60" BorderBrush="Black" BorderThickness="1.5" Click="Exit_Click" />
-                <Button Visibility="Hidden" Name="Talk" Height="60" Canvas.Left="990" Canvas.Top="466" Width="60" BorderBrush="Black" BorderThickness="1.5" ></Button>
-                <Button Name="Home" Height="60" Canvas.Left="900" Canvas.Top="526" Width="60" BorderBrush="Black" BorderThickness="1.5" Click="Home_Click"></Button>
-                <Button Name="About" Height="60" Canvas.Left="900" Canvas.Top="586" Width="60" BorderBrush="Black" BorderThickness="1.5" Click="About_Click" ></Button>
-                <Button Name="Export" Height="60" Canvas.Left="900" Canvas.Top="152" Width="60" BorderBrush="Black" BorderThickness="1.5" ></Button>
-
-                <Button x:Name="Load" Height="60" Canvas.Left="900" Canvas.Top="212" Width="60" BorderBrush="Black" BorderThickness="1.5" />
+                <Button x:Name="Exit" Height="60" Width="60" BorderBrush="Black" BorderThickness="1.5"
+                        Command="{StaticResource Close}"/>
+                <Button Name="Export" Margin="0 60 0 0" Height="60" Width="60" BorderBrush="Black" BorderThickness="1.5" ></Button>
+                <Button x:Name="Load" Height="60" Width="60" BorderBrush="Black" BorderThickness="1.5" />
+                <Button Name="Home" Margin="0 60 0 0" Height="60" Canvas.Left="900" 
+                        BorderBrush="Black" BorderThickness="1.5" Click="Home_Click"></Button>
+                <Button Name="About"  Height="60" Width="60" BorderBrush="Black" 
+                        BorderThickness="1.5" Click="About_Click" ></Button>
+                
             </StackPanel>
         </StackPanel>
 

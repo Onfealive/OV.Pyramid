@@ -3,18 +3,21 @@ using System.Collections.Generic;
 using System;
 using System.Linq;
 using System.Runtime.Serialization;
+using Newtonsoft.Json;
+using System.IO;
+using JsonNet.PrivateSettersContractResolvers;
 
 namespace OV.Core
 {
     [Serializable]
-    class YgoCard
+    internal class YgoCard
     {
         private FRAME DefaultFrame;
         private static string DatabasePath;
 
         private static ByteDatabase Database;
         public Version Version { get; private set; }
-
+        
         private YgoCard()
         {
             DefaultFrame = FRAME.Effect;
@@ -100,39 +103,48 @@ namespace OV.Core
             }
         }
 
-
         public YgoCard Clone()
         {
-            YgoCard clone = new YgoCard();
-
-            clone.Name = this.Name;
-            clone.ATK = this.ATK;
-            clone.DEF = this.DEF;
-            clone.Frame = this.Frame;
-            clone.Attribute = this.Attribute;
-            clone.Level = this.Level;
-            clone.Creator = this.Creator;
-            clone.Rarity = this.Rarity;
-            clone.Type = this.Type;
-            clone.Sticker = this.Sticker;
-            clone.ArtworkByte = this.ArtworkByte;
-            clone.Set = this.Set;
-            clone.ScaleLeft = this.ScaleLeft;
-            clone.ScaleRight = this.ScaleRight;
-            clone.Description = this.Description;
-            clone.Edition = this.Edition;
-            clone.IsPendulum = this.IsPendulum;
-            clone.Number = this.Number;
-            clone.PendulumEffect = this.PendulumEffect;
-            clone.Property = this.Property;
-            clone.Rank = this.Rank;
-            foreach(ABILITY ability in this.Abilities)
+            YgoCard clone = new YgoCard()
+            {
+                Name = this.Name,
+                ATK = this.ATK,
+                DEF = this.DEF,
+                Frame = this.Frame,
+                Attribute = this.Attribute,
+                Level = this.Level,
+                Creator = this.Creator,
+                Rarity = this.Rarity,
+                Type = this.Type,
+                Sticker = this.Sticker,
+                ArtworkByte = this.ArtworkByte,
+                Set = this.Set,
+                ScaleLeft = this.ScaleLeft,
+                ScaleRight = this.ScaleRight,
+                Description = this.Description,
+                Edition = this.Edition,
+                IsPendulum = this.IsPendulum,
+                Number = this.Number,
+                PendulumEffect = this.PendulumEffect,
+                Property = this.Property,
+                Rank = this.Rank
+            };
+            foreach (ABILITY ability in this.Abilities)
             {
                 clone.Abilities.Add(ability);
             }
             return clone;
         }
 
+        public static YgoCard LoadFrom(string fileName)
+        {
+            var settings = new JsonSerializerSettings
+            {
+                ContractResolver = new PrivateSetterContractResolver(),
+            };
+            return JsonConvert.DeserializeObject<YgoCard>(File.ReadAllText(fileName), settings);
+            
+        }
 
         public string GetData()
         {
@@ -641,7 +653,8 @@ internal void CleanUp()
                 && other.Rank.Equals(this.Rank)
                 && other.ScaleLeft.Equals(this.ScaleLeft)
                 && other.ScaleRight.Equals(this.ScaleRight)
-                && other.Type == this.Type) { return true; }
+                && other.Type == this.Type
+                && other.Rarity == this.Rarity) { return true; }
 
             return this.GetHashCode() == other.GetHashCode();
         }
@@ -649,6 +662,29 @@ internal void CleanUp()
         public override int GetHashCode()
         {
             return base.GetHashCode();
+        }
+
+        public static bool operator ==(YgoCard a, YgoCard b)
+        {
+            // If both are null, or both are same instance, return true.
+            if (System.Object.ReferenceEquals(a, b))
+            {
+                return true;
+            }
+
+            // If one is null, but not both, return false.
+            if (((object)a == null) || ((object)b == null))
+            {
+                return false;
+            }
+
+            // Return true if the fields match:
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(YgoCard a, YgoCard b)
+        {
+            return !(a == b);
         }
 
         internal void ResetAbility()
