@@ -25,6 +25,21 @@ namespace OV.Core
             Type = SETTYPE.BoosterPack;
         }
 
+        public YgoSet Clone()
+        {
+            YgoSet newSet = new YgoSet();
+            newSet.Version = this.Version;
+            newSet.Name = this.Name;
+            newSet.Prefix = this.Prefix;
+            newSet.Type = this.Type;
+            
+            foreach(YgoCard card in this.Cards)
+            {
+                newSet.Cards.Add(card.Clone());
+            }
+            return newSet;
+        }
+
         public static YgoSet LoadFrom(string fileName)
         {
             var settings = new JsonSerializerSettings

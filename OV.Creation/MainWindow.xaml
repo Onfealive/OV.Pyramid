@@ -1,83 +1,104 @@
-﻿<Window x:Class="OV.Pyramid.MainWindow"
+﻿<Window
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:OV.Pyramid"
+        xmlns:telerik="http://schemas.telerik.com/2008/xaml/presentation" x:Class="OV.Pyramid.MainWindow"
         mc:Ignorable="d"
-        Title="OV.Land.Pyramid.Creation 1.0 Beta" SizeToContent="WidthAndHeight"
+        Title="OV.Creation 1.0 - © 2015-2016 Onfealive - Email: vhtnghia@gmail.com" SizeToContent="WidthAndHeight"
         WindowStartupLocation="CenterScreen" MinWidth="974" MinHeight="710" ResizeMode="CanMinimize"
         Closing="Window_Closing">
-    
-        <Window.Resources>        
+
+    <Window.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Dictionary.xaml"/>
+                <ResourceDictionary Source="RoutedCommand.xaml"/>
             </ResourceDictionary.MergedDictionaries>
-            <RoutedUICommand x:Key="Close" Text="Close">
-                <RoutedUICommand.InputGestures>
-                    <KeyGesture>Ctrl+Q</KeyGesture>
-                </RoutedUICommand.InputGestures>
-            </RoutedUICommand>
+            
             <local:ImageConverter x:Key="imageConverter"/>
-            
-            
-
             <Style x:Key="RoundedBorder" TargetType="{x:Type Border}">
-                <Setter Property="Margin" Value="10"></Setter>
-                <Setter Property="Background" Value="Transparent"></Setter>
-                <Setter Property="BorderBrush" Value="Black"></Setter>
-                <Setter Property="BorderThickness" Value="1.5"></Setter>
-                <Setter Property="CornerRadius" Value="5"></Setter>
-                <Setter Property="VerticalAlignment" Value="Center"></Setter>
-                <Setter Property="Height" Value="40"></Setter>
-                <Setter Property="MinHeight" Value="40"></Setter>
-                <Setter Property="Width" Value="400"></Setter>
+                <Setter Property="Margin" Value="10"/>
+                <Setter Property="Background" Value="Transparent"/>
+                <Setter Property="BorderBrush" Value="Black"/>
+                <Setter Property="BorderThickness" Value="1.5"/>
+                <Setter Property="CornerRadius" Value="5"/>
+                <Setter Property="VerticalAlignment" Value="Center"/>
+                <Setter Property="Height" Value="40"/>
+                <Setter Property="MinHeight" Value="40"/>
+                <Setter Property="Width" Value="400"/>
             </Style>
-
             <Style x:Key="InsideBorderExpander" TargetType="{x:Type Expander}">
-                <Setter Property="OverridesDefaultStyle" Value="True"></Setter>
-                <Setter Property="Template" Value="{StaticResource StretchyExpanderTemp}"></Setter>
-                <Setter Property="Height" Value="Auto"></Setter>
-                <Setter Property="HorizontalAlignment" Value="Left"></Setter>
-                <Setter Property="VerticalAlignment" Value="Top"></Setter>
-                <Setter Property="Margin" Value="8,8,0,0"></Setter>
-                <Setter Property="HorizontalAlignment" Value="Stretch"></Setter>
-                <EventSetter Event="Expanded" Handler="InsideBorderExpander_Expanded"></EventSetter>
-                <EventSetter Event="Collapsed" Handler="InsideBorderExpander_Collapsed"></EventSetter>
+                <Setter Property="OverridesDefaultStyle" Value="True"/>
+                <Setter Property="Template" Value="{StaticResource StretchyExpanderTemp}"/>
+                <Setter Property="Height" Value="Auto"/>
+                <Setter Property="HorizontalAlignment" Value="Left"/>
+                <Setter Property="VerticalAlignment" Value="Top"/>
+                <Setter Property="Margin" Value="8,8,0,0"/>
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                <EventSetter Event="Expander.Expanded" Handler="InsideBorderExpander_Expanded"/>
+                <EventSetter Event="Expander.Collapsed" Handler="InsideBorderExpander_Collapsed"/>
             </Style>
 
             <Style TargetType="{x:Type TextBox}">
-                <EventSetter Event="GotFocus" Handler="TextBox_GotFocus"></EventSetter>
+                <EventSetter Event="UIElement.GotFocus" Handler="TextBox_GotFocus"/>
             </Style>
         </ResourceDictionary>
 
     </Window.Resources>
     <Window.CommandBindings>
-        <CommandBinding Command="New" CanExecute="NewCommand_CanExecute" Executed="NewCommand_Executed"/>
-        <CommandBinding Command="Open" CanExecute="OpenCommand_CanExecute" Executed="OpenCommand_Executed"/>
-        <CommandBinding Command="Save" CanExecute="SaveCommand_CanExecute" Executed="SaveCommand_Executed"                        />
-        <CommandBinding Command="{StaticResource Close}" CanExecute="CloseCommand_CanExecute" Executed="CloseCommand_Executed"/>
-        
+        <CommandBinding Command="{StaticResource NewCard}" CanExecute="NewCommand_CanExecuted" Executed="NewCommand_Executed"/>
+        <CommandBinding Command="{StaticResource Open}" Executed="OpenCommand_Executed"/>
+        <CommandBinding Command="{StaticResource Save}" Executed="SaveCommand_Executed"/>
+        <CommandBinding Command="{StaticResource SimpleSave}" Executed="SimpleSaveCommand_Executed"/>
+        <CommandBinding Command="{StaticResource Exit}" Executed="ExitCommand_Executed"/>
+        <CommandBinding Command="{StaticResource NextCard}" Executed="NextCardCommand_Executed"/>
+        <CommandBinding Command="{StaticResource PreviousCard}" Executed="PreviousCardCommand_Executed"/>
+        <CommandBinding Command="{StaticResource ResetCardToDefault}" Executed="SetCardToDefaultCommand_Executed"/>
+        <CommandBinding Command="{StaticResource RemoveCurrentCard}" Executed="RemoveCurrentCard_Executed"
+                        CanExecute="RemoveCurrentCard_CanExecuted"/>
+        <CommandBinding Command="{StaticResource SwitchMode}" Executed="SwitchMode_Executed"/>
+        <CommandBinding Command="{StaticResource About}" Executed="AboutCommand_Executed"></CommandBinding>
+        <CommandBinding Command="{StaticResource Feedback}" Executed="FeedbackCommand_Executed"></CommandBinding>
+        <CommandBinding Command="{StaticResource Facebook}" Executed="FacebookCommand_Executed"></CommandBinding>
+        <CommandBinding Command="{StaticResource Mediafire}" Executed="MediafireCommand_Executed"></CommandBinding>
     </Window.CommandBindings>
-    <StackPanel Name="mainCanvas" Width="974" Height="670">
+    
+    <StackPanel x:Name="mainCanvas" Width="974" Height="670">
         <Grid>
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"></ColumnDefinition>
-                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <Menu Name="MainMenu" Grid.Column="0">
-                <MenuItem Header="_File" Height="20">
-                    <MenuItem Header="_New" Command="New"/>
-                    <MenuItem Header="_Open" Command="Open" />
-                    <MenuItem Header="_Save" Command="Save" />
+            <Menu x:Name="MainMenu" Grid.Column="0" Padding="2">
+                <MenuItem Header="_File">
+                    <MenuItem Header="_Open" Command="{StaticResource Open}" />
+                    <MenuItem Header="_Save" Command="{StaticResource Save}" />
+                    <MenuItem Header="Save _Image" Command="{StaticResource SimpleSave}" />
                     <Separator />
-                    <MenuItem Header="_Exit" Command="{StaticResource Close}"/>
+                    <MenuItem Header="_Exit" Command="{StaticResource Exit}"/>
+                </MenuItem>
+                <MenuItem Header="_Set/Card">
+                    <MenuItem Header="_Add 1 Card" Command="{StaticResource NewCard}"/>
+                    <MenuItem Header="Ne_xt Card" Command="{StaticResource NextCard}"/>
+                    <MenuItem Header="_Previous Card" Command="{StaticResource PreviousCard}"/>
+                    <Separator></Separator>
+                    <MenuItem Header="_Reset Card" Command="{StaticResource ResetCardToDefault}"/>
+                    <MenuItem Header="Re_move Card" Command="{StaticResource RemoveCurrentCard}"/>
+                </MenuItem>
+                <MenuItem Header="Utility">
+                    <MenuItem Header="Card/Set Mode" Command="{StaticResource SwitchMode}"></MenuItem>
+                </MenuItem>
+                <MenuItem Header="_Help">
+                    <MenuItem Header="_Fan Page" Command="{StaticResource Facebook}"></MenuItem>
+                    <MenuItem Header="Main _Folder" Command="{StaticResource Mediafire}"></MenuItem>
+                    <MenuItem Header="F_eedback" Command="{StaticResource Feedback}"></MenuItem>
+                    <MenuItem Header="_About" Command="{StaticResource About}"></MenuItem>
                 </MenuItem>
             </Menu>
-            <TextBlock Name="Message" Background="{Binding ElementName=MainMenu, Path=Background}"
-                       Grid.Column="1" Padding="2">                
-            </TextBlock>
+            <TextBlock x:Name="Message" Background="{Binding Background, ElementName=MainMenu}"
+                       Grid.Column="1" Padding="2"/>
         </Grid>
         <StackPanel Orientation="Horizontal">
             <StackPanel Margin="0 0 10 0">
@@ -89,136 +110,133 @@
                        CirculationClick="RenderCard_CirculationClick"
                        ValueClick="RenderCard_ValueClick" ArtworkClick="RenderCard_ArtworkClick"                       
                        DescriptionClick="RenderCard_DescriptionClick"
-                       FrameClick="RenderCard_FrameClick" MiddleClick="RenderCard_MiddleClick" >
-                </local:YgoView >
-            </StackPanel>            
+                       FrameClick="RenderCard_FrameClick" MiddleClick="RenderCard_MiddleClick" />
+            </StackPanel>
             <TabControl x:Name="tabControl" Height="640" Width="450" Margin="0 3 0 0"
                     Canvas.Left="445" Canvas.Top="10" local:TabContent.IsCached="True"
                     Style="{DynamicResource DockTabControl}">
-                
+
                 <TabItem Header="Details" Grid.Column="1" DockPanel.Dock="Left">
-                    <ScrollViewer  Name="Scroll" VerticalScrollBarVisibility="Visible" Width="Auto" Height="614"
+                    <ScrollViewer  x:Name="Scroll" VerticalScrollBarVisibility="Visible" Width="Auto" Height="614"
                        Canvas.Left="461" Canvas.Top="44"
-                       Loaded="cardDetailsScroll_Loaded" Unloaded="cardDetailsScroll_Unloaded">
-                        <StackPanel Name="Grid" Width="Auto" Height="950" Canvas.Top="0" Canvas.Left="0">
-                            <Border Name="NameBorder">
-                                <Canvas Height="40" Name="NameCanvas">
-                                    <Label FontSize="14" Canvas.Left="13" Canvas.Top="8">Name</Label>
-                                    <TextBox Name="NameEdit"  Canvas.Left="60" Canvas.Top="10"
+                       Loaded="CardDetailsScroll_Loaded" Unloaded="CardDetailsScroll_Unloaded">
+                        <StackPanel x:Name="Grid" Width="Auto" Height="950" Canvas.Top="0" Canvas.Left="0">
+                            <Border x:Name="NameBorder">
+                                <Canvas Height="40" x:Name="NameCanvas">
+                                    <Label FontSize="14" Canvas.Left="13" Canvas.Top="8" Content="Name"/>
+                                    <TextBox x:Name="NameEdit"  Canvas.Left="60" Canvas.Top="10"
                                         Width="350" FontSize="15"
-                                TextChanged="Name_TextBox_TextChanged"></TextBox>
+                                TextChanged="Name_TextBox_TextChanged"/>
                                 </Canvas>
                             </Border>
                             <Border x:Name="RarityBorder" Style="{StaticResource RoundedBorder}">
                                 <Expander Style="{StaticResource InsideBorderExpander}">
                                     <Expander.Header>
-                                        <TextBlock FontSize="14" Canvas.Left="4">Rarity</TextBlock>
+                                        <TextBlock FontSize="14" Canvas.Left="4"><Run Text="Rarity"/></TextBlock>
                                     </Expander.Header>
-                                    <Canvas x:Name="RarityCanvas" Height="160"></Canvas>
+                                    <Canvas x:Name="RarityCanvas" Height="160"/>
                                 </Expander>
                             </Border>
                             <Border x:Name="AttributeBorder" Style="{StaticResource RoundedBorder}">
                                 <Expander Style="{StaticResource InsideBorderExpander}">
                                     <Expander.Header>
-                                        <TextBlock FontSize="14" Canvas.Left="4">Attribute</TextBlock>
+                                        <TextBlock FontSize="14" Canvas.Left="4"><Run Text="Attribute"/></TextBlock>
                                     </Expander.Header>
-                                    <Canvas x:Name="AttributeCanvas" Height="160">
-                                    </Canvas>
+                                    <Canvas x:Name="AttributeCanvas" Height="160"/>
                                 </Expander>
                             </Border>
                             <Border x:Name="MiddleBorder" Style="{StaticResource RoundedBorder}">
                                 <Expander Style="{StaticResource InsideBorderExpander}">
                                     <Expander.Header>
-                                        <TextBlock FontSize="14" Canvas.Left="4">Level/Rank/Property</TextBlock>
+                                        <TextBlock FontSize="14" Canvas.Left="4"><Run Text="Level/Rank/Property"/></TextBlock>
                                     </Expander.Header>
                                     <Canvas x:Name="MiddleCanvas" Height="230">
-                                        <TabControl Name="MiddleTab" Canvas.Top="8" Width="380" Height="185"></TabControl>
+                                        <TabControl x:Name="MiddleTab" Canvas.Top="8" Width="380" Height="185"/>
                                     </Canvas>
                                 </Expander>
                             </Border>
                             <Border x:Name="FrameBorder" Style="{StaticResource RoundedBorder}">
                                 <Expander Style="{StaticResource InsideBorderExpander}">
                                     <Expander.Header>
-                                        <TextBlock FontSize="14" Canvas.Left="4">Card Type</TextBlock>
+                                        <TextBlock FontSize="14" Canvas.Left="4"><Run Text="Card Type"/></TextBlock>
                                     </Expander.Header>
-                                    <Canvas x:Name="FrameCanvas" Height="160"></Canvas>
+                                    <Canvas x:Name="FrameCanvas" Height="160"/>
                                 </Expander>
                             </Border>
                             <Border x:Name="TypeBorder" Style="{StaticResource RoundedBorder}">
                                 <Expander Style="{StaticResource InsideBorderExpander}">
                                     <Expander.Header>
-                                        <TextBlock FontSize="14" Canvas.Left="4">Monster Type</TextBlock>
+                                        <TextBlock FontSize="14" Canvas.Left="4"><Run Text="Monster Type"/></TextBlock>
                                     </Expander.Header>
-                                    <Canvas x:Name="TypeCanvas" Height="294"></Canvas>
+                                    <Canvas x:Name="TypeCanvas" Height="294"/>
                                 </Expander>
                             </Border>
                             <Border x:Name="AbilityBorder" Style="{StaticResource RoundedBorder}">
                                 <Expander Style="{StaticResource InsideBorderExpander}">
                                     <Expander.Header>
-                                        <TextBlock FontSize="14" Canvas.Left="4">Ability</TextBlock>
+                                        <TextBlock FontSize="14" Canvas.Left="4"><Run Text="Ability"/></TextBlock>
                                     </Expander.Header>
-                                    <Canvas x:Name="AbilityCanvas" Height="152">
-                                    </Canvas>
+                                    <Canvas x:Name="AbilityCanvas" Height="152"/>
                                 </Expander>
                             </Border>
                             <Border x:Name="ValueBorder" Style="{StaticResource RoundedBorder}">
                                 <Expander Style="{StaticResource InsideBorderExpander}">
                                     <Expander.Header>
-                                        <TextBlock FontSize="14" Canvas.Left="4">ATK/DEF</TextBlock>
+                                        <TextBlock FontSize="14" Canvas.Left="4"><Run Text="ATK/DEF"/></TextBlock>
                                     </Expander.Header>
-                                    <Canvas Height="80" Name="ValueCanvas">
-                                        <TextBlock Canvas.Top="8" Canvas.Left="40" FontSize="14">ATK</TextBlock>
-                                        <TextBox Name="ATKBox" Width="70" FontSize="14" local:Masking.Mask="([0-9])|(^\?$)"
+                                    <Canvas Height="80" x:Name="ValueCanvas">
+                                        <TextBlock Canvas.Top="8" Canvas.Left="40" FontSize="14"><Run Text="ATK"/></TextBlock>
+                                        <TextBox x:Name="ATKBox" Width="70" FontSize="14" local:Masking.Mask="([0-9])|(^\?$)"
                                  Canvas.Left="76" Canvas.Top="5" MaxLength="4" TextAlignment="Right"
-                                 TextChanged="ATK_TextBox_TextChanged" ></TextBox>
-                                        <TextBlock Canvas.Top="8" Canvas.Left="250" FontSize="14">DEF</TextBlock>
-                                        <TextBox Name="DEFBox" Width="70" FontSize="14" local:Masking.Mask="([0-9])|(^\?$)"
+                                 TextChanged="ATK_TextBox_TextChanged" />
+                                        <TextBlock Canvas.Top="8" Canvas.Left="250" FontSize="14"><Run Text="DEF"/></TextBlock>
+                                        <TextBox x:Name="DEFBox" Width="70" FontSize="14" local:Masking.Mask="([0-9])|(^\?$)"
                                  Canvas.Left="286" Canvas.Top="5" MaxLength="4"
-                                 TextChanged="DEF_TextBox_TextChanged" TextAlignment="Right"></TextBox>
+                                 TextChanged="DEF_TextBox_TextChanged" TextAlignment="Right"/>
                                     </Canvas>
                                 </Expander>
                             </Border>
                             <Border x:Name="ScaleBorder" Style="{StaticResource RoundedBorder}">
                                 <Expander Style="{StaticResource InsideBorderExpander}">
                                     <Expander.Header>
-                                        <TextBlock FontSize="14" Canvas.Left="4">Pendulum Scale</TextBlock>
+                                        <TextBlock FontSize="14" Canvas.Left="4"><Run Text="Pendulum Scale"/></TextBlock>
                                     </Expander.Header>
                                     <Canvas x:Name="ScaleCanvas" Height="192">
-                                        <TextBox Name="ScaleLeftBox" local:Masking.Mask="^([0-9]|[1][0-3]|\?)$"  TextChanged="ScaleLeft_TextChanged" Width="40" TextAlignment="Right"></TextBox>
-                                        <TextBox Name="ScaleRightBox" local:Masking.Mask="^([0-9]|[1][0-3]|\?)$" TextChanged="ScaleRight_TextChanged"  Width="40"></TextBox>
+                                        <TextBox x:Name="ScaleLeftBox" local:Masking.Mask="^([0-9]|[1][0-3]|\?)$"  TextChanged="ScaleLeft_TextChanged" Width="40" TextAlignment="Right"/>
+                                        <TextBox x:Name="ScaleRightBox" local:Masking.Mask="^([0-9]|[1][0-3]|\?)$" TextChanged="ScaleRight_TextChanged"  Width="40"/>
                                     </Canvas>
                                 </Expander>
                             </Border>
-                            <Border Name="DocumentBorder">
+                            <Border x:Name="DocumentBorder">
                                 <Canvas x:Name="DocumentCanvas"  Height="330">
-                                    <TextBlock FontSize="14" Canvas.Top="5" Canvas.Left="118">Pendulum Effect and Description</TextBlock>
-                                    <RichTextBox Name="PendulumBox" Canvas.Top="30" Canvas.Left="30" Height="120" Width="360"></RichTextBox>
+                                    <TextBlock FontSize="14" Canvas.Top="5" Canvas.Left="118"><Run Text="Pendulum Effect and Description"/></TextBlock>
+                                    <RichTextBox x:Name="PendulumBox" Canvas.Top="30" Canvas.Left="30" Height="120" Width="360"/>
                                     <RichTextBox x:Name="DescriptionBox" Canvas.Top="170" Canvas.Left="30" Height="120" Width="360"/>
-                                    <Button Canvas.Top="300" Canvas.Right="20" Padding="5" Click="ApplyDocument_Click">Apply</Button>
+                                    <Button  Name="ApplyButton" Canvas.Top="300" Canvas.Right="20" Padding="5" Click="ApplyDocument_Click" Content="Apply"/>
                                     <TextBlock Canvas.Left="20" Canvas.Top="300" TextWrapping="Wrap"><Run Text="{}{.}, {a}, {b}, {o} =&gt;●, α, β, Ω"/><Run/></TextBlock>
                                 </Canvas>
                             </Border>
                             <Border x:Name="CirculationBorder" Style="{StaticResource RoundedBorder}">
                                 <Expander Style="{StaticResource InsideBorderExpander}">
                                     <Expander.Header>
-                                        <TextBlock FontSize="14" Canvas.Left="4">Circulation</TextBlock>
+                                        <TextBlock FontSize="14" Canvas.Left="4"><Run Text="Circulation"/></TextBlock>
                                     </Expander.Header>
                                     <Canvas x:Name="CirculationCanvas" Height="196">
-                                        <TextBlock Canvas.Top="22">Edition</TextBlock>
-                                        <ComboBox Name="EditionCombo" Width="120" SelectionChanged="Edition_SelectionChanged"
-                                              Canvas.Left="135" Canvas.Top="20"></ComboBox>
-                                        <TextBlock Canvas.Top="52">Card Number</TextBlock>
-                                        <TextBox Name="CardNumberEdit" Width="80" MaxLength="8" TextChanged="CardNumber_TextChanged"
-                                             Canvas.Top="50" Canvas.Left="135"></TextBox>
-                                        <Button Canvas.Top="50" Canvas.Left="225" Click="Random_Click">Random</Button>
-                                        <TextBlock Canvas.Top="82">Set Number</TextBlock>
-                                        <TextBox Name="SetNumberEdit" Width="100" MaxLength="10" TextChanged="SetNumber_TextChanged"
-                                             Canvas.Top="80" Canvas.Left="135"></TextBox>
-                                        <TextBlock Canvas.Top="115">Eye of Anubis Hologram</TextBlock>
-                                        <ComboBox Name="StickerCombo" Width="110" SelectionChanged="Sticker_SelectionChanged"
-                                              Canvas.Top="112" Canvas.Left="135"></ComboBox>
-                                        <TextBlock Canvas.Top="142">Creator</TextBlock>
-                                        <CheckBox Name="CreatorCheckBox" Canvas.Top="142" Canvas.Left="135" Click="CreatorCheckBox_Checked">Display</CheckBox>
+                                        <TextBlock Canvas.Top="22"><Run Text="Edition"/></TextBlock>
+                                        <ComboBox x:Name="EditionCombo" Width="120" SelectionChanged="Edition_SelectionChanged"
+                                              Canvas.Left="135" Canvas.Top="20"/>
+                                        <TextBlock Canvas.Top="52"><Run Text="Card Number"/></TextBlock>
+                                        <TextBox x:Name="CardNumberEdit" Width="80" MaxLength="8" TextChanged="CardNumber_TextChanged"
+                                             Canvas.Top="50" Canvas.Left="135"/>
+                                        <Button Canvas.Top="50" Canvas.Left="225" Click="Random_Click" Content="Random"/>
+                                        <TextBlock Canvas.Top="82"><Run Text="Set Number"/></TextBlock>
+                                        <TextBox x:Name="SetNumberEdit" Width="100" MaxLength="10" TextChanged="SetNumber_TextChanged"
+                                             Canvas.Top="80" Canvas.Left="135"/>
+                                        <TextBlock Canvas.Top="115"><Run Text="Eye of Anubis Hologram"/></TextBlock>
+                                        <ComboBox x:Name="StickerCombo" Width="110" SelectionChanged="Sticker_SelectionChanged"
+                                              Canvas.Top="112" Canvas.Left="135"/>
+                                        <TextBlock Canvas.Top="142"><Run Text="Creator"/></TextBlock>
+                                        <CheckBox x:Name="CreatorCheckBox" Canvas.Top="142" Canvas.Left="135" Click="CreatorCheckBox_Checked" Content="Display"/>
                                     </Canvas>
                                 </Expander>
                             </Border>
@@ -226,33 +244,33 @@
                     </ScrollViewer>
                 </TabItem>
                 <TabItem Header="Artwork" DockPanel.Dock="Left">
-                    <Canvas Name="ArtworkCanvas">
-                        
+                    <Canvas x:Name="ArtworkCanvas">
                         <Border Canvas.Left="60" Canvas.Top="10" BorderThickness="1" BorderBrush="Black">
-                            <Image Name="ControlArtwork" Stretch="Fill" Width="300" Height="300"></Image>
+                            <Image x:Name="ControlArtwork" Stretch="Fill" Width="300" Height="300"/>
                         </Border>
-                        <TextBox Name="ArtworkPath" MinLines="2" TextWrapping="Wrap" Canvas.Left="10" Canvas.Top="320" Width="320"
-                             TextChanged="ArtworkPath_TextChanged" IsReadOnly="True"></TextBox>
-                        <Button Canvas.Left="335" Canvas.Top="320" Width="75" Click="ArtworkBrowser_Click">Browse</Button>
-
+                        <TextBox x:Name="ArtworkPath" MinLines="2" TextWrapping="Wrap" Canvas.Left="10" Canvas.Top="320" Width="320"
+                             TextChanged="ArtworkPath_TextChanged" IsReadOnly="True"/>
+                        <Button Canvas.Left="335" Canvas.Top="320" Width="75" Click="ArtworkBrowser_Click" Content="Browse"/>
+                        
                         <TextBlock Canvas.Left="10" TextWrapping="Wrap" Text="Reduce/Increase Height" Canvas.Top="366"/>
                         <TextBox x:Name="artworkPaddingHeight" Height="23" Canvas.Left="141" TextWrapping="Wrap" Text="0" TextAlignment="Right" Canvas.Top="363" Width="95"/>
                         <Button x:Name="previewResizeArtworkButton" Content="Preview" Canvas.Left="255" Canvas.Top="364" Width="75" Click="previewResizeArtworkButton_Click"/>
                         <Button x:Name="resizeArtworkButton" Content="Apply" Canvas.Left="335" Canvas.Top="363" Width="75" Click="resizeArtworkButton_Click"/>
-                        
+
                     </Canvas>
                 </TabItem>
                 <TabItem Header="Set Detail"  DockPanel.Dock="Left">
                     <StackPanel Background="#FFE5E5E5">
                         <StackPanel Orientation="Horizontal" Margin="10 5">
-                            <TextBlock FontSize="14">Name</TextBlock>
-                            <TextBox Margin="5 0 0 0" FontSize="14" Name="SetEdit" Width="400" TextChanged="SetEdit_TextChanged">Set Name</TextBox>
+                            <TextBlock FontSize="14"><Run Text="Name"/></TextBlock>
+                            <TextBox Margin="5 0 0 0" FontSize="14" x:Name="SetEdit" Width="400" TextChanged="SetEdit_TextChanged" Text="Set Name"/>
                         </StackPanel>
                         <DockPanel Margin="5">
-                            <ListView Name="cardList" Canvas.Left="10" Canvas.Top="66" Width="Auto" Height="300"
-                              ScrollViewer.VerticalScrollBarVisibility="Auto"
+                            <ListView x:Name="CardList" Canvas.Left="10" Canvas.Top="66" Width="Auto" Height="300"
+                              ScrollViewer.VerticalScrollBarVisibility="Visible"
                               SelectionChanged="CardList_SelectionChanged" SelectionMode="Single"
-                             PreviewKeyDown="cardList_PreviewKeyDown">
+                             PreviewKeyDown="CardList_PreviewKeyDown"
+                                      MouseDoubleClick="CardList_MouseDoubleClick">
                                 <ListView.View>
                                     <GridView>
                                         <GridViewColumn Header="Name" Width="120">
@@ -274,14 +292,24 @@
                                 </ListView.View>
                             </ListView>
                             <StackPanel >
-                                <Button x:Name="InsertNewCard" Content="+1 Card" Width="75" Height="Auto"
-                            Click="InsertNewCard_Click"/>
+                                <Button x:Name="InsertNewCard" Content="+1 Card" Width="85"
+                                    Command="{StaticResource NewCard}"/>
+                                <Button Command="{StaticResource NextCard}" Margin="0 5 0 0"
+                                        Width="85" Content="Next Card"/>
+                                <Button Command="{StaticResource PreviousCard}" Margin="0 5 0 0"
+                                        Width="85" Content="Previous Card"/>
+                                <Button Command="{StaticResource ResetCardToDefault}" Margin="0 15 0 0"
+                                        Width="85" Content="Reset Card"/>
+                                <Button Command="{StaticResource RemoveCurrentCard}" Margin="0 5 0 0"
+                                        Width="85" Content="Remove This"/>
+                                <Button Command="{StaticResource SimpleSave}" Margin="0 15 0 0"
+                                        Width="85" Content="Save Image"/>
                             </StackPanel>
                         </DockPanel>
                         <StackPanel>
-                            <TextBox Name="DataText" IsEnabled="False" IsReadOnly="True" Height="200" Margin="10"></TextBox>
-                            <Button Margin="10 0 10 0" Name="DataTextCopy" Click="DataTextCopy_Click"
-                                Padding="5">Copy</Button>
+                            <TextBox x:Name="DataText" IsEnabled="False" IsReadOnly="True" Height="200" Margin="10"/>
+                            <Button Margin="10 0 10 0" x:Name="DataTextCopy" Click="DataTextCopy_Click"
+                                Padding="5" Content="Copy"/>
                         </StackPanel>
                     </StackPanel>
                 </TabItem>
@@ -289,103 +317,110 @@
                     <StackPanel>
                         <Canvas>
                             <Label Content="File Extensions: *.OCC, *OCS" Canvas.Left="10" Canvas.Top="10"/>
-                            <Button Name="Associate" Canvas.Left="182" Canvas.Top="9" Padding="5" Click="Associate_Click">Associate</Button>
+                            <Button x:Name="Associate" Canvas.Left="182" Canvas.Top="9" Padding="5" Click="Associate_Click" Content="Associate"/>
                             <Button x:Name="Unassociate" Canvas.Left="251" Canvas.Top="9" Padding="5" Content="Unassociate" Click="Unassociate_Click"/>
                         </Canvas>
                     </StackPanel>
                 </TabItem>
-                <TabItem Header="Export" DockPanel.Dock="Right" HorizontalAlignment="Right">
+                <TabItem Header="Save" DockPanel.Dock="Right" HorizontalAlignment="Right">
                     <StackPanel>
-                        <GroupBox Header="Export Settings" Margin="10">
+                        <GroupBox Header="Settings" Margin="10">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*"></ColumnDefinition>
-                                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
-                                    <RowDefinition Height="*"></RowDefinition>
-                                    <RowDefinition Height="*"></RowDefinition>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="*"/>
                                 </Grid.RowDefinitions>
-                                <Label>Export Path</Label>
-                                <TextBox Name="exportPathTextBox" TextChanged="ExportPathTextBox_TextChanged" IsReadOnly="True" Margin="5" Grid.Row="1" HorizontalAlignment="Stretch"></TextBox>
-                                <Button Name="exportPathButton" Click="ExportPathButton_Click" Margin="5" Padding="5" Grid.Column="2" Grid.Row="1" HorizontalAlignment="Right" Content="Browse"/>
+                                <Label Content="Save Folder"/>
+                                <TextBox x:Name="exportPathTextBox" TextChanged="ExportPathTextBox_TextChanged" IsReadOnly="True" Margin="5" Grid.Row="1" HorizontalAlignment="Stretch"/>
+                                <Button x:Name="exportPathButton" Click="ExportPathButton_Click" Margin="5" Padding="5" Grid.Column="2" Grid.Row="1" HorizontalAlignment="Right" Content="Browse"/>
                             </Grid>
                         </GroupBox>
-                        <GroupBox Header="Export Single Card" Margin="10" Canvas.Top="100">
+                        <GroupBox Header="Single Card" Margin="10" Canvas.Top="100">
                             <StackPanel Margin="0,5,0,0">
                                 <GroupBox Grid.Row="0" Header="Image">
                                     <DockPanel>
                                         <StackPanel Width="100" DockPanel.Dock="Left">
-                                            <RadioButton Name="SingleJPG" Grid.Row="1" IsChecked="True">JPG</RadioButton>
-                                            <RadioButton Name="SinglePNG" Grid.Row="2">PNG</RadioButton>
-                                            <RadioButton Name="SingleBMP" Grid.Row="3">BMP</RadioButton>
+                                            <RadioButton x:Name="SingleJPG" Grid.Row="1" IsChecked="True" Content="JPG"/>
+                                            <RadioButton x:Name="SinglePNG" Grid.Row="2" Content="PNG"/>
+                                            <RadioButton x:Name="SingleBMP" Grid.Row="3" Content="BMP"/>
                                         </StackPanel>
-                                        <StackPanel DockPanel.Dock="Top">
-                                            <CheckBox>Open image after Export</CheckBox>
+                                        <StackPanel Visibility="Hidden" DockPanel.Dock="Top">
+                                            <CheckBox  Content="Open image after Export"/>
                                         </StackPanel>
-                                        <Button Name="SingleImageExportButton" Padding="4 3" VerticalAlignment="Bottom"
+                                        <Button x:Name="SingleImageExportButton" Padding="4 3" VerticalAlignment="Bottom"
                                 Content="Image only" Click="SingleImageExportButton_Click"/>
                                     </DockPanel>
 
                                 </GroupBox>
                                 <GroupBox Grid.Column="1" Header="Data">
                                     <DockPanel>
-                                        <StackPanel Width="100" DockPanel.Dock="Left">
-                                        </StackPanel>
-                                        <Button Name="SingleDataExportButton" Click="SingleDataExportButton_Click" Padding="5">Data Only</Button>
+                                        <StackPanel Width="100" DockPanel.Dock="Left"/>
+                                        <Button x:Name="SingleDataExportButton" Click="SingleDataExportButton_Click" Padding="5" Content="Data Only"/>
                                     </DockPanel>
                                 </GroupBox>
                                 <StackPanel VerticalAlignment="Bottom">
-                                    <Button Name="SingleAllExportButton" Click="SingleAllExportButton_Click" Margin="5" Padding="5">Both Image and Data</Button>
+                                    <Button x:Name="SingleAllExportButton" Click="SingleAllExportButton_Click" Margin="5" Padding="5" Content="Both Image and Data"/>
                                 </StackPanel>
                             </StackPanel>
                         </GroupBox>
-                        <GroupBox Header="Export Set Card" Margin="10" Canvas.Top="100">
+                        <GroupBox Header="Set Card" Margin="10" Canvas.Top="100">
                             <StackPanel Margin="0,5,0,0">
                                 <GroupBox Grid.Row="0" Header="Image">
                                     <DockPanel>
                                         <StackPanel Width="100" DockPanel.Dock="Left">
-                                            <RadioButton Name="SetJPG" Grid.Row="1" IsChecked="True">JPG</RadioButton>
-                                            <RadioButton Name="SetPNG" Grid.Row="2">PNG</RadioButton>
-                                            <RadioButton Name="SetBMP" Grid.Row="3">BMP</RadioButton>
+                                            <RadioButton x:Name="SetJPG" Grid.Row="1" IsChecked="True" Content="JPG"/>
+                                            <RadioButton x:Name="SetPNG" Grid.Row="2" Content="PNG"/>
+                                            <RadioButton x:Name="SetBMP" Grid.Row="3" Content="BMP"/>
                                         </StackPanel>
                                         <StackPanel DockPanel.Dock="Top">
-                                            <CheckBox>Open folder after Export</CheckBox>
-                                            <CheckBox IsChecked="True" IsEnabled="False">Image for each Card</CheckBox>
+                                            <CheckBox Visibility="Collapsed" Content="Open folder after Export"/>
+                                            <CheckBox IsChecked="True" IsEnabled="False" Content="Image for each Card"/>
                                         </StackPanel>
-                                        <Button Name="SetImageExportButton" Padding="4 3" VerticalAlignment="Bottom" Content="Image only" Click="SetImageExportButton_Click"/>
+                                        <Button x:Name="SetImageExportButton" Padding="4 3" VerticalAlignment="Bottom" Content="Image only" Click="SetImageExportButton_Click"/>
                                     </DockPanel>
 
                                 </GroupBox>
                                 <GroupBox Grid.Column="1" Header="Data">
                                     <DockPanel>
                                         <StackPanel>
-                                            <CheckBox Name="EachCardData">Data for each Card</CheckBox>
-                                            <Button Name="SetDataExportButton" Padding="10 5" HorizontalAlignment="Right"
-                                    Click="SetDataExportButton_Click">Data Only</Button>
+                                            <CheckBox x:Name="EachCardData" Content="Data for each Card"/>
+                                            <Button x:Name="SetDataExportButton" Padding="10 5" HorizontalAlignment="Right"
+                                    Click="SetDataExportButton_Click" Content="Data Only"/>
                                         </StackPanel>
 
                                     </DockPanel>
                                 </GroupBox>
                                 <StackPanel VerticalAlignment="Bottom">
-                                    <Button Name="SetAllExportButton" Margin="5" Padding="5" Click="SetAllExportButton_Click">Both Image and Data</Button>
+                                    <Button x:Name="SetAllExportButton" Margin="5" Padding="5" Click="SetAllExportButton_Click" Content="Both Image and Data"/>
                                 </StackPanel>
                             </StackPanel>
                         </GroupBox>
                     </StackPanel>
                 </TabItem>
-                               
+
             </TabControl>
             <StackPanel Margin="10">
                 <Button x:Name="Exit" Height="60" Width="60" BorderBrush="Black" BorderThickness="1.5"
-                        Command="{StaticResource Close}"/>
-                <Button Name="Export" Margin="0 60 0 0" Height="60" Width="60" BorderBrush="Black" BorderThickness="1.5" ></Button>
-                <Button x:Name="Load" Height="60" Width="60" BorderBrush="Black" BorderThickness="1.5" />
-                <Button Name="Home" Margin="0 60 0 0" Height="60" Canvas.Left="900" 
-                        BorderBrush="Black" BorderThickness="1.5" Click="Home_Click"></Button>
-                <Button Name="About"  Height="60" Width="60" BorderBrush="Black" 
-                        BorderThickness="1.5" Click="About_Click" ></Button>
+                        Command="{StaticResource Exit}"/>
+                <Button x:Name="Open" Margin="0 60 0 0" Height="60" Width="60" 
+                        BorderBrush="Black" BorderThickness="1.5" 
+                        Command="{StaticResource Open}"/>
+                <Button x:Name="Save" Height="60" Width="60" BorderBrush="Black" BorderThickness="1.5" 
+                        Command="{StaticResource Save}"/>
                 
+                <Button x:Name="Facebook" Margin="0 60 0 0" Height="60"
+                        BorderBrush="Black" BorderThickness="1.5" Command="{StaticResource Facebook}"/>
+                <Button x:Name="Mediafire" Height="60" Command="{StaticResource Mediafire}"
+                        BorderBrush="Black" BorderThickness="1.5"/>
+                <Button x:Name="Feedback" Height="60" Command="{StaticResource Feedback}"
+                        BorderBrush="Black" BorderThickness="1.5"/>
+                <Button x:Name="About"  Height="60" Width="60" BorderBrush="Black" 
+                        BorderThickness="1.5" Command="{StaticResource About}" />
+
             </StackPanel>
         </StackPanel>
 
@@ -397,16 +432,14 @@
                                      EndPoint="80, 0.5"
                                      SpreadMethod="Reflect"
                                      MappingMode="Absolute">
-                    <GradientStop Color="Yellow" Offset="0"></GradientStop>
+                    <GradientStop Color="Yellow" Offset="0"/>
                     <GradientStop Color="#B87E19" Offset="1"/>
                 </LinearGradientBrush>
 
             </TextBlock.Foreground>
             <TextBlock.Effect>
-                <DropShadowEffect ShadowDepth="1" Direction="-180" BlurRadius="10"></DropShadowEffect>
-            </TextBlock.Effect>
-            Snow Plow Hustle Rustle
-        </TextBlock>
+                <DropShadowEffect ShadowDepth="1" Direction="-180" BlurRadius="10"/>
+            </TextBlock.Effect><Run Text="Snow Plow Hustle Rustle"/></TextBlock>
 
 
         <TextBlock Canvas.Left="151" FontFamily="./Resources/#Yu-Gi-Oh! Matrix Small Caps 2"
@@ -421,7 +454,7 @@
                 </LinearGradientBrush>
             </TextBlock.Foreground>
             <TextBlock.Effect>
-                <DropShadowEffect ShadowDepth="1" Direction="-180" BlurRadius="3"></DropShadowEffect>
+                <DropShadowEffect ShadowDepth="1" Direction="-180" BlurRadius="3"/>
             </TextBlock.Effect>
 
         </TextBlock>

@@ -19,7 +19,6 @@ using System.Windows.Input;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Xml.Linq;
-using Telerik.Windows.Controls;
 using static OV.Tools.Utilities;
 using Forms = System.Windows.Forms;
 
@@ -30,8 +29,7 @@ namespace OV.Pyramid
     /// </summary>
     public partial class MainWindow : Window
     {
-        internal YgoSet CurrentSet { get; private set; }
-        private int currentIndex;
+        internal YgoSet CurrentSet { get; private set; }        
 
         private bool inRefreshControl;
         private bool inChangeSetCard;
@@ -40,23 +38,33 @@ namespace OV.Pyramid
         private ByteDatabase Database;
         private string currentFilePath;
 
+        int currentNewIndex = 1;
         const string CARD_EXTENSION = ".occ";
         const string SET_EXTENSION = ".ocs";
 
-        private bool IsSaved
+        private string LastDataFolder
         {
             get
             {
                 if (string.IsNullOrWhiteSpace(currentFilePath) == false)
+                { return Path.GetDirectoryName(currentFilePath); }
+                return Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            }
+        }
+
+        public static class Command
+        {
+            public static RoutedCommand RemoveCurrentCard;
+        }
+        
+
+        private bool IsSaved
+        {
+            get
+            {                
+                if (PreviousSet != null)
                 {
-                    if (currentFilePath.IsExtension(CARD_EXTENSION))
-                    {
-                        return YgoCard.LoadFrom(currentFilePath) == CurrentCard;
-                    }
-                    else
-                    {
-                        return YgoSet.LoadFrom(currentFilePath).Equals(CurrentSet);
-                    }
+                    return PreviousSet == CurrentSet;
                 }
                 return false;
             }
@@ -66,31 +74,37 @@ namespace OV.Pyramid
         {
             get
             {
-                if (currentIndex < 0) return null;
-                return CurrentSet.Cards[currentIndex];
+                if (CardList.SelectedIndex < 0) { return null; }
+                return CurrentSet.Cards[CardList.SelectedIndex];
             }
             private set
             {
-                if (currentIndex < 0) return;
-                CurrentSet.Cards[currentIndex] = value;
+                if (CardList.SelectedIndex < 0) { return; }
+                CurrentSet.Cards[CardList.SelectedIndex] = value;
             }
         }
+        
+        private YgoSet PreviousSet;
+
         public MainWindow()
         {
-            currentIndex = -1;
-            CurrentSet = new YgoSet();
-            inRefreshControl = false;
-            DatabasePath = GetLocationPath() + @"\Resources\Datas.ld";
-            Database = new ByteDatabase(DatabasePath);
             InitializeComponent();
             FirstLoad();
-            
-            
-        }
+        }        
 
         private void FirstLoad()
         {
+            DatabasePath = GetLocationPath() + @"\Resources\Data.ld";
+            Database = new ByteDatabase(DatabasePath);
+
             //SaveDatabase();
+
+            CurrentSet = new YgoSet();
+            CurrentSet.Cards.Add(YgoCard.Default);
+            PreviousSet = CurrentSet.Clone();
+
+            inRefreshControl = false;
+            
             if (File.Exists("settings.json"))
             {
                 LoadSettings();
@@ -100,7 +114,7 @@ namespace OV.Pyramid
                 MessageBox.Show("The file settings.json cannot be found!");
                 GenerateSettings();
             }            
-            CurrentSet.Cards.Add(YgoCard.Default);
+            
             YgoView.SetDefaultArtwork(Database.GetData(@"Template\NoneImage.png").Bytes);  
 
             LoadControl();
@@ -108,9 +122,16 @@ namespace OV.Pyramid
             RefreshSetting();
             this.Loaded += new RoutedEventHandler(MainContainer_Loaded);
 
-            cardList.ItemsSource = CurrentSet.Cards;
-            cardList.SelectedIndex = 0;
-            
+            CardList.ItemsSource = CurrentSet.Cards;
+            CardList.SelectedIndex = 0;
+
+            DataObject.AddPastingHandler(PendulumBox, Document_OnPasting);
+            DataObject.AddPastingHandler(DescriptionBox, Document_OnPasting);
+        }
+
+        private void Document_OnPasting(object sender, DataObjectPastingEventArgs e)
+        {
+            ApplyButton.PerformClick();
         }
 
         private void LoadSettings()
@@ -118,7 +139,11 @@ namespace OV.Pyramid
             string data = File.ReadAllText("settings.json");
             JObject settings = JObject.Parse(JsonConvert.DeserializeObject(data).ToString());
 
-            string exportPath = settings["Export"]["ExportPath"].ToString();
+            string exportPath = "";
+            if (settings["Export"]["Path"] != null)
+            {
+                exportPath = settings["Export"]["Path"].ToString(0);
+            }
             if (Directory.Exists(exportPath) == false)
             {
                 exportPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
@@ -130,7 +155,7 @@ namespace OV.Pyramid
         {
             dynamic settings = new JObject();
             settings.Export = new JObject();
-            settings.Export.ExportPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            settings["Export"]["Path"] = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
             File.WriteAllText("settings.json",
                 JsonConvert.SerializeObject(settings.ToString(), Formatting.Indented));
         }
@@ -154,7 +179,7 @@ namespace OV.Pyramid
 
         private void RefreshControl()
         {
-            if (currentIndex == -1) { return; }
+            if (CurrentCard == null) { return; }
             inRefreshControl = true;
 
             if (NameEdit.Text != CurrentCard.Name)
@@ -464,7 +489,7 @@ namespace OV.Pyramid
 
         private void LoadButton()
         {
-            Button[] Stack = new Button[] { Home, About, Export, Load, Exit };
+            Button[] Stack = new Button[] { Facebook, Mediafire, About, Save, Feedback, Open, Exit };
             for (int i = 0; i < Stack.Length; i++)
             {
                 StackPanel Zone = new StackPanel()
@@ -483,8 +508,6 @@ namespace OV.Pyramid
 
                 Stack[i].Content = Zone;
             }            
-            Export.Click += Export_Click;
-            Load.Click += Load_Click;
         }
 
         private void Load_Click(object sender, RoutedEventArgs e)
@@ -501,7 +524,8 @@ namespace OV.Pyramid
                 {
                     Filter = string.Format("OV.Creation Card/Set Card|*{0};*{1}",
                         CARD_EXTENSION, SET_EXTENSION),
-                    Multiselect = false
+                    Multiselect = false,
+                    InitialDirectory = LastDataFolder,
                 };
                 if (choofdlog.ShowDialog() == true)
                 {
@@ -519,20 +543,23 @@ namespace OV.Pyramid
             if (path.IsExtension(".ocs"))
             {
                 CurrentSet = YgoSet.LoadFrom(path);
+                
             }
             else
             {
                 CurrentSet.Cards.Clear();
                 CurrentSet.Cards.Add(YgoCard.LoadFrom(path));
-                currentIndex = 0;
             }
+
+            PreviousSet = CurrentSet.Clone();
             inChangeSetCard = true;
 
             SetEdit.Text = CurrentSet.Name;
-            cardList.ItemsSource = CurrentSet.Cards;
-            currentIndex = 0;
-            cardList.SelectedIndex = currentIndex;
+            CardList.ItemsSource = CurrentSet.Cards;
+            
+            CardList.SelectedIndex = 0;
             currentFilePath = path;
+            currentNewIndex = 0;
 
             inChangeSetCard = false;
 
@@ -562,6 +589,29 @@ namespace OV.Pyramid
                     MessageBox.Show("Error #2");
                 }
             }
+        }
+
+        private void QuickImageRender()
+        {
+            if (CurrentCard == null)
+            {
+                return;
+            }
+            SaveFileDialog dlg = new SaveFileDialog();
+            //dlg.FileName = NameEdit.Text.Replace(":", " -"); // Default file name
+            if (String.IsNullOrEmpty(dlg.FileName))
+                dlg.FileName = CurrentCard.Name != null ? CurrentCard.Name.ToNonVietnamese() : "Card Name";
+            //dlg.DefaultExt = ".png"; // Default file extension
+            dlg.Filter = "JPEG Images|*.jpg|PNG Images|*.png|BMP Images|*.bmp"; // Filter files by extension 
+
+            // Show save file dialog box
+
+            // Process save file dialog box results 
+            if (dlg.ShowDialog() == true)
+            {                
+                YgoView.SaveImageTo(dlg.FileName);
+            }
+
         }
 
         private void SaveSet(string fileName = "")
@@ -594,17 +644,13 @@ namespace OV.Pyramid
 
                 }
                 File.WriteAllText(fileName, text);
+                PreviousSet = CurrentSet.Clone();
             }
             else
             {
                 tabControl.SelectedIndex = 4;//ExportTab
             }
-        }
-
-        private void Export_Click(object sender, RoutedEventArgs e)
-        {
-            tabControl.SelectedIndex = 4; //ExportTab
-        }
+        }        
 
         private void LoadControl()
         {
@@ -707,7 +753,8 @@ namespace OV.Pyramid
         {
             if (inRefreshControl) { return; }
             TextBox txtBox = sender as TextBox;
-            CurrentCard.SetDEF(int.TryParse(txtBox.Text, out int value) ? value : double.NaN);
+            int value;
+            CurrentCard.SetDEF(int.TryParse(txtBox.Text, out value) ? value : double.NaN);
             YgoView.Render(CurrentCard);
             RefreshControl();
         }
@@ -716,7 +763,8 @@ namespace OV.Pyramid
         {
             if (inRefreshControl) { return; }
             TextBox txtBox = sender as TextBox;
-            CurrentCard.SetATK(int.TryParse(txtBox.Text, out int value) ? value : double.NaN);
+            int value;
+            CurrentCard.SetATK(int.TryParse(txtBox.Text, out value) ? value : double.NaN);
             YgoView.Render(CurrentCard);
             RefreshControl();
         }
@@ -801,7 +849,8 @@ namespace OV.Pyramid
         private void Button_Scale(object sender, RoutedEventArgs e)
         {
             Button button = sender as Button;
-            CurrentCard.SetScaleLeft(int.TryParse(button.Tag.ToString(), out int value) ? value : double.NaN);
+            int value;
+            CurrentCard.SetScaleLeft(int.TryParse(button.Tag.ToString(), out value) ? value : double.NaN);
             CurrentCard.SetScaleRight(int.TryParse(button.Tag.ToString(), out value) ? value : double.NaN);
             YgoView.Render(CurrentCard);
             RefreshControl();
@@ -1178,12 +1227,7 @@ namespace OV.Pyramid
                     Margin = new Thickness(0, 0, 4, 0)
                 };
                 Zone.Children.Add(Icon);
-                string type = Type_String[i - 1];
-                type = type.Replace("WingedBeast", "Winged Beast");
-                type = type.Replace("BeastWarrior", "Beast-Warrior");
-                type = type.Replace("SeaSerpent", "Sea Serpent");
-                type = type.Replace("DivineBeast", "Divine-Beast");
-                type = type.Replace("CreatorGod", "Creator God");
+                string type = Type_String[i - 1].ToEnum<TYPE>().GetString();
                 Zone.Children.Add(new TextBlock(new Run(type)));
                 Zone.Margin = new Thickness(0, 4, 0, 0);
 
@@ -1260,7 +1304,8 @@ namespace OV.Pyramid
         private void CardNumber_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (inRefreshControl) { return; }
-            int.TryParse((sender as TextBox).Text, out int value);
+            int value;
+            int.TryParse((sender as TextBox).Text, out value);
             CurrentCard.SetNumber(value);
             YgoView.Render(CurrentCard);
             RefreshControl();
@@ -1294,8 +1339,14 @@ namespace OV.Pyramid
         private void Name_TextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (inRefreshControl) { return; }
-            string futureText = (sender as TextBox).Text;
-            CurrentCard.SetName(RenderText(futureText));
+            string futureText = RenderText((sender as TextBox).Text).Trim();
+            
+            if (CurrentSet.Cards.Count(o => o.Name == futureText) > 0)
+            {
+                MessageBox.Show("A duplicate name exists on the set. Please change it name!");
+                return;
+            }
+            CurrentCard.SetName(futureText);
 
             RefreshArtwork();
             RefreshControl();
@@ -1313,7 +1364,8 @@ namespace OV.Pyramid
         {
             if (inRefreshControl) { return; }
             TextBox txtBox = sender as TextBox;
-            CurrentCard.SetScaleLeft(int.TryParse(txtBox.Text, out int value) ? value : double.NaN);
+            int value;
+            CurrentCard.SetScaleLeft(int.TryParse(txtBox.Text, out value) ? value : double.NaN);
             YgoView.Render(CurrentCard);
             RefreshControl();
         }
@@ -1322,7 +1374,8 @@ namespace OV.Pyramid
         {
             if (inRefreshControl) { return; }
             TextBox txtBox = sender as TextBox;
-            CurrentCard.SetScaleRight(int.TryParse(txtBox.Text, out int value) ? value : double.NaN);
+            int value;
+            CurrentCard.SetScaleRight(int.TryParse(txtBox.Text, out value) ? value : double.NaN);
             YgoView.Render(CurrentCard);
             RefreshControl();
         }
@@ -1339,75 +1392,70 @@ namespace OV.Pyramid
         private void CardList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (inChangeSetCard) { return; }
-            currentIndex = cardList.SelectedIndex;
+            //currentIndex = cardList.SelectedIndex;
             //MessageBox.Show(currentIndex.ToString());
-            if (currentIndex != -1)
+            if (CurrentCard != null)
             {
                 ControlArtwork.Source = CurrentCard.ArtworkByte.GetBitmapImageFromByteArray();
             }
             RefreshArtwork();
             RefreshControl();
-
-
-
         }
 
-        private void cardList_PreviewKeyDown(object sender, KeyEventArgs e)
+        private void CardList_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             if (inChangeSetCard) { return; }
             if (e.Key == Key.Delete)
             {
-                if (CurrentSet.Cards.Count() <= 1)
-                {
-                    return;
-                }
-                int previewIndex = currentIndex;
-                CurrentSet.Cards.Remove(cardList.SelectedItem as YgoCard);
-                cardList.ItemsSource = CurrentSet.Cards;
-
-                currentIndex = previewIndex - 1;
-
-                if (currentIndex < 0)
-                {
-                    currentIndex = 0;
-                }
-
-
-                ControlArtwork.Source = CurrentCard.ArtworkByte.GetBitmapImageFromByteArray();
-
-                RefreshArtwork();
-                RefreshControl();
+                DeleteCurrentCard();
             }
         }
 
-        private void InsertNewCard_Click(object sender, RoutedEventArgs e)
+        private void DeleteCurrentCard()
         {
-            if (inChangeSetCard) { return; }
-            if (CurrentSet.Cards.Where(o => o.Equals(YgoCard.Default)).Count() >= 3)
+            if (CurrentSet.Cards.Count() <= 1)
             {
+                return;
+            }
 
+            int previewIndex = CardList.SelectedIndex;
+            inChangeSetCard = true;
+            CurrentSet.Cards.RemoveAt(CardList.SelectedIndex);
+
+            CardList.SelectedIndex = -1;
+            //CardList.ItemsSource = CurrentSet.Cards;
+
+            //ControlArtwork.Source = CurrentCard.ArtworkByte.GetBitmapImageFromByteArray();
+
+            //RefreshArtwork();
+            //RefreshControl();
+            inChangeSetCard = false;
+
+            if (CardList.SelectedIndex - 1 < 0)
+            {
+                CardList.SelectedIndex = 0;
             }
             else
             {
-                YgoCard newCard = YgoCard.Default;
-                int i = 2;
-                while (CurrentSet.Cards.Any(o => o.Name == newCard.Name))
-                {
-                    newCard.SetName(YgoCard.Default.Name + " " + i++);
-                }
-                CurrentSet.Cards.Add(newCard);
-                cardList.SelectedIndex++;
-                /*
-                cardList.ItemsSource = CurrentSet.Cards;
-                
-                //currentIndex = cardList;
-                if (currentIndex != -1)
-                {
-                    ControlArtwork.Source = CurrentCard.ArtworkByte.GetBitmapImageFromByteArray();
-                }
-                RefreshArtwork();
-                RefreshControl();*/
+                //CardList.SelectedIndex = Math.Min(previewIndex - 1, CurrentSet.Cards.Count - 1);
+                CardList.SelectedIndex--;
             }
+        }
+
+        private void AddNewCard()
+        {            
+            YgoCard newCard = YgoCard.Default;
+            while (CurrentSet.Cards.Any(o => o.Name == newCard.Name))
+            {
+                currentNewIndex++;
+                if (currentNewIndex > 1)
+                {
+                    newCard.SetName(YgoCard.Default.Name + " " + currentNewIndex);
+                }
+                    
+            }
+            CurrentSet.Cards.Add(newCard);
+            CardList.SelectedIndex++;            
         }
 
 
@@ -1483,7 +1531,10 @@ namespace OV.Pyramid
         private void SetEdit_TextChanged(object sender, TextChangedEventArgs e)
         {
             //if (inChangeSetCard) { return; }
-            CurrentSet.SetName(SetEdit.Text);
+            if (CurrentSet != null)
+            {
+                CurrentSet.SetName(SetEdit.Text);
+            }
         }
 
         private void AssociateExtension(bool isAssociate)
@@ -1537,25 +1588,9 @@ namespace OV.Pyramid
 
             Properties.Settings.Default.Associated = false;
             RefreshSetting();
-        }
-
-        private void About_Click(object sender, RoutedEventArgs e)
-        {
-            var app = Application.Current.MainWindow as MainWindow;
-            //app.GoToAboutPage();
-        }
-
-        private void Home_Click(object sender, RoutedEventArgs e)
-        {
-            System.Diagnostics.Process.Start("https://www.mediafire.com/folder/vamylw814g9iq/OV_Pyramid");
-        }
-
-        private void Exit_Click(object sender, RoutedEventArgs e)
-        {
-            Window.GetWindow(this).Close();
-        }
-
-        private void cardDetailsScroll_Loaded(object sender, RoutedEventArgs e)
+        }     
+        
+        private void CardDetailsScroll_Loaded(object sender, RoutedEventArgs e)
         {
             var cardDetailsScroll = sender as ScrollViewer;
             double offset;
@@ -1565,7 +1600,7 @@ namespace OV.Pyramid
             }
         }
 
-        private void cardDetailsScroll_Unloaded(object sender, RoutedEventArgs e)
+        private void CardDetailsScroll_Unloaded(object sender, RoutedEventArgs e)
         {
             var cardDetailsScroll = sender as ScrollViewer;
             cardDetailsScroll.Tag = cardDetailsScroll.VerticalOffset;
@@ -1618,6 +1653,9 @@ namespace OV.Pyramid
             } else if (border == TypeBorder)
             {
                 (AbilityBorder.Child as Expander).IsExpanded = true;
+            } else if (border == ValueBorder)
+            {
+                (ScaleBorder.Child as Expander).IsExpanded = true;
             }
         }
 
@@ -1698,40 +1736,11 @@ namespace OV.Pyramid
             MessageBox.Show("Data has been copied.");
         }
 
-        private void NewCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
-            e.CanExecute = true;
-        }
-
+       
+        
         private void NewCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            //InsertNewCard.PerformClick();
-            if (inChangeSetCard) { return; }
-            if (CurrentSet.Cards.Where(o => o.Equals(YgoCard.Default)).Count() >= 3)
-            {
-
-            }
-            else
-            {
-                YgoCard newCard = YgoCard.Default;
-                int i = 2;
-                while (CurrentSet.Cards.Any(o => o.Name == newCard.Name))
-                {
-                    newCard.SetName(YgoCard.Default.Name + " " + i++);
-                }
-                CurrentSet.Cards.Add(newCard);
-                cardList.SelectedIndex++;
-                /*
-                cardList.ItemsSource = CurrentSet.Cards;
-                
-                //currentIndex = cardList;
-                if (currentIndex != -1)
-                {
-                    ControlArtwork.Source = CurrentCard.ArtworkByte.GetBitmapImageFromByteArray();
-                }
-                RefreshArtwork();
-                RefreshControl();*/
-            }
+            AddNewCard();
         }
 
         private void ExportPathButton_Click(object sender, RoutedEventArgs e)
@@ -1743,29 +1752,53 @@ namespace OV.Pyramid
             }
         }
 
-        private void ExportPathTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        private void SetSetting(string value, params string[] valuePath)
         {
             string data = File.ReadAllText("settings.json");
             JObject settings = JObject.Parse(JsonConvert.DeserializeObject(data).ToString());
-            settings["Export"]["ExportPath"] = (sender as TextBox).Text;
 
-            File.WriteAllText("settings.json",
-                JsonConvert.SerializeObject(settings.ToString(), Formatting.Indented));
+            JToken obj = null;
+            foreach(string path in valuePath)
+            {
+                if (obj == null)
+                {
+                    obj = settings[path];
+                } else
+                {
+                    obj = obj[path];
+                }
+            }
+            obj = value;
 
+            string result = JsonConvert.SerializeObject(settings, Formatting.Indented);
+            File.WriteAllText("settings.json", result);
+        }
+
+        private void ExportPathTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            /*
+            string data = File.ReadAllText("settings.json");
+            JObject settings = JObject.Parse(JsonConvert.DeserializeObject(data).ToString());
+            //settings["Export"]["ExportPath"] = (sender as TextBox).Text;
+            var k = settings["Export"];
+            k["ExportPath"] = "omg";
+
+            string result = JsonConvert.SerializeObject(settings, Formatting.Indented);
+            File.WriteAllText("settings.json",result);*/
+            SetSetting((sender as TextBox).Text, "Export", "Path");
         }
 
         private void SingleImageExport()
         {
             string folderPath = exportPathTextBox.Text;
-            var main = Application.Current.MainWindow as MainWindow;
-            string cardName = main.YgoView.CurrentCard.Name.ToNonVietnamese();
+            string cardName = YgoView.CurrentCard.Name.ToNonVietnamese();
 
             string extension = (SingleJPG.IsChecked == true ?
                 ".jpg" : (SinglePNG.IsChecked == true ?
                     ".png" : ".bmp"));
 
             string fileName = folderPath + @"\" + cardName + extension;
-            main.YgoView.SaveImageTo(fileName);
+            YgoView.SaveImageTo(fileName);
         }
 
         private void SingleDataExport()
@@ -1779,31 +1812,31 @@ namespace OV.Pyramid
             string fileName = folderPath + @"\" + cardName + extension;
             //main.YgoView.SaveDataTo(fileName);
             main.YgoView.CurrentCard.SaveTo(fileName);
-
         }
 
         private void SetImageExport()
         {
-            string folderPath = exportPathTextBox.Text;
-            var main = Application.Current.MainWindow as MainWindow;
-            YgoSet set = main.CurrentSet;
+            string folderPath = exportPathTextBox.Text;            
+            YgoSet set = CurrentSet;
 
             folderPath += @"\" + set.Name + @"\Image\"; // in Images folder
             Directory.CreateDirectory(folderPath);
 
             foreach (YgoCard card in set.Cards)
             {
-                YgoView ygoView = new YgoView();
-
                 string extension = (SetJPG.IsChecked == true ?
                     ".jpg" : (SetPNG.IsChecked == true ?
                         ".png" : ".bmp"));
 
                 string fileName = folderPath + @"\" + card.Name.ToNonVietnamese() + extension;
+
+                
+                YgoView ygoView = new YgoView();
+
+                
                 //
                 ygoView.Render(card);
-                ygoView.SaveImageTo(card, fileName);
-
+                ygoView.SaveImageTo(fileName);
             }
         }
 
@@ -1921,33 +1954,20 @@ namespace OV.Pyramid
         }
 
         #endregion Event
-
-        private void OpenCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
-            e.CanExecute = true;
-        }
-
+        
         private void OpenCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             LoadSet();
         }
-
-        private void SaveCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {  
-            e.CanExecute = true;
-        }
+        
 
         private void SaveCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            SaveSet(currentFilePath);
+            //SaveSet(currentFilePath);
+            tabControl.SelectedIndex = 4;
         }
-
-        private void CloseCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-        {
-            e.CanExecute = true;
-        }
-
-        private void CloseCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        
+        private void ExitCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             this.Close();
         }
@@ -1956,280 +1976,118 @@ namespace OV.Pyramid
         {
             e.Cancel = true;
             if (IsSaved == false)
-            {
-                if (string.IsNullOrWhiteSpace(currentFilePath) == false) //In Opening
+            {                
+                MessageBoxResult result = MessageBox.Show("Want to save your current card/set?",
+                    "", MessageBoxButton.YesNoCancel);
+                if (result == MessageBoxResult.Yes)
                 {
-                    SaveSet(currentFilePath);
+                    //SaveSet(currentFilePath);
+                    tabControl.SelectedIndex = 4; //ExportTab
+                    e.Cancel = false;
                 }
-                else
+                else if (result == MessageBoxResult.No)
                 {
-                    MessageBoxResult result = MessageBox.Show("Want to save your current card/set?",
-                        "", MessageBoxButton.YesNoCancel);
-                    if (result == MessageBoxResult.Yes)
-                    {
-                        SaveSet();
-                    }
-                    else if (result == MessageBoxResult.No)
-                    {
-                        e.Cancel = false;
-                    }
-                }
+                    e.Cancel = false;
+                }                
             }
             else
             {
                 e.Cancel = false;
             }
         }
-    }
 
-    public class RelayCommand : ICommand
-    {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="RelayCommand"/> class.
-        /// </summary>
-        /// <param name="execute">The execute.</param>
-        public RelayCommand(Action<object> execute)
-            : this(execute, null)
+        private void CardList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
+            tabControl.SelectedIndex = 0;
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="RelayCommand"/> class.
-        /// </summary>
-        /// <param name="execute">The execute.</param>
-        /// <param name="canExecute">The can execute.</param>
-        public RelayCommand(Action<object> execute, Predicate<object> canExecute)
+        private void NextCardCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            if (execute == null)
-                throw new ArgumentNullException("execute");
-            _execute = execute;
-            _canExecute = canExecute;
-        }
-
-        /// <summary>
-        /// Defines the method that determines whether the command can execute in its current state.
-        /// </summary>
-        /// <param name="parameter">Data used by the command.  If the command does not require data to be passed, this object can be set to null.</param>
-        /// <returns>
-        /// true if this command can be executed; otherwise, false.
-        /// </returns>
-        public bool CanExecute(object parameter)
-        {
-            return _canExecute == null ? true : _canExecute(parameter);
-        }
-
-        /// <summary>
-        /// Occurs when changes occur that affect whether or not the command should execute.
-        /// </summary>
-        public event EventHandler CanExecuteChanged
-        {
-            add { CommandManager.RequerySuggested += value; }
-            remove { CommandManager.RequerySuggested -= value; }
-        }
-
-        /// <summary>
-        /// Defines the method to be called when the command is invoked.
-        /// </summary>
-        /// <param name="parameter">Data used by the command.  If the command does not require data to be passed, this object can be set to null.</param>
-        public void Execute(object parameter)
-        {
-            _execute(parameter);
-        }
-
-        /// <summary>
-        /// Action
-        /// </summary>
-        private readonly Action<object> _execute;
-
-
-        /// <summary>
-        /// Predicate
-        /// </summary>
-        private readonly Predicate<object> _canExecute;
-    }
-
-    public static class GridHelpers
-    {
-        #region RowCount Property
-
-        /// <summary>
-        /// Adds the specified number of Rows to RowDefinitions. 
-        /// Default Height is Auto
-        /// </summary>
-        public static readonly DependencyProperty RowCountProperty =
-            DependencyProperty.RegisterAttached(
-                "RowCount", typeof(int), typeof(GridHelpers),
-                new PropertyMetadata(-1, RowCountChanged));
-
-        // Get
-        public static int GetRowCount(DependencyObject obj)
-        {
-            return (int)obj.GetValue(RowCountProperty);
-        }
-
-        // Set
-        public static void SetRowCount(DependencyObject obj, int value)
-        {
-            obj.SetValue(RowCountProperty, value);
-        }
-
-        // Change Event - Adds the Rows
-        public static void RowCountChanged(
-            DependencyObject obj, DependencyPropertyChangedEventArgs e)
-        {
-            if (!(obj is Grid) || (int)e.NewValue < 0)
-                return;
-
-            Grid grid = (Grid)obj;
-            grid.RowDefinitions.Clear();
-
-            for (int i = 0; i < (int)e.NewValue; i++)
-                grid.RowDefinitions.Add(
-                    new RowDefinition() { Height = GridLength.Auto });
-
-            SetStarRows(grid);
-        }
-
-        #endregion
-
-        #region ColumnCount Property
-
-        /// <summary>
-        /// Adds the specified number of Columns to ColumnDefinitions. 
-        /// Default Width is Auto
-        /// </summary>
-        public static readonly DependencyProperty ColumnCountProperty =
-            DependencyProperty.RegisterAttached(
-                "ColumnCount", typeof(int), typeof(GridHelpers),
-                new PropertyMetadata(-1, ColumnCountChanged));
-
-        // Get
-        public static int GetColumnCount(DependencyObject obj)
-        {
-            return (int)obj.GetValue(ColumnCountProperty);
-        }
-
-        // Set
-        public static void SetColumnCount(DependencyObject obj, int value)
-        {
-            obj.SetValue(ColumnCountProperty, value);
-        }
-
-        // Change Event - Add the Columns
-        public static void ColumnCountChanged(
-            DependencyObject obj, DependencyPropertyChangedEventArgs e)
-        {
-            if (!(obj is Grid) || (int)e.NewValue < 0)
-                return;
-
-            Grid grid = (Grid)obj;
-            grid.ColumnDefinitions.Clear();
-
-            for (int i = 0; i < (int)e.NewValue; i++)
-                grid.ColumnDefinitions.Add(
-                    new ColumnDefinition() { Width = GridLength.Auto });
-
-            SetStarColumns(grid);
-        }
-
-        #endregion
-
-        #region StarRows Property
-
-        /// <summary>
-        /// Makes the specified Row's Height equal to Star. 
-        /// Can set on multiple Rows
-        /// </summary>
-        public static readonly DependencyProperty StarRowsProperty =
-            DependencyProperty.RegisterAttached(
-                "StarRows", typeof(string), typeof(GridHelpers),
-                new PropertyMetadata(string.Empty, StarRowsChanged));
-
-        // Get
-        public static string GetStarRows(DependencyObject obj)
-        {
-            return (string)obj.GetValue(StarRowsProperty);
-        }
-
-        // Set
-        public static void SetStarRows(DependencyObject obj, string value)
-        {
-            obj.SetValue(StarRowsProperty, value);
-        }
-
-        // Change Event - Makes specified Row's Height equal to Star
-        public static void StarRowsChanged(
-            DependencyObject obj, DependencyPropertyChangedEventArgs e)
-        {
-            if (!(obj is Grid) || string.IsNullOrEmpty(e.NewValue.ToString()))
-                return;
-
-            SetStarRows((Grid)obj);
-        }
-
-        #endregion
-
-        #region StarColumns Property
-
-        /// <summary>
-        /// Makes the specified Column's Width equal to Star. 
-        /// Can set on multiple Columns
-        /// </summary>
-        public static readonly DependencyProperty StarColumnsProperty =
-            DependencyProperty.RegisterAttached(
-                "StarColumns", typeof(string), typeof(GridHelpers),
-                new PropertyMetadata(string.Empty, StarColumnsChanged));
-
-        // Get
-        public static string GetStarColumns(DependencyObject obj)
-        {
-            return (string)obj.GetValue(StarColumnsProperty);
-        }
-
-        // Set
-        public static void SetStarColumns(DependencyObject obj, string value)
-        {
-            obj.SetValue(StarColumnsProperty, value);
-        }
-
-        // Change Event - Makes specified Column's Width equal to Star
-        public static void StarColumnsChanged(
-            DependencyObject obj, DependencyPropertyChangedEventArgs e)
-        {
-            if (!(obj is Grid) || string.IsNullOrEmpty(e.NewValue.ToString()))
-                return;
-
-            SetStarColumns((Grid)obj);
-        }
-
-        #endregion
-
-        private static void SetStarColumns(Grid grid)
-        {
-            string[] starColumns =
-                GetStarColumns(grid).Split(',');
-
-            for (int i = 0; i < grid.ColumnDefinitions.Count; i++)
+            if (CardList.SelectedIndex + 1 >= CurrentSet.Cards.Count)
             {
-                if (starColumns.Contains(i.ToString()))
-                    grid.ColumnDefinitions[i].Width =
-                        new GridLength(1, GridUnitType.Star);
+                CardList.SelectedIndex = 0;
+            }
+            else
+            {
+                CardList.SelectedIndex++;
             }
         }
 
-        private static void SetStarRows(Grid grid)
+        private void PreviousCardCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            string[] starRows =
-                GetStarRows(grid).Split(',');
-
-            for (int i = 0; i < grid.RowDefinitions.Count; i++)
+            if (CardList.SelectedIndex - 1 < 0)
             {
-                if (starRows.Contains(i.ToString()))
-                    grid.RowDefinitions[i].Height =
-                        new GridLength(1, GridUnitType.Star);
+                CardList.SelectedIndex = CurrentSet.Cards.Count - 1;
+            }
+            else
+            {
+                CardList.SelectedIndex--;
             }
         }
+
+        private void SetCardToDefaultCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            string previousName = CurrentCard.Name;
+            CurrentCard = YgoCard.Default;
+            CurrentCard.SetName(previousName);
+            YgoView.Render(CurrentCard);
+            RefreshControl();
+        }
+
+        private void NewCommand_CanExecuted(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = true;
+            if (inChangeSetCard || CurrentSet == null)
+            {
+                e.CanExecute = false;
+            }            
+        }
+
+        private void RemoveCurrentCard_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            DeleteCurrentCard();
+        }
+
+        private void RemoveCurrentCard_CanExecuted(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = true;        
+            if (CurrentSet?.Cards.Count <= 1)
+            {                
+                e.CanExecute = false;
+            }
+        }
+
+        private void SimpleSaveCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            QuickImageRender();
+        }
+
+        private void SwitchMode_Executed(object sender, ExecutedRoutedEventArgs e)
+        {            
+            tabControl.SelectedIndex = (tabControl.SelectedIndex == 0) ? 2 : 0;
+        }
+        
+        private void AboutCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start(GetLocationPath() + @"\Resources\Help\index.html");
+        }
+
+        private void FeedbackCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("https://docs.google.com/document/d/1KNWFNbJZGC5gWUDwVntbHiQ6vQV_8nuRGnj1ehcVMmE/edit?usp=sharing");
+        }
+
+        private void FacebookCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("https://www.facebook.com/OV.Pyramid");
+        }
+
+        private void MediafireCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("https://www.mediafire.com/folder/vamylw814g9iq/OV_Pyramid");
+        }
     }
+
 
     public static class TabContent
     {

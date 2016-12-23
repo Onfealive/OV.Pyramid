@@ -7,10 +7,10 @@ using System.Text;
 
 namespace OV.Core
 {
-    
+
     static class Extension
     {
-#region Card
+        #region Card
         /// <summary>
         /// Check the card whether it is this Frame or not
         /// </summary>
@@ -95,7 +95,25 @@ namespace OV.Core
             File.WriteAllText(fileName, data);
         }
 
-        
+        public static string GetString(this PROPERTY property)
+        {
+            if (property == PROPERTY.QuickPlay)
+            {
+                return "Quick-Play";
+            }
+            return property.ToString();
+        }
+
+        public static string GetString(this TYPE type)
+        {
+            string result = type.ToString().Replace("WingedBeast", "Winged Beast");
+            result = result.Replace("BeastWarrior", "Beast-Warrior");
+            result = result.Replace("SeaSerpent", "Sea Serpent");
+            result = result.Replace("DivineBeast", "Divine-Beast");
+            result = result.Replace("CreatorGod", "Creator God");
+
+            return result;
+        }
 
 
         #endregion Card
@@ -112,7 +130,7 @@ namespace OV.Core
             File.WriteAllText(fileName, data);
         }
 
-        
+
         #endregion Set
     }
 }

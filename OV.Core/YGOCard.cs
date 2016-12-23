@@ -21,7 +21,7 @@ namespace OV.Core
         private YgoCard()
         {
             DefaultFrame = FRAME.Effect;
-            DatabasePath = DatabasePath = Utilities.GetLocationPath() + @"\Resources\Datas.ld";
+            DatabasePath = DatabasePath = Utilities.GetLocationPath() + @"\Resources\Data.ld";
             Database = new ByteDatabase(DatabasePath);
             this.Abilities = new List<ABILITY>();
             this.Version = new Version("0.1");
@@ -142,8 +142,7 @@ namespace OV.Core
             {
                 ContractResolver = new PrivateSetterContractResolver(),
             };
-            return JsonConvert.DeserializeObject<YgoCard>(File.ReadAllText(fileName), settings);
-            
+            return JsonConvert.DeserializeObject<YgoCard>(File.ReadAllText(fileName), settings);            
         }
 
         public string GetData()
@@ -155,20 +154,69 @@ namespace OV.Core
             {
                 result += Environment.NewLine;
                 result += this.IsFrame(FRAME.Xyz)
-                    ? string.Format("Rank {0}", this.Rank)
-                    : string.Format("Level {0}", this.Level);
+                    ? string.Format("Rank {0}", (double.IsNaN(Rank) ? "?" : Rank.ToString()))
+                    : string.Format("Level {0}", (double.IsNaN(Level) ? "?" : Level.ToString()));
                 result += " " + this.Attribute.ToString();
-                result += " " + string.Format("{0}-Type", this.Type);
+                result += " " + string.Format("{0}-Type", this.Type.GetString());
+                if (this.IsPendulum)
+                {
+                    result += " Pendulum";
+                }
                 result += " " + this.Frame;
                 if (this.Abilities.Count > 0)
                 {
                     result += " " + string.Join(" ", this.Abilities);
                 }
+                result += " Monster";
                 result += Environment.NewLine;
-                result += string.Format("ATK {0}\nDEF {1}", this.ATK, this.DEF);
+                result += string.Format("ATK {0}\nDEF {1}",
+                    (double.IsNaN(ATK) ? "?" : ATK.ToString()),
+                    (double.IsNaN(DEF) ? "?" : DEF.ToString()));
+                if (this.IsPendulum)
+                {
+                    result += "\nPendulum Scale ";
+                    if (ScaleLeft.Equals(ScaleRight))
+                    {
+                        result += (double.IsNaN(ScaleLeft) ? "?" : ScaleLeft.ToString());
+                    }
+                    else
+                    {
+                        result += (double.IsNaN(ScaleLeft) ? "?" : ScaleLeft.ToString());
+                        result += "/";
+                        result += (double.IsNaN(ScaleRight) ? "?" : ScaleRight.ToString());
+                    }
+                }                
+                result += Environment.NewLine;
+                if (this.IsPendulum)
+                {
+                    result += "Pendulum Effect:\n";
+                    result += this.PendulumEffect.CleanUpUnnecessarySpace();
+                    result += Environment.NewLine;
+                    if (this.IsFrame(FRAME.Normal))
+                    {
+                        result += "Lore:\n";
+                        result += Environment.NewLine;
+                    }
+                    else
+                    {
+                        result += "Monster Effect:\n";
+                        result += Environment.NewLine;
+                    }
+                }
+            } 
+            else
+            {
+                result += Environment.NewLine;
+                if (Property != PROPERTY.NONE && Property != PROPERTY.Normal)
+                {
+                    result += Property.GetString() + " ";
+                }
+                result += Frame.ToString() + " Card";
+                result += Environment.NewLine;
             }
-            result += Environment.NewLine;
+
             result += this.Description.CleanUpUnnecessarySpace();
+
             return result;
         }
 
@@ -384,6 +432,11 @@ namespace OV.Core
                     {
                         this.Abilities.RemoveAll(o => o.IsEffectAbility());
                     }
+
+                    if (Abilities.Contains(ABILITY.Effect))
+                    {
+                        Abilities.Remove(ABILITY.Effect);
+                    }
                 }
                 else
                 {
@@ -394,7 +447,7 @@ namespace OV.Core
                     ATK = DEF = double.NaN;
                 }
             }
-            if (isAdd && Abilities.Contains(ability) == false)
+            if (isAdd && Abilities.Contains(ability) == false) //Add
             {
                 if (ability.IsEffectAbility() && Frame != FRAME.Effect)
                 {
@@ -402,9 +455,9 @@ namespace OV.Core
                 }
                 Abilities.Add(ability);
             }
-            else if (isAdd == false && Abilities.Contains(ability))
+            else if (isAdd == false && Abilities.Contains(ability)) //Remove
             {
-                Abilities.Remove(ability);
+                Abilities.Remove(ability);                
             }
 
             Abilities.Sort();

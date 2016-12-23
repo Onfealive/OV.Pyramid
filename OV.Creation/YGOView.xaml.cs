@@ -36,7 +36,7 @@ namespace OV.Pyramid
         public YgoView()
         {
             InitializeComponent();
-            DatabasePath = GetLocationPath() + @"\Resources\Datas.ld";
+            DatabasePath = GetLocationPath() + @"\Resources\Data.ld";
             Database = new ByteDatabase(DatabasePath);
             isInitialize = false;
 
@@ -672,12 +672,13 @@ namespace OV.Pyramid
             CreateBitmapFromVisual(CardCanvas, fileName);
         }
 
+        /*
         internal void SaveImageTo(YgoCard card, string fileName)
         {
-            
+            CurrentCard = card.Clone();
+            Render(CurrentCard);
             CreateBitmapFromVisual(CardCanvas, fileName);
-            //Render(origin);
-        }
+        }*/
 
         public void SaveDataTo(string fileName)
         {
@@ -967,7 +968,7 @@ namespace OV.Pyramid
             if (CurrentCard.IsMonster())
             {
                 Canvas.SetTop(TextBlockDescription, 922);
-                RichTextBoxDescription.Height = 158;
+                RichTextBoxDescription.Height = 160;
             }
             else
             {

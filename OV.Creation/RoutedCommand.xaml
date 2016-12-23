@@ -1,0 +1,67 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:OV.Pyramid">
+    <RoutedCommand x:Key="Exit">
+        <RoutedCommand.InputGestures>
+            <KeyGesture>Ctrl+Q</KeyGesture>
+        </RoutedCommand.InputGestures>
+    </RoutedCommand>
+    <RoutedCommand x:Key="Open">
+        <RoutedCommand.InputGestures>
+            <KeyGesture>Ctrl+O</KeyGesture>
+        </RoutedCommand.InputGestures>
+    </RoutedCommand>
+    <RoutedCommand x:Key="Save">
+        <RoutedCommand.InputGestures>
+            <KeyGesture>Ctrl+S</KeyGesture>
+        </RoutedCommand.InputGestures>
+    </RoutedCommand>
+    <RoutedCommand x:Key="SimpleSave">
+        <RoutedCommand.InputGestures>
+            <KeyGesture>Ctrl+I</KeyGesture>
+        </RoutedCommand.InputGestures>
+    </RoutedCommand>
+
+    <RoutedCommand x:Key="About">
+        <RoutedCommand.InputGestures>
+            <KeyGesture>F1</KeyGesture>
+        </RoutedCommand.InputGestures>
+    </RoutedCommand>
+    <RoutedCommand x:Key="Feedback"></RoutedCommand>
+    <RoutedCommand x:Key="Facebook"></RoutedCommand>
+    <RoutedCommand x:Key="Mediafire"></RoutedCommand>
+
+    <RoutedCommand x:Key="SwitchMode">
+        <RoutedCommand.InputGestures>
+            <KeyGesture>F10</KeyGesture>
+        </RoutedCommand.InputGestures>
+    </RoutedCommand>
+
+    <RoutedCommand x:Key="ResetCardToDefault">
+        <RoutedCommand.InputGestures>
+            <KeyGesture>Ctrl+R</KeyGesture>
+        </RoutedCommand.InputGestures>
+    </RoutedCommand>
+    <RoutedCommand x:Key="RemoveCurrentCard">
+        <RoutedCommand.InputGestures>
+            <KeyGesture>Ctrl+Delete</KeyGesture>
+        </RoutedCommand.InputGestures>
+    </RoutedCommand>
+    <RoutedCommand x:Key="NewCard">
+        <RoutedCommand.InputGestures>
+            <KeyGesture>Ctrl+N</KeyGesture>
+        </RoutedCommand.InputGestures>
+    </RoutedCommand>
+    
+    <RoutedCommand x:Key="NextCard">
+        <RoutedCommand.InputGestures>
+            <KeyGesture>F5</KeyGesture>            
+        </RoutedCommand.InputGestures>
+    </RoutedCommand>
+    
+    <RoutedCommand x:Key="PreviousCard">
+        <RoutedCommand.InputGestures>
+            <KeyGesture>F6</KeyGesture>
+        </RoutedCommand.InputGestures>
+    </RoutedCommand>
+</ResourceDictionary>
