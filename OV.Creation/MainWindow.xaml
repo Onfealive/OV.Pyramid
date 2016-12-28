@@ -63,6 +63,7 @@
         <CommandBinding Command="{StaticResource Feedback}" Executed="FeedbackCommand_Executed"></CommandBinding>
         <CommandBinding Command="{StaticResource Facebook}" Executed="FacebookCommand_Executed"></CommandBinding>
         <CommandBinding Command="{StaticResource Mediafire}" Executed="MediafireCommand_Executed"></CommandBinding>
+        <CommandBinding Command="{StaticResource Card2Clipboard}" Executed="Card2Clipboard_Executed"></CommandBinding>
     </Window.CommandBindings>
     
     <StackPanel x:Name="mainCanvas" Width="974" Height="670">
@@ -79,13 +80,15 @@
                     <Separator />
                     <MenuItem Header="_Exit" Command="{StaticResource Exit}"/>
                 </MenuItem>
-                <MenuItem Header="_Set/Card">
+                <MenuItem Header="Card &amp; Set">
                     <MenuItem Header="_Add 1 Card" Command="{StaticResource NewCard}"/>
                     <MenuItem Header="Ne_xt Card" Command="{StaticResource NextCard}"/>
                     <MenuItem Header="_Previous Card" Command="{StaticResource PreviousCard}"/>
                     <Separator></Separator>
                     <MenuItem Header="_Reset Card" Command="{StaticResource ResetCardToDefault}"/>
                     <MenuItem Header="Re_move Card" Command="{StaticResource RemoveCurrentCard}"/>
+                    <Separator></Separator>
+                    <MenuItem Header="Card2Clipboard" Command="{StaticResource Card2Clipboard}"/>
                 </MenuItem>
                 <MenuItem Header="Utility">
                     <MenuItem Header="Card/Set Mode" Command="{StaticResource SwitchMode}"></MenuItem>
@@ -108,7 +111,9 @@
                        NameClick="RenderCard_NameClick"
                        TypeClick="RenderCard_TypeClick"
                        CirculationClick="RenderCard_CirculationClick"
-                       ValueClick="RenderCard_ValueClick" ArtworkClick="RenderCard_ArtworkClick"                       
+                       ValueClick="RenderCard_ValueClick" 
+                               ArtworkClick="RenderCard_ArtworkClick"    
+                               ArtworkDoubleClick="YgoView_ArtworkDoubleClick"
                        DescriptionClick="RenderCard_DescriptionClick"
                        FrameClick="RenderCard_FrameClick" MiddleClick="RenderCard_MiddleClick" />
             </StackPanel>
@@ -117,135 +122,152 @@
                     Style="{DynamicResource DockTabControl}">
 
                 <TabItem Header="Details" Grid.Column="1" DockPanel.Dock="Left">
-                    <ScrollViewer  x:Name="Scroll" VerticalScrollBarVisibility="Visible" Width="Auto" Height="614"
-                       Canvas.Left="461" Canvas.Top="44"
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"></RowDefinition>
+                            <RowDefinition Height="Auto"></RowDefinition>
+                        </Grid.RowDefinitions>
+                        <ScrollViewer  x:Name="Scroll" VerticalScrollBarVisibility="Visible" Width="Auto" 
+                       Canvas.Left="461" Canvas.Top="44" Grid.Row="0" Height="Auto" Padding="0 0 0 10"
                        Loaded="CardDetailsScroll_Loaded" Unloaded="CardDetailsScroll_Unloaded">
-                        <StackPanel x:Name="Grid" Width="Auto" Height="950" Canvas.Top="0" Canvas.Left="0">
-                            <Border x:Name="NameBorder">
-                                <Canvas Height="40" x:Name="NameCanvas">
-                                    <Label FontSize="14" Canvas.Left="13" Canvas.Top="8" Content="Name"/>
-                                    <TextBox x:Name="NameEdit"  Canvas.Left="60" Canvas.Top="10"
+                            <StackPanel x:Name="Grid" Width="Auto" Height="950" Canvas.Top="0" Canvas.Left="0">
+                                <Border x:Name="NameBorder">
+                                    <Canvas Height="40" x:Name="NameCanvas">
+                                        <Label FontSize="14" Canvas.Left="13" Canvas.Top="8" Content="Name"/>
+                                        <TextBox x:Name="NameEdit"  Canvas.Left="60" Canvas.Top="10"
                                         Width="350" FontSize="15"
                                 TextChanged="Name_TextBox_TextChanged"/>
-                                </Canvas>
-                            </Border>
-                            <Border x:Name="RarityBorder" Style="{StaticResource RoundedBorder}">
-                                <Expander Style="{StaticResource InsideBorderExpander}">
-                                    <Expander.Header>
-                                        <TextBlock FontSize="14" Canvas.Left="4"><Run Text="Rarity"/></TextBlock>
-                                    </Expander.Header>
-                                    <Canvas x:Name="RarityCanvas" Height="160"/>
-                                </Expander>
-                            </Border>
-                            <Border x:Name="AttributeBorder" Style="{StaticResource RoundedBorder}">
-                                <Expander Style="{StaticResource InsideBorderExpander}">
-                                    <Expander.Header>
-                                        <TextBlock FontSize="14" Canvas.Left="4"><Run Text="Attribute"/></TextBlock>
-                                    </Expander.Header>
-                                    <Canvas x:Name="AttributeCanvas" Height="160"/>
-                                </Expander>
-                            </Border>
-                            <Border x:Name="MiddleBorder" Style="{StaticResource RoundedBorder}">
-                                <Expander Style="{StaticResource InsideBorderExpander}">
-                                    <Expander.Header>
-                                        <TextBlock FontSize="14" Canvas.Left="4"><Run Text="Level/Rank/Property"/></TextBlock>
-                                    </Expander.Header>
-                                    <Canvas x:Name="MiddleCanvas" Height="230">
-                                        <TabControl x:Name="MiddleTab" Canvas.Top="8" Width="380" Height="185"/>
                                     </Canvas>
-                                </Expander>
-                            </Border>
-                            <Border x:Name="FrameBorder" Style="{StaticResource RoundedBorder}">
-                                <Expander Style="{StaticResource InsideBorderExpander}">
-                                    <Expander.Header>
-                                        <TextBlock FontSize="14" Canvas.Left="4"><Run Text="Card Type"/></TextBlock>
-                                    </Expander.Header>
-                                    <Canvas x:Name="FrameCanvas" Height="160"/>
-                                </Expander>
-                            </Border>
-                            <Border x:Name="TypeBorder" Style="{StaticResource RoundedBorder}">
-                                <Expander Style="{StaticResource InsideBorderExpander}">
-                                    <Expander.Header>
-                                        <TextBlock FontSize="14" Canvas.Left="4"><Run Text="Monster Type"/></TextBlock>
-                                    </Expander.Header>
-                                    <Canvas x:Name="TypeCanvas" Height="294"/>
-                                </Expander>
-                            </Border>
-                            <Border x:Name="AbilityBorder" Style="{StaticResource RoundedBorder}">
-                                <Expander Style="{StaticResource InsideBorderExpander}">
-                                    <Expander.Header>
-                                        <TextBlock FontSize="14" Canvas.Left="4"><Run Text="Ability"/></TextBlock>
-                                    </Expander.Header>
-                                    <Canvas x:Name="AbilityCanvas" Height="152"/>
-                                </Expander>
-                            </Border>
-                            <Border x:Name="ValueBorder" Style="{StaticResource RoundedBorder}">
-                                <Expander Style="{StaticResource InsideBorderExpander}">
-                                    <Expander.Header>
-                                        <TextBlock FontSize="14" Canvas.Left="4"><Run Text="ATK/DEF"/></TextBlock>
-                                    </Expander.Header>
-                                    <Canvas Height="80" x:Name="ValueCanvas">
-                                        <TextBlock Canvas.Top="8" Canvas.Left="40" FontSize="14"><Run Text="ATK"/></TextBlock>
-                                        <TextBox x:Name="ATKBox" Width="70" FontSize="14" local:Masking.Mask="([0-9])|(^\?$)"
+                                </Border>
+                                <Border x:Name="RarityBorder" Style="{StaticResource RoundedBorder}">
+                                    <Expander Style="{StaticResource InsideBorderExpander}">
+                                        <Expander.Header>
+                                            <TextBlock FontSize="14" Canvas.Left="4"><Run Text="Rarity"/></TextBlock>
+                                        </Expander.Header>
+                                        <Canvas x:Name="RarityCanvas" Height="160"/>
+                                    </Expander>
+                                </Border>
+                                <Border x:Name="AttributeBorder" Style="{StaticResource RoundedBorder}">
+                                    <Expander Style="{StaticResource InsideBorderExpander}">
+                                        <Expander.Header>
+                                            <TextBlock FontSize="14" Canvas.Left="4"><Run Text="Attribute"/></TextBlock>
+                                        </Expander.Header>
+                                        <Canvas x:Name="AttributeCanvas" Height="160"/>
+                                    </Expander>
+                                </Border>
+                                <Border x:Name="MiddleBorder" Style="{StaticResource RoundedBorder}">
+                                    <Expander Style="{StaticResource InsideBorderExpander}">
+                                        <Expander.Header>
+                                            <TextBlock FontSize="14" Canvas.Left="4"><Run Text="Level/Rank/Property"/></TextBlock>
+                                        </Expander.Header>
+                                        <Canvas x:Name="MiddleCanvas" Height="230">
+                                            <TabControl x:Name="MiddleTab" Canvas.Top="8" Width="380" Height="185"/>
+                                        </Canvas>
+                                    </Expander>
+                                </Border>
+                                <Border x:Name="FrameBorder" Style="{StaticResource RoundedBorder}">
+                                    <Expander Style="{StaticResource InsideBorderExpander}">
+                                        <Expander.Header>
+                                            <TextBlock FontSize="14" Canvas.Left="4"><Run Text="Card Type"/></TextBlock>
+                                        </Expander.Header>
+                                        <Canvas x:Name="FrameCanvas" Height="160"/>
+                                    </Expander>
+                                </Border>
+                                <Border x:Name="TypeBorder" Style="{StaticResource RoundedBorder}">
+                                    <Expander Style="{StaticResource InsideBorderExpander}">
+                                        <Expander.Header>
+                                            <TextBlock FontSize="14" Canvas.Left="4"><Run Text="Monster Type"/></TextBlock>
+                                        </Expander.Header>
+                                        <Canvas x:Name="TypeCanvas" Height="294"/>
+                                    </Expander>
+                                </Border>
+                                <Border x:Name="AbilityBorder" Style="{StaticResource RoundedBorder}">
+                                    <Expander Style="{StaticResource InsideBorderExpander}">
+                                        <Expander.Header>
+                                            <TextBlock FontSize="14" Canvas.Left="4"><Run Text="Ability"/></TextBlock>
+                                        </Expander.Header>
+                                        <Canvas x:Name="AbilityCanvas" Height="152"/>
+                                    </Expander>
+                                </Border>
+                                <Border x:Name="ValueBorder" Style="{StaticResource RoundedBorder}">
+                                    <Expander Style="{StaticResource InsideBorderExpander}">
+                                        <Expander.Header>
+                                            <TextBlock FontSize="14" Canvas.Left="4"><Run Text="ATK/DEF"/></TextBlock>
+                                        </Expander.Header>
+                                        <Canvas Height="80" x:Name="ValueCanvas">
+                                            <TextBlock Canvas.Top="8" Canvas.Left="40" FontSize="14"><Run Text="ATK"/></TextBlock>
+                                            <TextBox x:Name="ATKBox" Width="70" FontSize="14" local:Masking.Mask="([0-9])|(^\?$)"
                                  Canvas.Left="76" Canvas.Top="5" MaxLength="4" TextAlignment="Right"
                                  TextChanged="ATK_TextBox_TextChanged" />
-                                        <TextBlock Canvas.Top="8" Canvas.Left="250" FontSize="14"><Run Text="DEF"/></TextBlock>
-                                        <TextBox x:Name="DEFBox" Width="70" FontSize="14" local:Masking.Mask="([0-9])|(^\?$)"
+                                            <TextBlock Canvas.Top="8" Canvas.Left="250" FontSize="14"><Run Text="DEF"/></TextBlock>
+                                            <TextBox x:Name="DEFBox" Width="70" FontSize="14" local:Masking.Mask="([0-9])|(^\?$)"
                                  Canvas.Left="286" Canvas.Top="5" MaxLength="4"
                                  TextChanged="DEF_TextBox_TextChanged" TextAlignment="Right"/>
+                                        </Canvas>
+                                    </Expander>
+                                </Border>
+                                <Border x:Name="ScaleBorder" Style="{StaticResource RoundedBorder}">
+                                    <Expander Style="{StaticResource InsideBorderExpander}">
+                                        <Expander.Header>
+                                            <TextBlock FontSize="14" Canvas.Left="4"><Run Text="Pendulum Scale"/></TextBlock>
+                                        </Expander.Header>
+                                        <Canvas x:Name="ScaleCanvas" Height="192">
+                                            <TextBox x:Name="ScaleLeftBox" local:Masking.Mask="^([0-9]|[1][0-3]|\?)$"  TextChanged="ScaleLeft_TextChanged" Width="40" TextAlignment="Right"/>
+                                            <TextBox x:Name="ScaleRightBox" local:Masking.Mask="^([0-9]|[1][0-3]|\?)$" TextChanged="ScaleRight_TextChanged"  Width="40"/>
+                                        </Canvas>
+                                    </Expander>
+                                </Border>
+                                <Border x:Name="DocumentBorder">
+                                    <Canvas x:Name="DocumentCanvas"  Height="330">
+                                        <TextBlock FontSize="14" Canvas.Top="5" Canvas.Left="118"><Run Text="Pendulum Effect and Description"/></TextBlock>
+                                        <RichTextBox x:Name="PendulumBox" Canvas.Top="30" Canvas.Left="30" Height="120" Width="360"/>
+                                        <RichTextBox x:Name="DescriptionBox" Canvas.Top="170" Canvas.Left="30" Height="120" Width="360"/>
+                                        <Button  Name="ApplyButton" Canvas.Top="300" Canvas.Right="20" Padding="5" Click="ApplyDocument_Click" Content="Apply"/>
+                                        <TextBlock Canvas.Left="20" Canvas.Top="300" TextWrapping="Wrap"><Run Text="{}{.}, {a}, {b}, {o} =&gt;●, α, β, Ω"/><Run/></TextBlock>
                                     </Canvas>
-                                </Expander>
-                            </Border>
-                            <Border x:Name="ScaleBorder" Style="{StaticResource RoundedBorder}">
-                                <Expander Style="{StaticResource InsideBorderExpander}">
-                                    <Expander.Header>
-                                        <TextBlock FontSize="14" Canvas.Left="4"><Run Text="Pendulum Scale"/></TextBlock>
-                                    </Expander.Header>
-                                    <Canvas x:Name="ScaleCanvas" Height="192">
-                                        <TextBox x:Name="ScaleLeftBox" local:Masking.Mask="^([0-9]|[1][0-3]|\?)$"  TextChanged="ScaleLeft_TextChanged" Width="40" TextAlignment="Right"/>
-                                        <TextBox x:Name="ScaleRightBox" local:Masking.Mask="^([0-9]|[1][0-3]|\?)$" TextChanged="ScaleRight_TextChanged"  Width="40"/>
-                                    </Canvas>
-                                </Expander>
-                            </Border>
-                            <Border x:Name="DocumentBorder">
-                                <Canvas x:Name="DocumentCanvas"  Height="330">
-                                    <TextBlock FontSize="14" Canvas.Top="5" Canvas.Left="118"><Run Text="Pendulum Effect and Description"/></TextBlock>
-                                    <RichTextBox x:Name="PendulumBox" Canvas.Top="30" Canvas.Left="30" Height="120" Width="360"/>
-                                    <RichTextBox x:Name="DescriptionBox" Canvas.Top="170" Canvas.Left="30" Height="120" Width="360"/>
-                                    <Button  Name="ApplyButton" Canvas.Top="300" Canvas.Right="20" Padding="5" Click="ApplyDocument_Click" Content="Apply"/>
-                                    <TextBlock Canvas.Left="20" Canvas.Top="300" TextWrapping="Wrap"><Run Text="{}{.}, {a}, {b}, {o} =&gt;●, α, β, Ω"/><Run/></TextBlock>
-                                </Canvas>
-                            </Border>
-                            <Border x:Name="CirculationBorder" Style="{StaticResource RoundedBorder}">
-                                <Expander Style="{StaticResource InsideBorderExpander}">
-                                    <Expander.Header>
-                                        <TextBlock FontSize="14" Canvas.Left="4"><Run Text="Circulation"/></TextBlock>
-                                    </Expander.Header>
-                                    <Canvas x:Name="CirculationCanvas" Height="196">
-                                        <TextBlock Canvas.Top="22"><Run Text="Edition"/></TextBlock>
-                                        <ComboBox x:Name="EditionCombo" Width="120" SelectionChanged="Edition_SelectionChanged"
+                                </Border>
+                                <Border x:Name="CirculationBorder" Style="{StaticResource RoundedBorder}">
+                                    <Expander Style="{StaticResource InsideBorderExpander}">
+                                        <Expander.Header>
+                                            <TextBlock FontSize="14" Canvas.Left="4"><Run Text="Circulation"/></TextBlock>
+                                        </Expander.Header>
+                                        <Canvas x:Name="CirculationCanvas" Height="196">
+                                            <TextBlock Canvas.Top="22"><Run Text="Edition"/></TextBlock>
+                                            <ComboBox x:Name="EditionCombo" Width="120" SelectionChanged="Edition_SelectionChanged"
                                               Canvas.Left="135" Canvas.Top="20"/>
-                                        <TextBlock Canvas.Top="52"><Run Text="Card Number"/></TextBlock>
-                                        <TextBox x:Name="CardNumberEdit" Width="80" MaxLength="8" TextChanged="CardNumber_TextChanged"
+                                            <TextBlock Canvas.Top="52"><Run Text="Card Number"/></TextBlock>
+                                            <TextBox x:Name="CardNumberEdit" Width="80" MaxLength="8" TextChanged="CardNumber_TextChanged"
                                              Canvas.Top="50" Canvas.Left="135"/>
-                                        <Button Canvas.Top="50" Canvas.Left="225" Click="Random_Click" Content="Random"/>
-                                        <TextBlock Canvas.Top="82"><Run Text="Set Number"/></TextBlock>
-                                        <TextBox x:Name="SetNumberEdit" Width="100" MaxLength="10" TextChanged="SetNumber_TextChanged"
+                                            <Button Canvas.Top="50" Canvas.Left="225" Click="Random_Click" Content="Random"/>
+                                            <TextBlock Canvas.Top="82"><Run Text="Set Number"/></TextBlock>
+                                            <TextBox x:Name="SetNumberEdit" Width="100" MaxLength="10" TextChanged="SetNumber_TextChanged"
                                              Canvas.Top="80" Canvas.Left="135"/>
-                                        <TextBlock Canvas.Top="115"><Run Text="Eye of Anubis Hologram"/></TextBlock>
-                                        <ComboBox x:Name="StickerCombo" Width="110" SelectionChanged="Sticker_SelectionChanged"
+                                            <TextBlock Canvas.Top="115"><Run Text="Eye of Anubis Hologram"/></TextBlock>
+                                            <ComboBox x:Name="StickerCombo" Width="110" SelectionChanged="Sticker_SelectionChanged"
                                               Canvas.Top="112" Canvas.Left="135"/>
-                                        <TextBlock Canvas.Top="142"><Run Text="Creator"/></TextBlock>
-                                        <CheckBox x:Name="CreatorCheckBox" Canvas.Top="142" Canvas.Left="135" Click="CreatorCheckBox_Checked" Content="Display"/>
-                                    </Canvas>
-                                </Expander>
-                            </Border>
-                        </StackPanel>
-                    </ScrollViewer>
+                                            <TextBlock Canvas.Top="142"><Run Text="Creator"/></TextBlock>
+                                            <CheckBox x:Name="CreatorCheckBox" Canvas.Top="142" Canvas.Left="135" Click="CreatorCheckBox_Checked" Content="Display"/>
+                                        </Canvas>
+                                    </Expander>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+                            <Button Name="ExpandAllButton"
+                                Padding="5" Grid.Column="0" Click="ExpandAllButton_Click">Expand All</Button>
+                            <Button Name="CollapseAllButton"
+                                    Padding="5" Grid.Column="1" Click="CollapseAllButton_Click">Collapse All</Button>
+                        </Grid>
+                    </Grid>
                 </TabItem>
                 <TabItem Header="Artwork" DockPanel.Dock="Left">
                     <Canvas x:Name="ArtworkCanvas">
-                        <Border Canvas.Left="60" Canvas.Top="10" BorderThickness="1" BorderBrush="Black">
+                        <Border Canvas.Left="60" Canvas.Top="10" BorderThickness="1" BorderBrush="Black"
+                                PreviewMouseLeftButtonDown="Border_PreviewMouseLeftButtonDown">
                             <Image x:Name="ControlArtwork" Stretch="Fill" Width="300" Height="300"/>
                         </Border>
                         <TextBox x:Name="ArtworkPath" MinLines="2" TextWrapping="Wrap" Canvas.Left="10" Canvas.Top="320" Width="320"
@@ -253,7 +275,7 @@
                         <Button Canvas.Left="335" Canvas.Top="320" Width="75" Click="ArtworkBrowser_Click" Content="Browse"/>
                         
                         <TextBlock Canvas.Left="10" TextWrapping="Wrap" Text="Reduce/Increase Height" Canvas.Top="366"/>
-                        <TextBox x:Name="artworkPaddingHeight" Height="23" Canvas.Left="141" TextWrapping="Wrap" Text="0" TextAlignment="Right" Canvas.Top="363" Width="95"/>
+                        <TextBox x:Name="ArtworkPaddingHeight" Height="23" Canvas.Left="141" TextWrapping="Wrap" Text="0" TextAlignment="Right" Canvas.Top="363" Width="95"/>
                         <Button x:Name="previewResizeArtworkButton" Content="Preview" Canvas.Left="255" Canvas.Top="364" Width="75" Click="previewResizeArtworkButton_Click"/>
                         <Button x:Name="resizeArtworkButton" Content="Apply" Canvas.Left="335" Canvas.Top="363" Width="75" Click="resizeArtworkButton_Click"/>
 
@@ -307,9 +329,10 @@
                             </StackPanel>
                         </DockPanel>
                         <StackPanel>
-                            <TextBox x:Name="DataText" IsEnabled="False" IsReadOnly="True" Height="200" Margin="10"/>
-                            <Button Margin="10 0 10 0" x:Name="DataTextCopy" Click="DataTextCopy_Click"
-                                Padding="5" Content="Copy"/>
+                            <TextBox x:Name="DataText" IsEnabled="False" IsReadOnly="True" 
+                                     Height="200" Margin="10" TextWrapping="Wrap"/>
+                            <Button Margin="10 0 10 0" x:Name="DataTextCopy"
+                                Padding="5" Content="Card2Clipboard" Command="{StaticResource Card2Clipboard}"/>
                         </StackPanel>
                     </StackPanel>
                 </TabItem>

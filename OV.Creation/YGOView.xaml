@@ -16,6 +16,10 @@
             <Image x:Name="Frame" Width="{Binding Width, ElementName=CardCanvas}"
                     Height="{Binding Height, ElementName=CardCanvas}" Stretch="Fill">
             </Image>
+            <Canvas Name="FakeFrame" Width="{Binding Width, ElementName=CardCanvas}"
+                Height="{Binding Height, ElementName=CardCanvas}">
+                
+            </Canvas>
             <Viewbox Name="NameViewbox" Stretch="Fill" Height="95"  Width="606" Canvas.Top="40" Canvas.Left="61">
                 <TextBlock Name="CardName" FontSize="{Binding Height, ElementName=NameViewbox}" ></TextBlock>
             </Viewbox>
@@ -73,6 +77,7 @@
             <TextBlock Name="SetNumber" Panel.ZIndex="10" Canvas.Right="82" Canvas.Top="849" FontSize="23" TextAlignment="Right"></TextBlock>
             <TextBlock Name="Creator" Panel.ZIndex="10" FontSize="23" Canvas.Right="70" HorizontalAlignment="Right" Canvas.Top="1128" ></TextBlock>
             <Image Name="Artwork" Stretch="Fill" Width="620" Height="620" Canvas.Left="98" Canvas.Top="217"></Image>
+            <Image Name="Watermark" Width="60" Height="60" Stretch="Fill" Opacity="0.5"></Image>
             <Image Name="ArtworkFoil" Stretch="Fill" Width="{Binding ElementName=Artwork, Path=Width}"
                        Height="{Binding ElementName=Artwork, Path=Height}"
                        Canvas.Left="{Binding ElementName=Artwork, Path=(Canvas.Left)}"
@@ -85,7 +90,7 @@
                              IsReadOnly="True" Background="Transparent"></RichTextBox>-->
             <local:TextBlockAutoShrink x:Name="Pendulum" Width="568" MaxHeight="130" TextWrapping="Wrap"
                      TextAlignment="Justify" LineStackingStrategy="BlockLineHeight"
-                     Opacity="0.9" Background="Transparent" Padding="5,0,5,0" Canvas.Left="122" Canvas.Top="797">                
+                     Opacity="0.9" Background="Transparent" Padding="3,0,3,0" Canvas.Left="122" Canvas.Top="797">                
             </local:TextBlockAutoShrink>
 
             <Image Name="ScaleLeft" Width="50" Canvas.Left="60"></Image>
@@ -124,7 +129,7 @@
                         PreviewMouseLeftButtonDown="Middle_PreviewMouseLeftButtonDown"
                     Width="655" Height="56" Canvas.Left="80" Canvas.Top="143" ></Border>
                 <Border Name="ArtworkZone" Style="{StaticResource ZoneBorder}"
-                    PreviewMouseLeftButtonDown="Artwork_PreviewMouseLeftButtonDown"
+                    PreviewMouseLeftButtonDown="Artwork_PreviewMouseLeftButtonDown"                    
                     Width="{Binding ElementName=Artwork, Path=Width}" 
                     Height="{Binding ElementName=Artwork, Path=Height}" 
                     Canvas.Left="{Binding ElementName=Artwork, Path=(Canvas.Left)}"

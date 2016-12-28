@@ -64,4 +64,9 @@
             <KeyGesture>F6</KeyGesture>
         </RoutedCommand.InputGestures>
     </RoutedCommand>
+    <RoutedCommand x:Key="Card2Clipboard">
+        <RoutedCommand.InputGestures>
+            <KeyGesture>Ctrl+Shift+C</KeyGesture>
+        </RoutedCommand.InputGestures>
+    </RoutedCommand>
 </ResourceDictionary>

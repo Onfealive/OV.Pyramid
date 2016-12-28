@@ -202,20 +202,48 @@ namespace OV.Pyramid
             RefreshDescriptionControl();
 
             RefreshCirculationControl();
-            ArtworkPath.Text = "";
-            artworkPaddingHeight.Text = YgoView.RecommendedHeight.ToString();
+            RefreshArtworkControl();
+            RefreshOtherControls();
+            
 
+            inRefreshControl = false;
+        }
+
+        private void RefreshOtherControls()
+        {
             DataText.Text = CurrentCard.GetData();
 
             Message.Text = string.IsNullOrEmpty(currentFilePath)
-                ? "Unsaved"
+                ? ""
                 : Path.GetFileName(currentFilePath);
             if (IsSaved == false)
             {
                 Message.Text += " *";
             }
+            RefreshExpanders();
+        }
 
-            inRefreshControl = false;
+        private void RefreshExpanders()
+        {
+            List<Expander> expanders = new List<Expander>();
+            expanders.Add(RarityBorder.Child as Expander);
+            expanders.Add(AttributeBorder.Child as Expander);
+            expanders.Add(MiddleBorder.Child as Expander);
+            expanders.Add(FrameBorder.Child as Expander);
+            expanders.Add(TypeBorder.Child as Expander);
+            expanders.Add(AbilityBorder.Child as Expander);
+            expanders.Add(ValueBorder.Child as Expander);
+            expanders.Add(ScaleBorder.Child as Expander);
+            expanders.Add(CirculationBorder.Child as Expander);
+
+            ExpandAllButton.IsEnabled = expanders.Any(o => o.IsExpanded == false);
+            CollapseAllButton.IsEnabled = expanders.Any(o => o.IsExpanded == true);
+        }
+
+        private void RefreshArtworkControl()
+        {
+            ArtworkPath.Text = "";
+            ArtworkPaddingHeight.Text = YgoView.RecommendedHeight.ToString();
         }
 
         private void RefreshSetting()
@@ -1339,13 +1367,8 @@ namespace OV.Pyramid
         private void Name_TextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (inRefreshControl) { return; }
-            string futureText = RenderText((sender as TextBox).Text).Trim();
+            string futureText = RenderText((sender as TextBox).Text);
             
-            if (CurrentSet.Cards.Count(o => o.Name == futureText) > 0)
-            {
-                MessageBox.Show("A duplicate name exists on the set. Please change it name!");
-                return;
-            }
             CurrentCard.SetName(futureText);
 
             RefreshArtwork();
@@ -1462,6 +1485,12 @@ namespace OV.Pyramid
 
         private void ArtworkBrowser_Click(object sender, RoutedEventArgs e)
         {
+            BrowseArtwork();
+            
+        }
+
+        private void BrowseArtwork()
+        {
             OpenFileDialog openDialog = new OpenFileDialog();
             openDialog.Filter = "Image File (*.png, *.jpg, *.bmp)|*.png;*.jpg;*.bmp";
             if (openDialog.ShowDialog() == true)
@@ -1505,7 +1534,7 @@ namespace OV.Pyramid
         private void resizeArtworkButton_Click(object sender, RoutedEventArgs e)
         {
             int value;
-            if (int.TryParse(artworkPaddingHeight.Text, out value))
+            if (int.TryParse(ArtworkPaddingHeight.Text, out value))
             {
                 YgoView.ResizeArtwork(value, true);
             }
@@ -1514,7 +1543,7 @@ namespace OV.Pyramid
         private void previewResizeArtworkButton_Click(object sender, RoutedEventArgs e)
         {
             int value;
-            if (int.TryParse(artworkPaddingHeight.Text, out value))
+            if (int.TryParse(ArtworkPaddingHeight.Text, out value))
             {
                 ControlArtwork.Source = YgoView.ResizeArtwork(value, false);
             }
@@ -1698,18 +1727,6 @@ namespace OV.Pyramid
         }
         #endregion ScrollToCanvas
 
-        private void InsideBorderExpander_Expanded(object sender, RoutedEventArgs e)
-        {
-            var expander = sender as Expander;
-            var canvas = expander.Content as Canvas;
-            var border = expander.Parent as Border;
-            if (canvas != null)
-            {
-                Grid.Height += canvas.Height - border.MinHeight;
-                Animations.SynchroAnimation(border, canvas.Height, Border.HeightProperty);
-            }
-        }
-
         private void InsideBorderExpander_Collapsed(object sender, RoutedEventArgs e)
         {
             var expander = sender as Expander;
@@ -1720,24 +1737,29 @@ namespace OV.Pyramid
                 Grid.Height -= canvas.Height - border.MinHeight;
                 Animations.SynchroAnimation(border,
                     border.MinHeight, Border.HeightProperty);
+
+                RefreshExpanders();
             }
         }
 
-        private void InsideBorderExpander_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
-            TextBlock TxtBlock = sender as TextBlock;
-            Expander Ex = TxtBlock.Parent as Expander;
-            Ex.IsExpanded = !Ex.IsExpanded;
-        }
-
-        private void DataTextCopy_Click(object sender, RoutedEventArgs e)
-        {
-            Clipboard.SetText(DataText.Text);
-            MessageBox.Show("Data has been copied.");
-        }
-
-       
         
+
+        private void InsideBorderExpander_Expanded(object sender, RoutedEventArgs e)
+        {
+            var expander = sender as Expander;
+            var canvas = expander.Content as Canvas;
+            var border = expander.Parent as Border;
+            if (canvas != null)
+            {
+                Grid.Height += canvas.Height - border.MinHeight;
+                Animations.SynchroAnimation(border, canvas.Height, Border.HeightProperty);
+
+                RefreshExpanders();
+            }
+        }
+
+        
+                        
         private void NewCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             AddNewCard();
@@ -1815,7 +1837,7 @@ namespace OV.Pyramid
         }
 
         private void SetImageExport()
-        {
+        {            
             string folderPath = exportPathTextBox.Text;            
             YgoSet set = CurrentSet;
 
@@ -1869,6 +1891,11 @@ namespace OV.Pyramid
 
         private void SingleImageExportButton_Click(object sender, RoutedEventArgs e)
         {
+            if (DuplicateCards().Count > 0)
+            {
+                MessageBox.Show("A duplicate name exists on the set. Please change it name!");
+                return;
+            }
             string folderPath = exportPathTextBox.Text;
             if (Directory.Exists(folderPath))
             {
@@ -1883,6 +1910,11 @@ namespace OV.Pyramid
 
         private void SingleDataExportButton_Click(object sender, RoutedEventArgs e)
         {
+            if (DuplicateCards().Count > 0)
+            {
+                MessageBox.Show("A duplicate name exists on the set. Please change it name!");
+                return;
+            }
             string folderPath = exportPathTextBox.Text;
             if (Directory.Exists(folderPath))
             {
@@ -1897,6 +1929,11 @@ namespace OV.Pyramid
 
         private void SingleAllExportButton_Click(object sender, RoutedEventArgs e)
         {
+            if (DuplicateCards().Count > 0)
+            {
+                MessageBox.Show("A duplicate name exists on the set. Please change it name!");
+                return;
+            }
             string folderPath = exportPathTextBox.Text;
             if (Directory.Exists(folderPath))
             {
@@ -1910,9 +1947,21 @@ namespace OV.Pyramid
             }
         }
 
+        private Dictionary<YgoCard, int> DuplicateCards()
+        {
+            var list = CurrentSet.Cards.GroupBy(x => x).Where(y => y.Count() > 1)
+                .ToDictionary(x => x.Key, y => y.Count());
+            return list;
+        }
+
         private void SetImageExportButton_Click(object sender, RoutedEventArgs e)
         {
             string folderPath = exportPathTextBox.Text;
+            if (DuplicateCards().Count > 0)
+            {
+                MessageBox.Show("A duplicate name exists on the set. Please change it name!");
+                return;
+            }
             if (Directory.Exists(folderPath))
             {
                 SetImageExport();
@@ -1927,6 +1976,11 @@ namespace OV.Pyramid
         private void SetDataExportButton_Click(object sender, RoutedEventArgs e)
         {
             string folderPath = exportPathTextBox.Text;
+            if (DuplicateCards().Count > 0)
+            {
+                MessageBox.Show("A duplicate name exists on the set. Please change it name!");
+                return;
+            }
             if (Directory.Exists(folderPath))
             {
                 SetDataExport();
@@ -1941,6 +1995,11 @@ namespace OV.Pyramid
         private void SetAllExportButton_Click(object sender, RoutedEventArgs e)
         {
             string folderPath = exportPathTextBox.Text;
+            if (DuplicateCards().Count > 0)
+            {
+                MessageBox.Show("A duplicate name exists on the set. Please change it name!");
+                return;
+            }
             if (Directory.Exists(folderPath))
             {
                 SetImageExport();
@@ -2069,7 +2128,14 @@ namespace OV.Pyramid
         
         private void AboutCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            System.Diagnostics.Process.Start(GetLocationPath() + @"\Resources\Help\index.html");
+            if (File.Exists(GetLocationPath() + @"\Resources\Help\index.html"))
+            {
+                System.Diagnostics.Process.Start(GetLocationPath() + @"\Resources\Help\index.html");
+            } else
+            {
+                MessageBox.Show("The Help file cannot be found!\nPlease download it again!");
+            }
+            
         }
 
         private void FeedbackCommand_Executed(object sender, ExecutedRoutedEventArgs e)
@@ -2085,6 +2151,39 @@ namespace OV.Pyramid
         private void MediafireCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             System.Diagnostics.Process.Start("https://www.mediafire.com/folder/vamylw814g9iq/OV_Pyramid");
+        }
+
+        private void Card2Clipboard_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            Clipboard.SetText(DataText.Text);
+            MessageBox.Show("Data has been copied.");
+        }
+
+        private void ExpandAllButton_Click(object sender, RoutedEventArgs e)
+        {
+            Grid.FindChildrens<Expander>().Where(o => o.IsExpanded == false)
+                .ToList().ForEach(o => o.IsExpanded = true);
+            Scroll.ScrollToTop();
+        }
+
+        private void CollapseAllButton_Click(object sender, RoutedEventArgs e)
+        {
+            Grid.FindChildrens<Expander>().Where(o => o.IsExpanded == true)
+                .ToList().ForEach(o => o.IsExpanded = false);
+            Scroll.ScrollToTop();
+        }
+
+        private void YgoView_ArtworkDoubleClick(object sender, EventArgs e)
+        {
+            BrowseArtwork();
+        }
+
+        private void Border_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+               if (e.ClickCount > 1)
+            {
+                BrowseArtwork();
+            }
         }
     }
 

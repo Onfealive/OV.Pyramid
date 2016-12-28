@@ -87,7 +87,7 @@ namespace OV.Core
                 defaultCard.Level = 4;
                 defaultCard.Creator = CREATOR.KazukiTakahashi;
                 defaultCard.Rarity = RARITY.Common;
-                defaultCard.Type = TYPE.Warrior;
+                //defaultCard.Type = TYPE.Warrior;
                 defaultCard.Sticker = STICKER.PromoSilver;
                 defaultCard.ArtworkByte = Database.GetData(@"Template\NoneImage.png").Bytes;
                 defaultCard.Set = "";
@@ -157,7 +157,10 @@ namespace OV.Core
                     ? string.Format("Rank {0}", (double.IsNaN(Rank) ? "?" : Rank.ToString()))
                     : string.Format("Level {0}", (double.IsNaN(Level) ? "?" : Level.ToString()));
                 result += " " + this.Attribute.ToString();
-                result += " " + string.Format("{0}-Type", this.Type.GetString());
+                if (Type != TYPE.NONE)
+                {
+                    result += " " + string.Format("{0}-Type", this.Type.GetString());
+                }
                 if (this.IsPendulum)
                 {
                     result += " Pendulum";
@@ -194,12 +197,12 @@ namespace OV.Core
                     result += Environment.NewLine;
                     if (this.IsFrame(FRAME.Normal))
                     {
-                        result += "Lore:\n";
+                        result += "Lore:";
                         result += Environment.NewLine;
                     }
                     else
                     {
-                        result += "Monster Effect:\n";
+                        result += "Monster Effect:";
                         result += Environment.NewLine;
                     }
                 }

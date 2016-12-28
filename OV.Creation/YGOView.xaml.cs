@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
-using System.IO;
+//using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
@@ -17,6 +17,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
 using static OV.Tools.Utilities;
 
 namespace OV.Pyramid
@@ -36,6 +37,11 @@ namespace OV.Pyramid
         public YgoView()
         {
             InitializeComponent();
+            FirstLoad();            
+        }
+
+        private void FirstLoad()
+        {
             DatabasePath = GetLocationPath() + @"\Resources\Data.ld";
             Database = new ByteDatabase(DatabasePath);
             isInitialize = false;
@@ -45,21 +51,52 @@ namespace OV.Pyramid
                 border.MouseEnter += ControlZone_MouseEnter;
                 border.MouseLeave += ControlZone_MouseLeave;
             }
-
+            /*
             ContextMenu AttributeContextMenu = new ContextMenu();
             AttributeZone.ContextMenu = AttributeContextMenu;
-            AttributeContextMenu.Items.Add("kk");
+            AttributeContextMenu.Items.Add("kk");*/
+
+            //TestFakeFrame();
+            
+        }
+        
+        private void TestFakeFrame()
+        {
+            Path orangePath = new Path();
+            PathFigure pathFigure = new PathFigure();
+            pathFigure.StartPoint = new Point(Frame.Width / 2, Frame.Height / 2);
+            LineSegment lineSegment1 = new LineSegment();
+            lineSegment1.Point = new Point(0, Frame.Height);
+            pathFigure.Segments.Add(lineSegment1);
+            LineSegment lineSegment2 = new LineSegment();
+            lineSegment2.Point = new Point(0, Frame.Height / 2 - (Frame.Width / 2) * Math.Tan(Math.PI / 2));
+            pathFigure.Segments.Add(lineSegment2);
+            PathGeometry pathGeometry = new PathGeometry();
+            pathGeometry.Figures = new PathFigureCollection();
+            pathGeometry.Figures.Add(pathFigure);
+            pathFigure.IsClosed = true;
+            orangePath.Data = pathGeometry;
+
+            Image first = new Image();
+            first.Width = FakeFrame.Width;
+            first.Height = FakeFrame.Height;
+
+            first.Source = Database.GetImage(@"Template\Frame\Effect.png");
+            FakeFrame.Children.Add(first);
+
+            first.Clip = pathGeometry;
         }
 
-        public event EventHandler ValueClick;        
         public event EventHandler TypeClick;
         public event EventHandler ArtworkClick;
+        public event EventHandler ArtworkDoubleClick;
         public event EventHandler AttributeClick;
         public event EventHandler CirculationClick;
         public event EventHandler DescriptionClick;
         public event EventHandler FrameClick;
         public event EventHandler MiddleClick;
         public event EventHandler NameClick;
+        public event EventHandler ValueClick;
 
         public event PropertyChangedEventHandler PropertyChanged;
         private void OnPropertyChanged(object sender, string propertyName)
@@ -144,6 +181,7 @@ namespace OV.Pyramid
             LoreBorder.Source = Database.GetImage(@"Template\Border\Lore\Default.png");
             ScaleLeft.Source = Database.GetImage(@"Template\Middle\ScaleLeft.png");
             ScaleRight.Source = Database.GetImage(@"Template\Middle\ScaleRight.png");
+            //Watermark.Source = Database.GetImage(@"Watermark.png");
         }
 
         public void SetDefaultArtwork(byte[] imageBytes)
@@ -222,9 +260,10 @@ namespace OV.Pyramid
                 }
                 if (preCard.Abilities.ListEquals(CurrentCard.Abilities) == false
                     || preCard.Type != CurrentCard.Type
-                    || (CurrentCard.IsMagic() && preCard.IsMonster())
-                    || (CurrentCard.IsMonster() && preCard.IsMagic())
-                    || (CurrentCard.IsFrame(FRAME.Normal) != preCard.IsFrame(FRAME.Normal)))
+                    //|| (CurrentCard.IsMagic() && preCard.IsMonster())
+                    //|| (CurrentCard.IsMonster() && preCard.IsMagic())
+                    //|| (CurrentCard.IsFrame(FRAME.Normal) != preCard.IsFrame(FRAME.Normal))
+                    || preCard.Frame != CurrentCard.Frame)
                 {
                     HandleAbility();
                 }
@@ -253,7 +292,8 @@ namespace OV.Pyramid
                 }
                 if (preCard.IsPendulum != CurrentCard.IsPendulum
                     || preCard.ScaleLeft.Equals(CurrentCard.ScaleLeft) == false
-                    || preCard.ScaleRight.Equals(CurrentCard.ScaleRight) == false)
+                    || preCard.ScaleRight.Equals(CurrentCard.ScaleRight) == false
+                    || preCard.PendulumEffect != CurrentCard.PendulumEffect)
                 {
                     HandleScale();
                 }
@@ -310,9 +350,9 @@ namespace OV.Pyramid
             double fontDefault = 31;
 
             Pendulum.Inlines.Clear();
-            Pendulum.Text = Text;
+            Pendulum.Text = Text.Length >= 1 ? Text.Substring(0, Text.Length - 1) : Text;
             Pendulum.FontSize = fontDefault;
-
+                        
             /*
             
             Pendulum.LineHeight = fontDefault * 1;
@@ -346,8 +386,10 @@ namespace OV.Pyramid
 
             Pendulum.MaxHeight = Pendulum.Height;
             Pendulum.MaxWidth = Pendulum.Width;
-
-
+            if (Text.Length >= 1)
+            {
+                Pendulum.Text = Text;
+            }
 
             //Is Pendulum?
             if (CurrentCard.IsPendulum)
@@ -372,6 +414,8 @@ namespace OV.Pyramid
                 Artwork.Height = 663;
                 Canvas.SetLeft(Artwork, 53);
                 Canvas.SetTop(Artwork, 212);
+
+                
                 //Set Card
                 Canvas.SetLeft(SetNumber, 68);
                 Canvas.SetRight(SetNumber, double.NaN);
@@ -396,7 +440,12 @@ namespace OV.Pyramid
                 Canvas.SetLeft(SetNumber, double.NaN);
                 Canvas.SetTop(SetNumber, 849);
                 SetNumber.TextAlignment = TextAlignment.Left;
+
+                
             }
+
+            Canvas.SetLeft(Watermark, Canvas.GetLeft(Artwork) + 10);
+            Canvas.SetTop(Watermark, Canvas.GetTop(Artwork) + 10);
         }
 
         private void HandleScale()
@@ -655,7 +704,7 @@ namespace OV.Pyramid
             if (dlg.ShowDialog() == true)
             {
                 // Save document 
-                File.WriteAllText(dlg.FileName, text);
+                System.IO.File.WriteAllText(dlg.FileName, text);
             }
         }
 
@@ -683,13 +732,13 @@ namespace OV.Pyramid
         public void SaveDataTo(string fileName)
         {
             string text = JsonConvert.SerializeObject(CurrentCard, Formatting.Indented);
-            File.WriteAllText(fileName, text);
+            System.IO.File.WriteAllText(fileName, text);
         }
 
         internal void SaveDataTo(YgoCard card, string fileName)
         {
             string text = JsonConvert.SerializeObject(card, Formatting.Indented);
-            File.WriteAllText(fileName, text);
+            System.IO.File.WriteAllText(fileName, text);
         }
 
         public void CallExport()
@@ -756,7 +805,7 @@ namespace OV.Pyramid
             //source = source.CreateResizedImage(813, 1185, 0);
             bitmapEncoder.Frames.Add(BitmapFrame.Create(source));
             
-            using (Stream stm = File.Create(fileName))
+            using (System.IO.Stream stm = System.IO.File.Create(fileName))
             {
 
                 bitmapEncoder.Save(stm);
@@ -1667,7 +1716,7 @@ namespace OV.Pyramid
                     for (int i = 1; i <= number; i++)
                     {
                         Image Star = new Image();
-                        Star.Source = Database.GetImage(@"Template\" + type +
+                        Star.Source = Database.GetImage(@"Template\Middle\" + type +
                             (CurrentCard.Rarity == RARITY.UltimateRare ? "Emboss" : null) + ".png");
 
 
@@ -1788,7 +1837,14 @@ namespace OV.Pyramid
         }
         private void Artwork_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            ArtworkClick.Invoke(sender, e);
+            if (e.ClickCount >= 2)
+            {
+                ArtworkDoubleClick(sender, e);
+            }
+            else
+            {
+                ArtworkClick.Invoke(sender, e);
+            }
         }
         private void Attribute_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
